@@ -1,0 +1,20 @@
+<!-- res/layout/calendar_cell.xml -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:background="@drawable/cell_border"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <!-- TextView per il numero del giorno -->
+<TextView
+android:id="@+id/txtDay"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="1"
+android:textSize="16sp"
+android:textColor="@android:color/black"
+android:gravity="center" />
+
+    </LinearLayout>

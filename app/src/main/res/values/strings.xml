@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">YouCoach</string>
+    <string name="textview">TextView</string>
+    <string name="calendar">Calendar</string>
+    <string name="home_screen">Home Screen</string>
+    <string name="calendar_screen">Calendar Home</string>
+    <string name="rosa_screen">Rosa home</string>
+    <string name="Stats_screen">Stats home</string>
+    <string name="nome_squadra">Nome squadra</string>
+    <string name="search">Cerca...</string>
+    <string name="filter">"Ordina "</string>
+    <string name="todo">TODO</string>
+    <string name="calendario">Calendario</string>
+    <string name="calendar_title">Calendario</string>
+    <string name="Titolo_finestra_modale">Quale evento vuoi creare?</string>
+</resources>

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "560703057199",
+    "firebase_url": "https://youcoach-b4cfd-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "youcoach-b4cfd",
+    "storage_bucket": "youcoach-b4cfd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:560703057199:android:acd335e24e2cfa09ae45da",
+        "android_client_info": {
+          "package_name": "com.example.youcoach"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXf_3iYovFmpxo4j_9cAHu6yscUInUQ6c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stile personalizzato per le icone del BottomNavigationView -->
+    <style name="BottomNavigationViewStyle" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="itemIconSize">36dp</item> <!-- Dimensione personalizzata delle icone -->
+        <item name="itemTextAppearanceActive">@style/ActiveTextStyle</item> <!-- Testo attivo -->
+        <item name="itemTextAppearanceInactive">@style/InactiveTextStyle</item> <!-- Testo inattivo -->
+    </style>
+
+    <!-- Stile per il testo attivo -->
+    <style name="ActiveTextStyle" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Stile per il testo inattivo -->
+    <style name="InactiveTextStyle" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textSize">12sp</item>
+    </style>
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp">
+
+    <!-- Titolo della finestra modale -->
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Titolo_finestra_modale"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Pulsante "Nuovo Allenamento" -->
+    <Button
+        android:id="@+id/allenamentoButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Nuovo Allenamento"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/dialogTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/partitaButton"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Pulsante "Nuova Partita" -->
+    <Button
+        android:id="@+id/partitaButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Nuova Partita"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/dialogTitle"
+        app:layout_constraintStart_toEndOf="@id/allenamentoButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="8dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
