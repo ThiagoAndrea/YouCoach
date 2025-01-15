@@ -22,7 +22,7 @@ class AggiungiAllenamentoActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_aggiungi_allenamento)
-        setupBottomNavigation(R.id.nav_rosa)
+        setupBottomNavigation(R.id.nav_calendar)
 
         database = Firebase.database.reference
 
@@ -33,9 +33,9 @@ class AggiungiAllenamentoActivity : BaseActivity() {
         val buttonAggiungi = findViewById<Button>(R.id.buttonAggiungiAllenamento)
         val buttonBack = findViewById<ImageButton>(R.id.back_button)
 
-        // Listener per il pulsante "Indietro"
+
         buttonBack.setOnClickListener {
-            finish() // Chiude l'activity e torna alla schermata precedente
+            finish()
         }
 
         editTextData.setOnClickListener {
@@ -87,7 +87,6 @@ class AggiungiAllenamentoActivity : BaseActivity() {
             val timePickerDialog = TimePickerDialog(
                 this,
                 { _, selectedHour, selectedMinute ->
-                    // Formatta l'orario selezionato e impostalo nel campo di testo
                     val time = String.format("%02d:%02d", selectedHour, selectedMinute)
                     editTextOrarioFine.setText(time)
                 },
@@ -120,17 +119,15 @@ class AggiungiAllenamentoActivity : BaseActivity() {
                 Toast.makeText(this, "Compila tutti i campi", Toast.LENGTH_SHORT).show()
             } else {
                 if (allenamentoId != null) {
-                    // Modalità modifica: aggiorna l'allenamento esistente
                     modificaAllenamento(allenamentoId!!, data, orarioInizio, orarioFine)
                 } else {
-                    // Modalità aggiunta: aggiungi un nuovo allenamento
                     aggiungiAllenamento(data, orarioInizio, orarioFine)
                 }
             }
         }
     }
 
-    // Funzione per aggiungere un nuovo allenamento
+
     private fun aggiungiAllenamento(data: String, orarioInizio: String, orarioFine: String) {
         val allenamentoId = database.child("Allenamenti").push().key
 
@@ -139,7 +136,7 @@ class AggiungiAllenamentoActivity : BaseActivity() {
             database.child("Allenamenti").child(allenamentoId).setValue(allenamento)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Allenamento aggiunto con successo", Toast.LENGTH_SHORT).show()
-                    finish() // Chiudi l'Activity dopo l'aggiunta
+                    finish()
                 }
                 .addOnFailureListener {
                     Toast.makeText(this, "Errore durante l'aggiunta dell'allenamento", Toast.LENGTH_SHORT).show()

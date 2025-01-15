@@ -11,6 +11,7 @@ class DettaglioGiornoActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dettaglio_giorno)
+        setupBottomNavigation(R.id.nav_calendar)
 
         val txtDay: TextView = findViewById(R.id.txtDay)
         val btnTraining: Button = findViewById(R.id.btnTraining)
