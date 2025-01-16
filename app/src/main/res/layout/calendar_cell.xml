@@ -17,4 +17,12 @@ android:textSize="16sp"
 android:textColor="@android:color/black"
 android:gravity="center" />
 
+    <ImageView
+        android:id="@+id/img_training"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="5dp"
+        android:visibility="gone"
+        android:src="@drawable/training_cone"/>
+
     </LinearLayout>

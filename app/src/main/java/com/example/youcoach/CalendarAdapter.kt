@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 
@@ -15,7 +16,8 @@ class CalendarAdapter(
     private val currentMonth: Int, // Mese corrente
     private val currentYear: Int, // Anno corrente
     private val displayedMonth: Int, // Mese visualizzato
-    private val displayedYear: Int // Anno visualizzato
+    private val displayedYear: Int, // Anno visualizzato
+    private val trainingDays: Map<String, Boolean>
 ) : BaseAdapter() {
 
     override fun getCount(): Int {
@@ -44,8 +46,21 @@ class CalendarAdapter(
             viewHolder = view.tag as ViewHolder
         }
 
-        // Imposta il testo del giorno
-        viewHolder.txtDay.text = days[position]
+        val day = days[position]
+        viewHolder.txtDay.text = day
+
+        val dateKey = "$displayedYear-${"%02d".format(displayedMonth + 1)}-${"%02d".format(day.toIntOrNull() ?: 0)}"
+        val hasTraining = trainingDays[dateKey] == true
+
+        if (hasTraining) {
+            // Mostra l'icona dell'allenamento
+            viewHolder.imgTraining.visibility = View.VISIBLE
+        } else {
+            // Nascondi l'icona
+            viewHolder.imgTraining.visibility = View.GONE
+        }
+
+
 
         // Evidenzia solo la data di oggi
         if (days[position].toIntOrNull() == currentDay &&
@@ -64,5 +79,6 @@ class CalendarAdapter(
     // ViewHolder per migliorare le prestazioni
     private class ViewHolder(view: View) {
         val txtDay: TextView = view.findViewById(R.id.txtDay)
+        val imgTraining: ImageView = view.findViewById(R.id.img_training)
     }
 }

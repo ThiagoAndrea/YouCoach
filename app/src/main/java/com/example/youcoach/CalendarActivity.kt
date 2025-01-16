@@ -8,10 +8,16 @@ import android.widget.GridView
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import java.util.Calendar
 import java.util.Locale
 
 class CalendarActivity : BaseActivity() {
+
+    private val database = FirebaseDatabase.getInstance().reference.child("Allenamenti")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +39,8 @@ class CalendarActivity : BaseActivity() {
         // Variabili per il mese e l'anno visualizzati
         var displayedMonth = currentMonth
         var displayedYear = currentYear
+
+        val trainingDays = mutableMapOf<String, Boolean>()
 
         addEventButton.setOnClickListener {
             // Infla il layout personalizzato
@@ -91,11 +99,12 @@ class CalendarActivity : BaseActivity() {
             val adapter = CalendarAdapter(
                 this,
                 days,
-                currentDay, // Giorno corrente
-                currentMonth, // Mese corrente
-                currentYear, // Anno corrente
-                displayedMonth, // Mese visualizzato
-                displayedYear // Anno visualizzato
+                currentDay,
+                currentMonth,
+                currentYear,
+                displayedMonth,
+                displayedYear,
+                trainingDays
             )
             gridView.adapter = adapter
 
@@ -104,7 +113,32 @@ class CalendarActivity : BaseActivity() {
             currentMonthYearTextView.text = "$monthName $displayedYear"
         }
 
+        fun getTrainingDaysForMonth(year: Int, month: Int){
+            val monthKey = "$year-${"%02d".format(month + 1)}"
+            database.orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        trainingDays.clear()
+                        for (dateSnapshot in snapshot.children) {
+                            val date = dateSnapshot.key
+                            if (date != null) {
+                                trainingDays[date] = true
+                            }
+                        }
+                        updateCalendar()
+                    }
+                    override fun onCancelled(error: DatabaseError) {
+                        // Gestisci l'errore (ad esempio, mostra un messaggio all'utente)
+                        Toast.makeText(
+                            this@CalendarActivity,
+                            "Errore nel caricamento degli allenamenti: ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                })
+        }
+
         // Inizializza il calendario con il mese corrente
+        getTrainingDaysForMonth(displayedYear, displayedMonth)
         updateCalendar()
 
         // Gestisci il clic sul bottone "Prec"
@@ -116,6 +150,7 @@ class CalendarActivity : BaseActivity() {
             } else {
                 displayedMonth--
             }
+            getTrainingDaysForMonth(displayedYear, displayedMonth)
             updateCalendar()
         }
 
@@ -128,6 +163,7 @@ class CalendarActivity : BaseActivity() {
             } else {
                 displayedMonth++
             }
+            getTrainingDaysForMonth(displayedYear, displayedMonth)
             updateCalendar()
         }
 
