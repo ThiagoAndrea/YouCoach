@@ -5,5 +5,7 @@
     <color name="transparent">#00000000</color>
     <color name="circle_background">#00CC33</color>
     <color name="background_grey">#F5F5F5</color>
+    <color name="background_orange">#ff7514</color>
+    <color name="background_training_card">#f0d2bc</color>
     <color name="giorno_selezionato">#599680  </color>
 </resources>
