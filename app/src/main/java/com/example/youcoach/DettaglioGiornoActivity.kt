@@ -3,37 +3,39 @@ package com.example.youcoach
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.database.DatabaseReference
 
 class DettaglioGiornoActivity : BaseActivity() {
+
+    private lateinit var database: DatabaseReference
+    private lateinit var allenamento: Allenamento
+    private lateinit var allenamentoId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dettaglio_giorno)
         setupBottomNavigation(R.id.nav_calendar)
 
-        val txtDay: TextView = findViewById(R.id.txtDay)
-        val btnTraining: Button = findViewById(R.id.btnTraining)
-        val btnMatch: Button = findViewById(R.id.btnMatch)
+
+        val cardDate: TextView = findViewById(R.id.card_date)
+        val backbutton: ImageButton = findViewById(R.id.back_button)
 
         // Ottieni il giorno selezionato dall'Intent
         val selectedDay = intent.getStringExtra("selectedDay")
-        txtDay.text = "Giorno: $selectedDay"
+        val selectedMonth = intent.getIntExtra("selectedMonth", -1)
+        val selectedYear = intent.getIntExtra("selectedYear", -1)
 
-        // Gestisci il clic sui pulsanti
-        btnTraining.setOnClickListener {
-            val resultIntent = Intent()
-            resultIntent.putExtra("eventType", "training")
-            setResult(RESULT_OK, resultIntent)
+        val date = "$selectedDay/${selectedMonth+1}/$selectedYear"
+        cardDate.text = date
+
+        backbutton.setOnClickListener{
             finish()
         }
 
-        btnMatch.setOnClickListener {
-            val resultIntent = Intent()
-            resultIntent.putExtra("eventType", "match")
-            setResult(RESULT_OK, resultIntent)
-            finish()
-        }
+
+
     }
 }
