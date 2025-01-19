@@ -53,10 +53,8 @@ class CalendarAdapter(
         val hasTraining = trainingDays[dateKey] == true
 
         if (hasTraining) {
-            // Mostra l'icona dell'allenamento
             viewHolder.imgTraining.visibility = View.VISIBLE
         } else {
-            // Nascondi l'icona
             viewHolder.imgTraining.visibility = View.GONE
         }
 

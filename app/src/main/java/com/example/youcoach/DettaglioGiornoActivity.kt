@@ -21,7 +21,7 @@ class DettaglioGiornoActivity : BaseActivity() {
 
 
         val cardDate: TextView = findViewById(R.id.card_date)
-        val backbutton: ImageButton = findViewById(R.id.back_button)
+        val backButton: ImageButton = findViewById(R.id.back_button)
 
         // Ottieni il giorno selezionato dall'Intent
         val selectedDay = intent.getStringExtra("selectedDay")
@@ -31,7 +31,7 @@ class DettaglioGiornoActivity : BaseActivity() {
         val date = "$selectedDay/${selectedMonth+1}/$selectedYear"
         cardDate.text = date
 
-        backbutton.setOnClickListener{
+        backButton.setOnClickListener{
             finish()
         }
 
