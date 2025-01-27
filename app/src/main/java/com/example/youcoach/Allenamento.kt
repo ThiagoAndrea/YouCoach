@@ -6,5 +6,6 @@ data class Allenamento(
     val id: String = "",
     val orarioInizio: String = "",
     val orarioFine: String = "",
-    val presenze: Map<Giocatore, Int>
+    val obiettivi: List<String> = emptyList(),
+    val presenze: Map<String, Int> = emptyMap()
 ) : Serializable
