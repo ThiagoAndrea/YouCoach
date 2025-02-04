@@ -1,57 +1,68 @@
-package com.example.youcoach
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.Spinner
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.youcoach.Giocatore
+import com.example.youcoach.R
 
 class PresenzeAdapter(
     private val giocatori: List<Giocatore>,
-    private val onPresenzaChanged: (Giocatore, Int) -> Unit
-) : RecyclerView.Adapter<PresenzeAdapter.GiocatoreViewHolder>() {
+    private val presenze: MutableMap<String, Int>,
+    private val onPresenzaUpdated: (String, Int) -> Unit // Callback per aggiornare la presenza
+) : RecyclerView.Adapter<PresenzeAdapter.ViewHolder>() {
 
-    // Stati della presenza
-    private val statiPresenza = listOf("Presente", "Assente", "Ritardo")
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_presenza, parent, false)
+        return ViewHolder(view, onPresenzaUpdated)
+    }
 
-    inner class GiocatoreViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val txtGiocatore: TextView = itemView.findViewById(R.id.txt_giocatore)
-        private val spinnerPresenza: Spinner = itemView.findViewById(R.id.spinner_presenza)
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val giocatore = giocatori[position]
+        holder.bind(giocatore, presenze[giocatore.id] ?: 0)
+    }
 
-        fun bind(giocatore: Giocatore) {
-            // Mostra nome e cognome del giocatore
-            txtGiocatore.text = "${giocatore.nome} ${giocatore.cognome}"
+    override fun getItemCount() = giocatori.size
 
-            // Configura lo Spinner
-            val adapter = ArrayAdapter(itemView.context, android.R.layout.simple_spinner_item, statiPresenza)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinnerPresenza.adapter = adapter
+    class ViewHolder(itemView: View, private val onPresenzaUpdated: (String, Int) -> Unit) :
+        RecyclerView.ViewHolder(itemView) {
 
-            // Imposta lo stato iniziale (es. "Presente")
-            spinnerPresenza.setSelection(0)
+        private val nomeGiocatore: TextView = itemView.findViewById(R.id.txt_giocatore)
+        private val btnPresente: ImageButton = itemView.findViewById(R.id.btn_presenza)
+        private val btnAssente: ImageButton = itemView.findViewById(R.id.btn_assenza)
+        private val btnRitardo: ImageButton = itemView.findViewById(R.id.btn_ritardo)
+        private val btnInfortunato: ImageButton = itemView.findViewById(R.id.btn_infortunio)
 
-            // Gestisci il cambio di stato
-            spinnerPresenza.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    val nuovoStato = position // 0: Presente, 1: Assente, 2: Ritardo
-                    onPresenzaChanged(giocatore, nuovoStato)
-                }
+        fun bind(giocatore: Giocatore, stato: Int) {
+            nomeGiocatore.text = "${giocatore.nome} ${giocatore.cognome}"
+            aggiornaUI(stato)
 
-                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+            btnPresente.setOnClickListener { aggiornaPresenza(giocatore.id, 0) }
+            btnAssente.setOnClickListener { aggiornaPresenza(giocatore.id, 1) }
+            btnRitardo.setOnClickListener { aggiornaPresenza(giocatore.id, 2) }
+            btnInfortunato.setOnClickListener { aggiornaPresenza(giocatore.id, 3) }
+        }
+
+        private fun aggiornaPresenza(idGiocatore: String, stato: Int) {
+            onPresenzaUpdated(idGiocatore, stato)
+            aggiornaUI(stato)
+        }
+
+        private fun aggiornaUI(stato: Int) {
+            // Reset background per tutti i bottoni
+            btnPresente.setBackgroundResource(R.drawable.background_circle_base)
+            btnAssente.setBackgroundResource(R.drawable.background_circle_base)
+            btnRitardo.setBackgroundResource(R.drawable.background_circle_base)
+            btnInfortunato.setBackgroundResource(R.drawable.background_circle_base)
+
+            // Evidenzia solo il bottone selezionato
+            when (stato) {
+                0 -> btnPresente.setBackgroundResource(R.drawable.background_circle_confirm)
+                1 -> btnAssente.setBackgroundResource(R.drawable.background_circle_delete)
+                2 -> btnRitardo.setBackgroundResource(R.drawable.background_circle_late)
+                3 -> btnInfortunato.setBackgroundResource(R.drawable.background_circle_injured)
             }
         }
     }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GiocatoreViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_giocatore, parent, false)
-        return GiocatoreViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: GiocatoreViewHolder, position: Int) {
-        holder.bind(giocatori[position])
-    }
-
-    override fun getItemCount(): Int = giocatori.size
 }

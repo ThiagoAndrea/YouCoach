@@ -3,9 +3,13 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00000000</color>
-    <color name="circle_background">#00CC33</color>
+    <color name="confirm">#00CC33</color>
+    <color name="delete">#fb1814</color>
+    <color name="late">#ffff00</color>
+    <color name="injured">#b515fe</color>
     <color name="background_grey">#F5F5F5</color>
     <color name="background_orange">#ff7514</color>
     <color name="background_training_card">#f0d2bc</color>
     <color name="giorno_selezionato">#599680  </color>
+    <color name="background_item_presenza">#808080</color>
 </resources>

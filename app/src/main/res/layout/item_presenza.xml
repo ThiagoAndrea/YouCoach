@@ -24,18 +24,49 @@
         android:layout_marginStart="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/spinner_presenza"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- Spinner per selezionare lo stato della presenza -->
-    <Spinner
-        android:id="@+id/spinner_presenza"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+    <ImageButton
+        android:id="@+id/btn_presenza"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/check"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/btn_assenza"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btn_assenza"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/croce"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/btn_ritardo"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btn_ritardo"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ritardo"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/btn_infortunio"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+
+        <ImageButton
+        android:id="@+id/btn_infortunio"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/infortunio"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+
+
+    
 
     </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
