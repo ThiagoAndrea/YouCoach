@@ -63,7 +63,7 @@ class DettaglioGiornoActivity : BaseActivity() {
                             val orarioFine = it.child("orarioFine").value as? String ?: "N/A"
 
                             cardTraining.visibility = View.VISIBLE
-                            cardTime?.text = "Orario: $orarioInizio - $orarioFine"
+                            cardTime?.text = "$orarioInizio - $orarioFine"
                         }
                     } else {
                         cardTraining.visibility = View.GONE
