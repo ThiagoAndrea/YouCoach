@@ -25,4 +25,13 @@ android:gravity="center" />
         android:visibility="gone"
         android:src="@drawable/training_cone"/>
 
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/img_match"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="5dp"
+        android:visibility="gone"
+        android:src="@drawable/pallone"/>
+
+
+</LinearLayout>

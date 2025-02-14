@@ -2,6 +2,7 @@
 agp = "8.7.2"
 cosmocalendar = "1.0.4"
 firebaseBom = "33.7.0"
+googleMaterial = "1.9.0"
 kotlin = "1.9.24"
 coreKtx = "1.15.0"
 junit = "4.13.2"
@@ -32,6 +33,7 @@ firebase-database-ktx = { group = "com.google.firebase", name = "firebase-databa
 androidx-leanback = { group = "androidx.leanback", name = "leanback", version.ref = "leanback" }
 material-calendarview = { module = "com.github.prolificinteractive:material-calendarview", version = "2.0.1" }
 material-v1110 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
+material-v190 = { module = "com.google.android.material:material", version.ref = "googleMaterial" }
 
 
 [plugins]

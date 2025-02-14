@@ -41,6 +41,7 @@ class CalendarActivity : BaseActivity() {
         var displayedYear = currentYear
 
         val trainingDays = mutableMapOf<String, Boolean>()
+        val matchDays = mutableMapOf<String, Boolean>()
 
         addEventButton.setOnClickListener {
             // Infla il layout personalizzato
@@ -104,7 +105,8 @@ class CalendarActivity : BaseActivity() {
                 currentYear,
                 displayedMonth,
                 displayedYear,
-                trainingDays
+                trainingDays,
+                matchDays
             )
             gridView.adapter = adapter
 
@@ -135,6 +137,30 @@ class CalendarActivity : BaseActivity() {
                         ).show()
                     }
                 })
+        }
+
+        fun getMatchDaysForMonth(year: Int, month: Int){
+            val monthKey = "$year-${"%02d".format(month + 1)}"
+            database.orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    matchDays.clear()
+                    for (dateSnapshot in snapshot.children) {
+                        val date = dateSnapshot.key
+                        if (date != null) {
+                            matchDays[date] = true
+                        }
+                    }
+                    updateCalendar()
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    // Gestisci l'errore (ad esempio, mostra un messaggio all'utente)
+                    Toast.makeText(
+                        this@CalendarActivity,
+                        "Errore nel caricamento delle partite: ${error.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
         }
 
         // Inizializza il calendario con il mese corrente

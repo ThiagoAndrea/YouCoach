@@ -17,7 +17,8 @@ class CalendarAdapter(
     private val currentYear: Int, // Anno corrente
     private val displayedMonth: Int, // Mese visualizzato
     private val displayedYear: Int, // Anno visualizzato
-    private val trainingDays: Map<String, Boolean>
+    private val trainingDays: Map<String, Boolean>,
+    private val matchDays: Map<String, Boolean>
 ) : BaseAdapter() {
 
     override fun getCount(): Int {
@@ -51,11 +52,18 @@ class CalendarAdapter(
 
         val dateKey = "$displayedYear-${"%02d".format(displayedMonth + 1)}-${"%02d".format(day.toIntOrNull() ?: 0)}"
         val hasTraining = trainingDays[dateKey] == true
+        val hasMatch = matchDays[dateKey] == true
 
         if (hasTraining) {
             viewHolder.imgTraining.visibility = View.VISIBLE
         } else {
             viewHolder.imgTraining.visibility = View.GONE
+        }
+
+        if (hasMatch) {
+            viewHolder.imgMatch.visibility = View.VISIBLE
+        } else {
+            viewHolder.imgMatch.visibility = View.GONE
         }
 
 
@@ -78,5 +86,6 @@ class CalendarAdapter(
     private class ViewHolder(view: View) {
         val txtDay: TextView = view.findViewById(R.id.txtDay)
         val imgTraining: ImageView = view.findViewById(R.id.img_training)
+        val imgMatch: ImageView = view.findViewById(R.id.img_match)
     }
 }
