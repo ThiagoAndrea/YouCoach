@@ -3,7 +3,6 @@ package com.example.youcoach
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.GridView
 import android.widget.ImageButton
@@ -172,7 +171,7 @@ class CalendarActivity : BaseActivity() {
         gridView.setOnItemClickListener { _, _, position, _ ->
             val selectedDay = (gridView.adapter as CalendarAdapter).getItem(position) as String
             if (selectedDay.isNotEmpty()) {
-                val intent = Intent(this, DettaglioGiornoActivity::class.java)
+                val intent = Intent(this, DettaglioAllenamentoActivity::class.java)
                 intent.putExtra("selectedDay", selectedDay)
                 intent.putExtra("selectedMonth", displayedMonth) // Usa displayedMonth
                 intent.putExtra("selectedYear", displayedYear) // Usa displayedYear

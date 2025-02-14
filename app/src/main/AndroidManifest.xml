@@ -20,7 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".CalendarActivity" />
-        <activity android:name=".DettaglioGiornoActivity" />
+        <activity android:name=".DettaglioAllenamentoActivity" />
         <activity android:name=".RosaActivity"/>
         <activity android:name=".StatsActivity"/>
         <activity android:name=".AggiungiGiocatoreActivity" />

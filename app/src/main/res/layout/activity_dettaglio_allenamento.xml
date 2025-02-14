@@ -66,7 +66,7 @@
                 android:textSize="24sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
             <!-- Orario -->
             <TextView
@@ -78,7 +78,7 @@
                 android:textSize="16dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/card_date" />
+                app:layout_constraintTop_toBottomOf="@id/card_title" />
 
             <!-- Layout per obiettivi e pulsante "+" -->
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -99,27 +99,37 @@
                     android:textStyle="bold"
                     android:textSize="24dp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <!-- RecyclerView per la lista degli obiettivi -->
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_goals"
+                    android:id="@+id/recyclerViewObiettivi"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/obiettivi_txt" />
 
-                <!-- Pulsante "+" -->
-                <ImageButton
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="@color/transparent"
-                    android:src="@drawable/edit"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"/>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <ImageButton
+                android:id="@+id/modificaAllenamento_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@color/transparent"
+                android:src="@drawable/edit"
+                app:layout_constraintTop_toBottomOf="@+id/card_date"
+                app:layout_constraintEnd_toStartOf="@+id/eliminaAllenamento_button"/>
+
+            <ImageButton
+                android:id="@+id/eliminaAllenamento_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@color/transparent"
+                android:src="@drawable/delete"
+                app:layout_constraintTop_toBottomOf="@+id/card_date"
+                app:layout_constraintEnd_toEndOf="parent"/>
 
             <!-- Bottone Presenze -->
             <Button

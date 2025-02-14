@@ -1,37 +1,67 @@
 package com.example.youcoach
 
+import android.content.Intent
+import android.media.Image
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 import com.google.firebase.database.*
 
-class DettaglioGiornoActivity : BaseActivity() {
+class DettaglioAllenamentoActivity : BaseActivity() {
 
     private lateinit var database: DatabaseReference
     private var allenamentoId: String? = null
     private lateinit var formattedDate: String
 
+    // UI Components
+    private lateinit var cardTraining: MaterialCardView
+    private lateinit var cardDate: TextView
+    private lateinit var cardTime: TextView
+    private lateinit var backButton: ImageButton
+    private lateinit var deleteButton: ImageButton
+    private lateinit var editButton: ImageButton
+    private lateinit var presenzeButton: Button
+
+    // RecyclerView for Obiettivi
+    private lateinit var recyclerViewObiettivi: RecyclerView
+    private lateinit var obiettiviAdapter: ObiettiviAdapter
+    private lateinit var obiettiviList: MutableList<String>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_dettaglio_giorno)
+        setContentView(R.layout.activity_dettaglio_allenamento)
         setupBottomNavigation(R.id.nav_calendar)
 
         database = FirebaseDatabase.getInstance().reference
 
-        val cardTraining: MaterialCardView = findViewById(R.id.card_training)
-        val cardDate: TextView = findViewById(R.id.card_date)
-        val cardTime: TextView? = findViewById(R.id.card_time)
-        val backButton: ImageButton = findViewById(R.id.back_button)
-        val presenzeButton: Button = findViewById(R.id.presenze_button)
+        initUI()
+        loadSelectedDate()
+        caricaAllenamento(formattedDate)
+        setupButtonListeners()
+    }
 
+    private fun initUI() {
+        cardTraining = findViewById(R.id.card_training)
+        cardDate = findViewById(R.id.card_date)
+        cardTime = findViewById(R.id.card_time)
+        backButton = findViewById(R.id.back_button)
+        deleteButton = findViewById(R.id.eliminaAllenamento_button)
+        editButton = findViewById(R.id.modificaAllenamento_button)
+        presenzeButton = findViewById(R.id.presenze_button)
+        recyclerViewObiettivi = findViewById(R.id.recyclerViewObiettivi)
+        recyclerViewObiettivi.layoutManager = LinearLayoutManager(this)
+        obiettiviList = mutableListOf()
+        obiettiviAdapter = ObiettiviAdapter(obiettiviList, false)
+        recyclerViewObiettivi.adapter = obiettiviAdapter
+    }
+
+    private fun loadSelectedDate() {
         val selectedDay = intent.getStringExtra("selectedDay")
         val selectedMonth = intent.getIntExtra("selectedMonth", -1)
         val selectedYear = intent.getIntExtra("selectedYear", -1)
@@ -39,19 +69,20 @@ class DettaglioGiornoActivity : BaseActivity() {
         formattedDate = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay?.toIntOrNull() ?: 0)
         val date = "$selectedDay/${selectedMonth + 1}/$selectedYear"
         cardDate.text = date
+    }
 
-        caricaAllenamento(formattedDate, cardTraining, cardTime)
+    private fun setupButtonListeners() {
+        backButton.setOnClickListener { finish() }
 
         presenzeButton.setOnClickListener {
             caricaGiocatoriEApriDialog()
         }
+        editButton.setOnClickListener{modificaAllenamento()}
 
-        backButton.setOnClickListener {
-            finish()
-        }
+        deleteButton.setOnClickListener{confermaEliminazione()}
     }
 
-    private fun caricaAllenamento(formattedDate: String, cardTraining: MaterialCardView, cardTime: TextView?) {
+    private fun caricaAllenamento(formattedDate: String) {
         database.child("Allenamenti").child(formattedDate)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -61,17 +92,25 @@ class DettaglioGiornoActivity : BaseActivity() {
                             allenamentoId = it.key
                             val orarioInizio = it.child("orarioInizio").value as? String ?: "N/A"
                             val orarioFine = it.child("orarioFine").value as? String ?: "N/A"
+                            val obiettivi = it.child("obiettivi").children.mapNotNull { obiettivo ->
+                                obiettivo.getValue(String::class.java)
+                            }
 
                             cardTraining.visibility = View.VISIBLE
-                            cardTime?.text = "$orarioInizio - $orarioFine"
+                            cardTime.text = "$orarioInizio - $orarioFine"
+
+                            obiettiviList.clear()
+                            obiettiviList.addAll(obiettivi)
+                            obiettiviAdapter.notifyDataSetChanged()
                         }
                     } else {
                         cardTraining.visibility = View.GONE
+                        recyclerViewObiettivi.visibility = View.GONE
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@DettaglioGiornoActivity, "Errore nel recupero dell'allenamento", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@DettaglioAllenamentoActivity, "Errore nel recupero dell'allenamento", Toast.LENGTH_SHORT).show()
                 }
             })
     }
@@ -118,5 +157,46 @@ class DettaglioGiornoActivity : BaseActivity() {
         presenzeRef.setValue(presenzeConfermate)
             .addOnSuccessListener { Toast.makeText(this, "Presenze aggiornate!", Toast.LENGTH_SHORT).show() }
             .addOnFailureListener { Toast.makeText(this, "Errore!", Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun modificaAllenamento() {
+        if (allenamentoId != null) {
+            val intent = Intent(this, AggiungiAllenamentoActivity::class.java).apply {
+                putExtra("ALLENAMENTO_ID", allenamentoId)
+                putExtra("DATA", formattedDate)
+                putExtra("ORARIO_INIZIO", cardTime.text.toString().split(" - ")[0])
+                putExtra("ORARIO_FINE", cardTime.text.toString().split(" - ")[1])
+                putStringArrayListExtra("OBIETTIVI", ArrayList(obiettiviList))
+            }
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "Errore: Nessun allenamento selezionato", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    private fun confermaEliminazione() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Conferma eliminazione")
+            .setMessage("Sei sicuro di voler eliminare questo allenamento?")
+            .setPositiveButton("Elimina") { _, _ -> eliminaAllenamento() }
+            .setNegativeButton("Annulla", null)
+            .show()
+    }
+
+    private fun eliminaAllenamento() {
+        if (allenamentoId != null) {
+            database.child("Allenamenti").child(formattedDate).child(allenamentoId!!)
+                .removeValue()
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Allenamento eliminato con successo", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Errore durante l'eliminazione", Toast.LENGTH_SHORT).show()
+                }
+        } else {
+            Toast.makeText(this, "Errore: Nessun allenamento selezionato", Toast.LENGTH_SHORT).show()
+        }
     }
 }

@@ -16,15 +16,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bottone per confermare le presenze -->
-    <Button
-        android:id="@+id/btn_conferma_presenze"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Conferma"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/recycler_presenze"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
