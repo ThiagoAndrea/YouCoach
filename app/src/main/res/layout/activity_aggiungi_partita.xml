@@ -18,25 +18,58 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
-
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/inputData"
+        android:id="@+id/inputAvversario"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Data"
-        app:layout_constraintTop_toBottomOf="@id/back_button"
+        android:layout_weight="2"
+        app:layout_constraintTop_toBottomOf="@+id/back_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="16dp"
+        android:hint="Avversario">
+
+        <EditText
+            android:id="@+id/editTextAvversario"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+    <LinearLayout
+        android:id="@+id/layout_competizione_casa"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/inputAvversario"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginTop="16dp">
 
-        <EditText
-            android:id="@+id/editTextData"
-            android:layout_width="match_parent"
+    <Spinner
+        android:id="@+id/spinnerCompetizione"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:prompt="competizione"
+        android:layout_marginEnd="16dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchCasa"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="date" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:layout_weight="1"
+            android:text="Partita in casa" />
+
+
+    </LinearLayout>
+
+
 
 
     <LinearLayout
@@ -44,12 +77,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/inputData"
+        app:layout_constraintTop_toBottomOf="@+id/layout_competizione_casa"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginTop="12dp">
+        android:layout_marginTop="16dp">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/inputLuogo"
@@ -83,6 +116,7 @@
 
 
     <LinearLayout
+        android:id="@+id/layout_tempi_giocatori"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -91,7 +125,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginTop="24dp">
+        android:layout_marginTop="32dp">
 
         <!-- Campo 1: Numero di tempi -->
         <com.google.android.material.textfield.TextInputLayout
@@ -110,7 +144,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Spazio tra i campi -->
-        <Space
+        <TextView
             android:layout_width="16dp"
             android:layout_height="wrap_content" />
 
@@ -130,7 +164,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Spazio tra i campi -->
-        <Space
+        <TextView
             android:layout_width="16dp"
             android:layout_height="wrap_content" />
 
@@ -147,32 +181,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="number"
-                android:text="11" /> <!-- Valore predefinito -->
+                android:text="11" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputData"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Data"
+        app:layout_constraintBottom_toTopOf="@+id/buttonAggiungiPartita"
+        app:layout_constraintTop_toBottomOf="@+id/layout_tempi_giocatori"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp">
 
-
-
-
-
-
+        <EditText
+            android:id="@+id/editTextData"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="date" />
+    </com.google.android.material.textfield.TextInputLayout>
 
 
     <Button
         android:id="@+id/buttonAggiungiPartita"
-
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Aggiungi Partita"
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+        app:layout_constraintTop_toBottomOf="@+id/inputData"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="24dp"
         android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginTop="32dp" />
+        android:layout_marginEnd="24dp" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
