@@ -1,0 +1,196 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/background_grey"
+        android:src="@drawable/arrow_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <!-- TextView per il giorno selezionato -->
+
+    <!-- BottomNavigationView -->
+
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.55"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="100dp"
+        app:cardCornerRadius="8dp"
+        app:cardBackgroundColor="@color/background_soccer_card"
+        app:cardElevation="4dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/background_green">
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/fair_play"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Titolo -->
+            <TextView
+                android:id="@+id/card_title_partita"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Bedizzole U16 - Valtenesi U16"
+                android:textSize="24dp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/card_date_partita" />
+
+            <!-- Data -->
+            <TextView
+                android:id="@+id/card_date_partita"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="40dp"
+                android:text="12/10/2023"
+                android:textSize="24sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Orario -->
+            <TextView
+                android:id="@+id/card_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="16:30"
+                android:textSize="16dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/card_title_partita" />
+
+            <TextView
+                android:id="@+id/match_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Via Garibaldi, Bedizzole (BS)"
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="10dp"
+                android:textSize="16dp"
+                app:layout_constraintStart_toEndOf="@+id/card_time"
+                app:layout_constraintTop_toBottomOf="@id/card_title_partita"
+                />
+
+            <TextView
+                android:id="@+id/match_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dettagli partita"
+                android:textSize="24sp"
+                android:layout_marginTop="16dp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@id/card_time"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/numero_tempi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tempi: 2"
+                android:layout_marginTop="4dp"
+                android:textSize="16sp"
+                app:layout_constraintTop_toBottomOf="@id/match_details"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+            <TextView
+                android:id="@+id/durata_tempo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Durata per tempo: 40'"
+                android:layout_marginTop="4dp"
+                android:textSize="16sp"
+                app:layout_constraintTop_toBottomOf="@id/numero_tempi"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+            <TextView
+                android:id="@+id/numero_giocatori"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Giocatori: 11"
+                android:textSize="16sp"
+                app:layout_constraintTop_toBottomOf="@id/durata_tempo"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+            <Button
+                android:id="@+id/convocati_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Convocati"
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@+id/numero_giocatori"
+                app:layout_constraintStart_toStartOf="parent"/>
+
+
+
+            <Button
+                android:id="@+id/go_live_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:text="VAI AL LIVE"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/ball_icon"/>
+
+
+
+            <!-- Icona di training in basso a destra -->
+            <ImageView
+                android:id="@+id/ball_icon"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginTop="16dp"
+                android:src="@drawable/pallone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="0dp"
+        android:layout_height="72dp"
+        android:background="?android:attr/windowBackground"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu"
+        style="@style/BottomNavigationViewStyle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
