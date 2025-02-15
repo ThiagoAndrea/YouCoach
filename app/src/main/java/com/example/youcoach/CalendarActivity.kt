@@ -63,7 +63,8 @@ class CalendarActivity : BaseActivity() {
             }
 
             dialogView.findViewById<Button>(R.id.partitaButton).setOnClickListener {
-                Toast.makeText(this, "Hai selezionato Partita", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, AggiungiPartitaActivity::class.java)
+                startActivity(intent)
                 dialog.dismiss() // Chiudi il dialogo
             }
         }

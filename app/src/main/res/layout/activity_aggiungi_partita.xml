@@ -56,7 +56,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="2"
-        android:prompt="competizione"
         android:layout_marginEnd="16dp" />
 
         <androidx.appcompat.widget.SwitchCompat
