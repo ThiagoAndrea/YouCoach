@@ -19,13 +19,11 @@ class AggiungiPartitaActivity : BaseActivity() {
     private lateinit var editTextAvversario: EditText
     private lateinit var editTextOrario: EditText
     private lateinit var editTextLuogo: EditText
-    private lateinit var editTextRisultato: EditText
     private lateinit var spinnerCompetizione: Spinner
     private lateinit var switchCasaTrasferta: SwitchCompat
     private lateinit var editTextNumTempi: EditText
     private lateinit var editTextNumGiocatori: EditText
     private lateinit var editTextMinTempi: EditText
-    private lateinit var editTextModulo: EditText
     private lateinit var editTextData: EditText
     private lateinit var buttonAggiungi: Button
 
@@ -52,7 +50,6 @@ class AggiungiPartitaActivity : BaseActivity() {
         editTextData = findViewById(R.id.editTextData)
         buttonAggiungi = findViewById(R.id.buttonAggiungiPartita)
 
-        // Popola lo Spinner con le opzioni
         val competizioni = arrayOf("Amichevole", "Coppa", "Campionato")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, competizioni)
         spinnerCompetizione.adapter = adapter
@@ -100,8 +97,8 @@ class AggiungiPartitaActivity : BaseActivity() {
         val avversario = editTextAvversario.text.toString().trim()
         val orario = editTextOrario.text.toString().trim()
         val luogo = editTextLuogo.text.toString().trim()
-        val competizione = editCompetizione.selectedItem.toString()
-        val casa = editCasaTrasferta.isChecked // Recupera il valore del SwitchCompat
+        val competizione = spinnerCompetizione.selectedItem.toString()
+        val casa = switchCasaTrasferta.isChecked // Recupera il valore del SwitchCompat
         val numTempi = editTextNumTempi.text.toString().trim().toIntOrNull() ?: 0
         val numGiocatori = editTextNumGiocatori.text.toString().trim().toIntOrNull() ?: 0
         val minTempi = editTextMinTempi.text.toString().trim().toIntOrNull() ?: 0
@@ -129,7 +126,8 @@ class AggiungiPartitaActivity : BaseActivity() {
             minuti_per_tempo = minTempi,
             numero_calciatori = numGiocatori,
             casa = casa,
-            modulo = "", // Aggiungi il valore corretto se necessario
+            risultato = "",
+            modulo = "",
             convocati = emptyMap(),
             titolari = emptyMap()
         )

@@ -17,7 +17,8 @@ import java.util.Locale
 
 class CalendarActivity : BaseActivity() {
 
-    private val database = FirebaseDatabase.getInstance().reference.child("Allenamenti")
+    private val database = FirebaseDatabase.getInstance().reference
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,7 +119,7 @@ class CalendarActivity : BaseActivity() {
 
         fun getTrainingDaysForMonth(year: Int, month: Int){
             val monthKey = "$year-${"%02d".format(month + 1)}"
-            database.orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
+            database.child("allenamenti").orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         trainingDays.clear()
                         for (dateSnapshot in snapshot.children) {
@@ -142,7 +143,7 @@ class CalendarActivity : BaseActivity() {
 
         fun getMatchDaysForMonth(year: Int, month: Int){
             val monthKey = "$year-${"%02d".format(month + 1)}"
-            database.orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
+            database.child("partite").orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     matchDays.clear()
                     for (dateSnapshot in snapshot.children) {
@@ -166,6 +167,7 @@ class CalendarActivity : BaseActivity() {
 
         // Inizializza il calendario con il mese corrente
         getTrainingDaysForMonth(displayedYear, displayedMonth)
+        getMatchDaysForMonth(displayedYear, displayedMonth)
         updateCalendar()
 
         // Gestisci il clic sul bottone "Prec"
