@@ -96,7 +96,6 @@ class DettaglioAllenamentoActivity : BaseActivity() {
                                 obiettivo.getValue(String::class.java)
                             }
 
-                            cardTraining.visibility = View.VISIBLE
                             cardTime.text = "$orarioInizio - $orarioFine"
 
                             obiettiviList.clear()

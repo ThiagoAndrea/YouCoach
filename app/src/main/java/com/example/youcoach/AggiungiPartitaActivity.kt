@@ -35,6 +35,7 @@ class AggiungiPartitaActivity : BaseActivity() {
         database = FirebaseDatabase.getInstance().reference
 
         initUI()
+        checkIntentData() // Controlla se ci sono dati da precompilare
         setupButtonListeners()
     }
 
@@ -55,13 +56,43 @@ class AggiungiPartitaActivity : BaseActivity() {
         spinnerCompetizione.adapter = adapter
     }
 
+    private fun checkIntentData() {
+        partitaId = intent.getStringExtra("PARTITA_ID")
+        val data = intent.getStringExtra("DATA")
+        val orario = intent.getStringExtra("ORARIO")
+        val avversario = intent.getStringExtra("AVVERSARIO")
+        val luogo = intent.getStringExtra("LUOGO")
+        val competizione = intent.getStringExtra("COMPETIZIONE")
+        val casa = intent.getBooleanExtra("CASA", false)
+        val numTempi = intent.getIntExtra("NUMERO_TEMPI", 0)
+        val numGiocatori = intent.getIntExtra("NUMERO_GIOCATORI", 0)
+        val minTempi = intent.getIntExtra("MINUTI_PER_TEMPO", 0)
+
+        if (data != null) {
+            selectedDate = data
+            editTextData.setText(data.replace("-", "/"))
+        }
+        if (orario != null) editTextOrario.setText(orario)
+        if (avversario != null) editTextAvversario.setText(avversario)
+        if (luogo != null) editTextLuogo.setText(luogo)
+        if (competizione != null) {
+            val index = (spinnerCompetizione.adapter as ArrayAdapter<String>).getPosition(competizione)
+            spinnerCompetizione.setSelection(index)
+        }
+        switchCasaTrasferta.isChecked = casa
+        if (numTempi > 0) editTextNumTempi.setText(numTempi.toString())
+        if (numGiocatori > 0) editTextNumGiocatori.setText(numGiocatori.toString())
+        if (minTempi > 0) editTextMinTempi.setText(minTempi.toString())
+
+        if (partitaId != null) {
+            buttonAggiungi.text = "Modifica Partita"
+        }
+    }
+
     private fun setupButtonListeners() {
         editTextData.setOnClickListener { selezionaData() }
         editTextOrario.setOnClickListener { selezionaOrario() }
-
-        buttonAggiungi.setOnClickListener {
-            salvaPartita()
-        }
+        buttonAggiungi.setOnClickListener { salvaPartita() }
     }
 
     private fun selezionaData() {
@@ -98,7 +129,7 @@ class AggiungiPartitaActivity : BaseActivity() {
         val orario = editTextOrario.text.toString().trim()
         val luogo = editTextLuogo.text.toString().trim()
         val competizione = spinnerCompetizione.selectedItem.toString()
-        val casa = switchCasaTrasferta.isChecked // Recupera il valore del SwitchCompat
+        val casa = switchCasaTrasferta.isChecked
         val numTempi = editTextNumTempi.text.toString().trim().toIntOrNull() ?: 0
         val numGiocatori = editTextNumGiocatori.text.toString().trim().toIntOrNull() ?: 0
         val minTempi = editTextMinTempi.text.toString().trim().toIntOrNull() ?: 0
@@ -109,15 +140,8 @@ class AggiungiPartitaActivity : BaseActivity() {
             return
         }
 
-        // Controlliamo il riferimento a Firebase
-        val partitaId = database.child("Partite").child(selectedDate).push().key
-        if (partitaId == null) {
-            Toast.makeText(this, "Errore nella generazione dell'ID partita", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val partita = Partita(
-            id = partitaId,
+            id = partitaId ?: database.child("Partite").child(selectedDate).push().key!!,
             orario = orario,
             luogo = luogo,
             avversario = avversario,
@@ -132,21 +156,14 @@ class AggiungiPartitaActivity : BaseActivity() {
             titolari = emptyMap()
         )
 
-        // Debug: stampiamo i dati per vedere se sono validi
-        println("Sto salvando la partita: $partita")
-
-        database.child("Partite").child(selectedDate).child(partitaId)
+        database.child("Partite").child(selectedDate).child(partita.id)
             .setValue(partita)
             .addOnSuccessListener {
-                Toast.makeText(this, "Partita aggiunta con successo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Partita salvata con successo", Toast.LENGTH_SHORT).show()
                 finish()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Errore durante l'aggiunta: ${e.message}", Toast.LENGTH_SHORT).show()
-                e.printStackTrace() // Log dell'errore
+                Toast.makeText(this, "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
-
-
 }

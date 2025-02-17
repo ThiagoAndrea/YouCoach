@@ -117,57 +117,49 @@ class CalendarActivity : BaseActivity() {
             currentMonthYearTextView.text = "$monthName $displayedYear"
         }
 
-        fun getTrainingDaysForMonth(year: Int, month: Int){
+        fun getTrainingAndMatchDaysForMonth(year: Int, month: Int) {
             val monthKey = "$year-${"%02d".format(month + 1)}"
-            database.child("allenamenti").orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        trainingDays.clear()
-                        for (dateSnapshot in snapshot.children) {
-                            val date = dateSnapshot.key
-                            if (date != null) {
-                                trainingDays[date] = true
-                            }
-                        }
-                        updateCalendar()
-                    }
-                    override fun onCancelled(error: DatabaseError) {
-                        // Gestisci l'errore (ad esempio, mostra un messaggio all'utente)
-                        Toast.makeText(
-                            this@CalendarActivity,
-                            "Errore nel caricamento degli allenamenti: ${error.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                })
-        }
+            val trainingRef = database.child("Allenamenti").orderByKey().startAt(monthKey).endAt("$monthKey-31")
+            val matchRef = database.child("Partite").orderByKey().startAt(monthKey).endAt("$monthKey-31")
 
-        fun getMatchDaysForMonth(year: Int, month: Int){
-            val monthKey = "$year-${"%02d".format(month + 1)}"
-            database.child("partite").orderByKey().startAt(monthKey).endAt("$monthKey-31").addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    matchDays.clear()
-                    for (dateSnapshot in snapshot.children) {
-                        val date = dateSnapshot.key
-                        if (date != null) {
-                            matchDays[date] = true
-                        }
+            trainingRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(trainingSnapshot: DataSnapshot) {
+                    trainingDays.clear()
+                    for (dateSnapshot in trainingSnapshot.children) {
+                        dateSnapshot.key?.let { trainingDays[it] = true }
                     }
-                    updateCalendar()
+
+                    matchRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(matchSnapshot: DataSnapshot) {
+                            matchDays.clear()
+                            for (dateSnapshot in matchSnapshot.children) {
+                                dateSnapshot.key?.let { matchDays[it] = true }
+                            }
+                            updateCalendar()
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Toast.makeText(
+                                this@CalendarActivity,
+                                "Errore nel caricamento delle partite: ${error.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    })
                 }
+
                 override fun onCancelled(error: DatabaseError) {
-                    // Gestisci l'errore (ad esempio, mostra un messaggio all'utente)
                     Toast.makeText(
                         this@CalendarActivity,
-                        "Errore nel caricamento delle partite: ${error.message}",
+                        "Errore nel caricamento degli allenamenti: ${error.message}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             })
         }
 
-        // Inizializza il calendario con il mese corrente
-        getTrainingDaysForMonth(displayedYear, displayedMonth)
-        getMatchDaysForMonth(displayedYear, displayedMonth)
+// Inizializza il calendario con il mese corrente
+        getTrainingAndMatchDaysForMonth(displayedYear, displayedMonth)
         updateCalendar()
 
         // Gestisci il clic sul bottone "Prec"
@@ -179,7 +171,7 @@ class CalendarActivity : BaseActivity() {
             } else {
                 displayedMonth--
             }
-            getTrainingDaysForMonth(displayedYear, displayedMonth)
+            getTrainingAndMatchDaysForMonth(displayedYear, displayedMonth)
             updateCalendar()
         }
 
@@ -192,20 +184,49 @@ class CalendarActivity : BaseActivity() {
             } else {
                 displayedMonth++
             }
-            getTrainingDaysForMonth(displayedYear, displayedMonth)
+            getTrainingAndMatchDaysForMonth(displayedYear, displayedMonth)
             updateCalendar()
         }
 
-        // Gestisci il clic su ciascun giorno
         gridView.setOnItemClickListener { _, _, position, _ ->
             val selectedDay = (gridView.adapter as CalendarAdapter).getItem(position) as String
             if (selectedDay.isNotEmpty()) {
-                val intent = Intent(this, DettaglioAllenamentoActivity::class.java)
-                intent.putExtra("selectedDay", selectedDay)
-                intent.putExtra("selectedMonth", displayedMonth) // Usa displayedMonth
-                intent.putExtra("selectedYear", displayedYear) // Usa displayedYear
-                startActivity(intent)
+                val formattedDate = String.format("%04d-%02d-%02d", displayedYear, displayedMonth + 1, selectedDay.toInt())
+
+                database.child("Partite").child(formattedDate).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (snapshot.exists()) {
+                            // Se esiste una partita in questa data, apri DettaglioPartitaActivity
+                            val intent = Intent(this@CalendarActivity, DettaglioPartitaActivity::class.java)
+                            intent.putExtra("selectedDay", selectedDay)
+                            intent.putExtra("selectedMonth", displayedMonth)
+                            intent.putExtra("selectedYear", displayedYear)
+                            startActivity(intent)
+                        } else {
+                            database.child("Allenamenti").child(formattedDate).addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    if (snapshot.exists()) {
+                                        val intent = Intent(this@CalendarActivity, DettaglioAllenamentoActivity::class.java)
+                                        intent.putExtra("selectedDay", selectedDay)
+                                        intent.putExtra("selectedMonth", displayedMonth)
+                                        intent.putExtra("selectedYear", displayedYear)
+                                        startActivity(intent)
+                                    }
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    Toast.makeText(this@CalendarActivity, "Errore nel caricamento", Toast.LENGTH_SHORT).show()
+                                }
+                            })
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Toast.makeText(this@CalendarActivity, "Errore nel caricamento", Toast.LENGTH_SHORT).show()
+                    }
+                })
             }
         }
+
     }
 }
