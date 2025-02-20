@@ -4,12 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -51,7 +49,8 @@ class RosaActivity : BaseActivity() {
         giocatoriRef.addValueEventListener(object : ValueEventListener {
             @SuppressLint("NotifyDataSetChanged")
             override fun onDataChange(snapshot: DataSnapshot) {
-                playerList.clear() // Pulisci la lista esistente
+                playerList.clear() // Pulisce la lista esistente
+
                 for (data in snapshot.children) {
                     val giocatore = data.getValue(Giocatore::class.java)
                     if (giocatore != null) {
@@ -59,7 +58,21 @@ class RosaActivity : BaseActivity() {
                         playerList.add(giocatore)
                     }
                 }
-                giocatoreAdapter.notifyDataSetChanged() // Notifica l'adapter del cambiamento
+
+                // Ordinamento dopo il caricamento dei dati
+                val ruoloPriority = mapOf(
+                    "portiere" to 1,
+                    "difensore" to 2,
+                    "centrocampista" to 3,
+                    "attaccante" to 4
+                )
+
+                playerList.sortWith(compareBy(
+                    { ruoloPriority[it.ruolo.lowercase()] ?: 99 }, // Default a 99 per ruoli sconosciuti
+                    { it.nome }
+                ))
+
+                giocatoreAdapter.notifyDataSetChanged() // Notifica l'aggiornamento
             }
 
             override fun onCancelled(error: DatabaseError) {

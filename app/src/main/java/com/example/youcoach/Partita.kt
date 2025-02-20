@@ -14,7 +14,7 @@ data class Partita(
     val numero_calciatori: Int = 0,
     val casa: Boolean = false,
     val modulo: String = "",
-    val convocati: Map<String, Int> = emptyMap(),
+    val convocati: Map<String, Boolean> = emptyMap(),
     val titolari: Map<String, String> = emptyMap(),
 
 

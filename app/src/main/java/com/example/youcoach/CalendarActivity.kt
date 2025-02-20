@@ -60,7 +60,7 @@ class CalendarActivity : BaseActivity() {
             dialogView.findViewById<Button>(R.id.allenamentoButton).setOnClickListener {
                 val intent = Intent(this, AggiungiAllenamentoActivity::class.java)
                 startActivity(intent)
-                dialog.dismiss() // Chiudi il dialogo
+                dialog.dismiss()
             }
 
             dialogView.findViewById<Button>(R.id.partitaButton).setOnClickListener {
@@ -158,7 +158,7 @@ class CalendarActivity : BaseActivity() {
             })
         }
 
-// Inizializza il calendario con il mese corrente
+
         getTrainingAndMatchDaysForMonth(displayedYear, displayedMonth)
         updateCalendar()
 

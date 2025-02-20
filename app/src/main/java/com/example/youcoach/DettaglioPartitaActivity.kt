@@ -21,7 +21,7 @@ import com.google.firebase.database.ValueEventListener
 class DettaglioPartitaActivity : BaseActivity() {
     private lateinit var database: DatabaseReference
     private var partitaId: String? = null
-    private var formattedDate: String? = null
+    private lateinit var formattedDate: String
 
     // UI Components
     private lateinit var cardMatch: MaterialCardView
@@ -84,6 +84,7 @@ class DettaglioPartitaActivity : BaseActivity() {
         backButton.setOnClickListener {finish()}
         editButton.setOnClickListener{modificaPartita()}
         deleteButton.setOnClickListener{confermaEliminazione()}
+        convocatiButton.setOnClickListener{caricaGiocatoriEApriDialog()}
 
         //convocatiButton!!.setOnClickListener { v: View? -> caricaConvocatiEApriDialog() }
         //goLiveButton!!.setOnClickListener { v: View? -> avviaLive() }
@@ -141,24 +142,65 @@ class DettaglioPartitaActivity : BaseActivity() {
             })
     }
 
-    /*private fun caricaConvocatiEApriDialog() {
-        database!!.child("Giocatori").addListenerForSingleValueEvent(object : ValueEventListener {
+    private fun caricaGiocatoriEApriDialog() {
+        val giocatoriRef = database.child("Giocatori")
+
+        giocatoriRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(giocatoriSnapshot: DataSnapshot) {
-                val giocatori: MutableList<String?> = ArrayList()
-                for (playerSnapshot in giocatoriSnapshot.children) {
-                    giocatori.add(playerSnapshot.getValue(String::class.java))
+                if (giocatoriSnapshot.exists()) {
+                    val giocatori = giocatoriSnapshot.children.mapNotNull { it.getValue(Giocatore::class.java) }
+
+                    val convocazioniRef = database.child("Partite")
+                        .child(formattedDate)
+                        .child(partitaId ?: "")
+                        .child("convocati")
+                    convocazioniRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(presenzeSnapshot: DataSnapshot) {
+                            val convocazioniIniziali = mutableMapOf<String, Boolean>()
+                            presenzeSnapshot.children.forEach {
+                                val playerId = it.key ?: ""
+                                val stato = it.getValue(Boolean::class.java) ?: true
+                                convocazioniIniziali[playerId] = stato
+                            }
+
+                            // Se convocazioniIniziali è vuota, vuol dire che non c'è ancora una lista salvata, quindi passa una mappa vuota
+                            apriDialogConvocati(giocatori, convocazioniIniziali)
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
                 }
-                apriDialogConvocati(giocatori)
             }
 
             override fun onCancelled(error: DatabaseError) {}
         })
     }
 
-    private fun apriDialogConvocati(giocatori: List<String?>) {
-        val dialog: ConvocatiDialogFragment = ConvocatiDialogFragment(giocatori)
-        dialog.show(supportFragmentManager, "ConvocatiDialogFragment")
-    }*/
+
+    private fun apriDialogConvocati(giocatori: List<Giocatore>, convocazioniIniziali: Map<String, Boolean>) {
+        val dialog = ConvocazioniDialogFragment(giocatori, convocazioniIniziali) { convocazioniIniziali ->
+            salvaConvocatiNelDatabase(convocazioniIniziali)
+        }
+        dialog.show(supportFragmentManager, "ConvocazioniDialogFragment")
+    }
+
+    private fun salvaConvocatiNelDatabase(convocazioniConfermate: Map<String, Boolean>) {
+        val presenzeRef = database.child("Partite")
+            .child(formattedDate)
+            .child(partitaId ?: "")
+            .child("convocati")
+
+        // Salva la mappa intera, che contiene sia true che false.
+        presenzeRef.setValue(convocazioniConfermate)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Convocazioni aggiornate!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Errore!", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
 
     private fun modificaPartita() {
         if (partitaId != null) {

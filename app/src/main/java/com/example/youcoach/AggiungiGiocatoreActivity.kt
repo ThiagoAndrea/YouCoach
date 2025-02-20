@@ -2,9 +2,11 @@ package com.example.youcoach
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.DatabaseReference
@@ -27,9 +29,15 @@ class AggiungiGiocatoreActivity : BaseActivity() {
         val editTextNome = findViewById<EditText>(R.id.editTextNome)
         val editTextCognome = findViewById<EditText>(R.id.editTextCognome)
         val editTextEta = findViewById<EditText>(R.id.editTextEta)
-        val editTextRuolo = findViewById<EditText>(R.id.editTextRuolo)
+        val spinnerRuolo = findViewById<Spinner>(R.id.spinnerRuolo)
         val buttonAggiungi = findViewById<Button>(R.id.buttonAggiungiGiocatore)
         val buttonBack = findViewById<ImageButton>(R.id.back_button)
+
+        // Popola lo spinner con i ruoli disponibili
+        val ruoli = listOf("Portiere", "Difensore", "Centrocampista", "Attaccante")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ruoli)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerRuolo.adapter = adapter
 
         buttonBack.setOnClickListener{
             finish()
@@ -43,8 +51,11 @@ class AggiungiGiocatoreActivity : BaseActivity() {
             editTextNome.setText(giocatore.nome)
             editTextCognome.setText(giocatore.cognome)
             editTextEta.setText(giocatore.eta.toString())
-            editTextRuolo.setText(giocatore.ruolo)
-
+            // Seleziona il ruolo corretto nello spinner
+            val index = ruoli.indexOf(giocatore.ruolo)
+            if (index >= 0) {
+                spinnerRuolo.setSelection(index)
+            }
             // Cambia il testo del pulsante
             buttonAggiungi.text = "Modifica Giocatore"
         }
@@ -54,10 +65,10 @@ class AggiungiGiocatoreActivity : BaseActivity() {
             val nome = editTextNome.text.toString().trim()
             val cognome = editTextCognome.text.toString().trim()
             val eta = editTextEta.text.toString().trim()
-            val ruolo = editTextRuolo.text.toString().trim()
+            // Legge il valore selezionato dallo spinner
+            val ruolo = spinnerRuolo.selectedItem.toString()
 
             if (nome.isEmpty() || cognome.isEmpty() || eta.isEmpty() || ruolo.isEmpty()) {
-                // Mostra un messaggio di errore se i campi sono vuoti
                 Toast.makeText(this, "Compila tutti i campi", Toast.LENGTH_SHORT).show()
             } else {
                 if (giocatoreId != null) {

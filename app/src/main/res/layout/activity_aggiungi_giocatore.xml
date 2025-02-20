@@ -5,12 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
-    <!-- Campo per il nome -->
-
-
-    <!-- Campo per il cognome -->
-
     <ImageButton
         android:id="@+id/back_button"
         android:layout_width="wrap_content"
@@ -63,18 +57,16 @@
         android:layout_marginTop="16dp" />
 
     <!-- Campo per il ruolo -->
-    <EditText
-        android:id="@+id/editTextRuolo"
+    <Spinner
+        android:id="@+id/spinnerRuolo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:autofillHints=""
-        android:hint="Ruolo"
-        android:inputType="text"
         app:layout_constraintTop_toBottomOf="@id/editTextEta"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.8"
         android:layout_marginTop="16dp" />
+
 
     <!-- Pulsante per confermare l'aggiunta -->
     <Button
@@ -82,7 +74,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Aggiungi Giocatore"
-        app:layout_constraintTop_toBottomOf="@id/editTextRuolo"
+        app:layout_constraintTop_toBottomOf="@id/spinnerRuolo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.8"

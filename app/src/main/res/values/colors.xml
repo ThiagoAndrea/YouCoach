@@ -12,4 +12,8 @@
     <color name="background_training_card">#f0d2bc</color>
     <color name="giorno_selezionato">#599680  </color>
     <color name="background_item_presenza">#808080</color>
+    <color name="portiere">#add8e6</color>
+    <color name="difensore">#90ee90</color>
+    <color name="centrocampista">#e3a250</color>
+    <color name="attaccante">#f1807e</color>
 </resources>
