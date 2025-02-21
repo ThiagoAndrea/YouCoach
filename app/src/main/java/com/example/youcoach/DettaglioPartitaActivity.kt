@@ -85,9 +85,17 @@ class DettaglioPartitaActivity : BaseActivity() {
         editButton.setOnClickListener{modificaPartita()}
         deleteButton.setOnClickListener{confermaEliminazione()}
         convocatiButton.setOnClickListener{caricaGiocatoriEApriDialog()}
+        goLiveButton.setOnClickListener{goLive()}
 
         //convocatiButton!!.setOnClickListener { v: View? -> caricaConvocatiEApriDialog() }
         //goLiveButton!!.setOnClickListener { v: View? -> avviaLive() }
+    }
+
+    private fun goLive() {
+        val intent = Intent(this, FormazioneActivity::class.java)
+        intent.putExtra("PARTITA_ID", partitaId)
+        intent.putExtra("DATA", formattedDate)
+        startActivity(intent)
     }
 
     private fun caricaPartita(formattedDate: String) {

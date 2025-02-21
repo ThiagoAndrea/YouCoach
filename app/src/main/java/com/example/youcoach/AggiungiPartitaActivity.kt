@@ -27,6 +27,7 @@ class AggiungiPartitaActivity : BaseActivity() {
     private lateinit var editTextData: EditText
     private lateinit var buttonAggiungi: Button
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_aggiungi_partita)
@@ -93,6 +94,7 @@ class AggiungiPartitaActivity : BaseActivity() {
         editTextData.setOnClickListener { selezionaData() }
         editTextOrario.setOnClickListener { selezionaOrario() }
         buttonAggiungi.setOnClickListener { salvaPartita() }
+
     }
 
     private fun selezionaData() {

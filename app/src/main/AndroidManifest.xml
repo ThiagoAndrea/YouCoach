@@ -29,6 +29,7 @@
         <activity android:name=".AggiungiAllenamentoActivity" />
         <activity android:name=".AggiungiPartitaActivity"/>
         <activity android:name=".DettaglioPartitaActivity"/>
+        <activity android:name=".FormazioneActivity"/>
     </application>
 
 </manifest>
