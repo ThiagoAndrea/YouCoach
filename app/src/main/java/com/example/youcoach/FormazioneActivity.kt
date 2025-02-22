@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +22,9 @@ class FormazioneActivity : BaseActivity() {
     private lateinit var spinnerModuli: Spinner
     private lateinit var recyclerViewPosizioni: RecyclerView
     private lateinit var database: DatabaseReference
+    private lateinit var buttonConferma: Button
+
+    private var formazioneAdapter: SelezioneGiocatoreAdapter? = null
 
 
     private val rosaConvocati = mutableListOf<Giocatore>()
@@ -115,6 +119,7 @@ class FormazioneActivity : BaseActivity() {
         recyclerViewPosizioni = findViewById(R.id.recyclerPosizioni)
         recyclerViewPosizioni.layoutManager = LinearLayoutManager(this)
         database = Firebase.database.reference
+        buttonConferma = findViewById(R.id.buttonConferma)
 
         val moduliList = moduli.keys.toList()
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, moduliList)
@@ -127,6 +132,18 @@ class FormazioneActivity : BaseActivity() {
             caricaDatiPartita(partitaId, data)
             caricaGiocatori(partitaId, data) {
                 setupModuloListener(moduliList)
+                spinnerModuli.setSelection(0)
+            }
+        }
+
+        buttonConferma.setOnClickListener {
+            val currentAdapter = formazioneAdapter
+
+            if (partitaId != null && data != null && currentAdapter != null) {
+                salvaFormazione(currentAdapter, partitaId, data)
+
+            } else {
+                Log.e("FormazioneActivity", "Impossibile salvare la formazione: dati mancanti")
             }
         }
     }
@@ -197,8 +214,7 @@ class FormazioneActivity : BaseActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun setupModuloListener(moduliList: List<String>) {
-        spinnerModuli.setOnItemSelectedListener(object :
-            android.widget.AdapterView.OnItemSelectedListener {
+        spinnerModuli.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: android.widget.AdapterView<*>?,
                 view: View?,
@@ -213,9 +229,9 @@ class FormazioneActivity : BaseActivity() {
                     repeat(quantita) { posizioni.add(Posizione(ruolo, it + 1)) }
                 }
 
-                val adapter =
-                    SelezioneGiocatoreAdapter(this@FormazioneActivity, posizioni, rosaConvocati)
-                recyclerViewPosizioni.adapter = adapter
+                formazioneAdapter = SelezioneGiocatoreAdapter(this@FormazioneActivity, posizioni, rosaConvocati)
+                recyclerViewPosizioni.adapter = formazioneAdapter
+                Log.d("FormazioneActivity", "formationAdapter assegnato con ${posizioni.size} posizioni")
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
@@ -223,4 +239,31 @@ class FormazioneActivity : BaseActivity() {
             }
         })
     }
+
+
+    private fun salvaFormazione(adapter: SelezioneGiocatoreAdapter, partitaId: String, dataPartita: String) {
+        val titolari = mutableMapOf<String, String>()
+        adapter.selezioni.forEach { (posizione, giocatoreId) ->
+            val key = giocatoreId
+            titolari[key] = "${posizione.ruolo} ${posizione.posizioneIndex}"
+        }
+
+        val titolariIds = titolari.keys.toSet()
+        val panchina = rosaConvocati.filter { it.id !in titolariIds }.map { it.id }
+
+        val formazioneMap = mapOf(
+            "titolari" to titolari,
+            "panchina" to panchina
+        )
+
+        database.child("Partite").child(dataPartita).child(partitaId).child("formazione")
+            .setValue(formazioneMap)
+            .addOnSuccessListener {
+                Log.d("FormazioneActivity", "Formazione salvata con successo!")
+            }
+            .addOnFailureListener { error ->
+                Log.e("FormazioneActivity", "Errore durante il salvataggio della formazione: ${error.message}")
+            }
+    }
 }
+

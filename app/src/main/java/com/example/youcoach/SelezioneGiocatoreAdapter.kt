@@ -1,10 +1,12 @@
 package com.example.youcoach
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.AdapterView
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +17,7 @@ class SelezioneGiocatoreAdapter(
     private val giocatori: List<Giocatore>
 ) : RecyclerView.Adapter<SelezioneGiocatoreAdapter.PosizioneViewHolder>() {
 
-    // Mappa che memorizza la selezione per ogni posizione (chiave: posizione, valore: id del giocatore selezionato)
+    // Mappa globale delle selezioni: chiave: Posizione, valore: ID del giocatore selezionato
     val selezioni = mutableMapOf<Posizione, String>()
 
     inner class PosizioneViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -29,47 +31,64 @@ class SelezioneGiocatoreAdapter(
         return PosizioneViewHolder(view)
     }
 
+    override fun getItemCount(): Int = posizioni.size
+
     override fun onBindViewHolder(holder: PosizioneViewHolder, position: Int) {
         val posizioneItem = posizioni[position]
         holder.ruoloTextView.text = "${posizioneItem.ruolo} ${posizioneItem.posizioneIndex}"
 
-        // Ordina i giocatori: prima quelli del ruolo richiesto, poi gli altri
-        val giocatoriOrdinati = giocatori.sortedWith(
-            compareByDescending<Giocatore> { it.ruolo == posizioneItem.ruolo } // Priorità ai giocatori con lo stesso ruolo
-                .thenBy { it.nome } // Poi ordina alfabeticamente per nome
-        )
+        // Costruiamo l'insieme degli ID già selezionati in altre posizioni
+        val selezioniAltre = selezioni.filter { it.key != posizioneItem }.values.toSet()
 
-        // Crea la lista di stringhe per lo Spinner
-        val giocatoriString = giocatoriOrdinati.map { "${it.nome} ${it.cognome}" }
+        // Recuperiamo il giocatore già selezionato per questa posizione (se esiste)
+        val currentSelection = selezioni[posizioneItem]
 
-        // Adapter per lo Spinner
+        // Costruiamo la lista dei giocatori consentiti:
+        // - Includiamo tutti quelli non ancora selezionati
+        // - Se il giocatore corrente è già selezionato, lo includiamo comunque
+        val giocatoriConsentiti = giocatori.filter {
+            (!selezioniAltre.contains(it.id)) || (it.id == currentSelection)
+        }.sortedWith(compareByDescending<Giocatore> { it.ruolo == posizioneItem.ruolo }
+            .thenBy { it.nome })
+
+        // Creiamo la lista di stringhe per lo Spinner (es. "Nome Cognome")
+        val giocatoriString = giocatoriConsentiti.map { "${it.nome} ${it.cognome}" }
+
+        // Creiamo un ArrayAdapter per lo Spinner
         val spinnerAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, giocatoriString)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         holder.giocatoreSpinner.adapter = spinnerAdapter
 
-        // Mantieni la selezione precedente, se esiste
-        val selectedGiocatoreId = selezioni[posizioneItem]
-        val index = giocatoriOrdinati.indexOfFirst { it.id == selectedGiocatoreId }
+        // Impostiamo la selezione corrente (se esiste) cercando l'indice corrispondente
+        val index = giocatoriConsentiti.indexOfFirst { it.id == currentSelection }
         if (index >= 0) {
             holder.giocatoreSpinner.setSelection(index)
         } else {
-            holder.giocatoreSpinner.setSelection(0) // Default alla prima opzione
-            selezioni[posizioneItem] = giocatoriOrdinati.firstOrNull()?.id ?: ""
+            // Se non è stata effettuata una selezione, impostiamo il primo elemento di default
+            if (giocatoriConsentiti.isNotEmpty()) {
+                holder.giocatoreSpinner.setSelection(0)
+                // Salviamo la selezione di default
+                selezioni[posizioneItem] = giocatoriConsentiti[0].id
+            }
         }
 
-        // Gestisci la selezione dello Spinner
-        holder.giocatoreSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, spinnerPosition: Int, id: Long) {
-                selezioni[posizioneItem] = giocatoriOrdinati[spinnerPosition].id
+        // Gestiamo la selezione dello Spinner
+        holder.giocatoreSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?, view: View?, spinnerPosition: Int, id: Long
+            ) {
+                val nuovoId = giocatoriConsentiti[spinnerPosition].id
+                // Se la selezione è cambiata, aggiorniamo la mappa
+                if (selezioni[posizioneItem] != nuovoId) {
+                    selezioni[posizioneItem] = nuovoId
+                    // Notifichiamo l'adapter per aggiornare gli spinner in tutte le righe
+                    notifyDataSetChanged()
+                }
             }
 
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
                 // Nessuna azione necessaria
             }
-        })
+        }
     }
-
-
-
-    override fun getItemCount(): Int = posizioni.size
 }
