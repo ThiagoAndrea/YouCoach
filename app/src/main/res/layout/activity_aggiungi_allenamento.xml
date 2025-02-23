@@ -17,44 +17,68 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/editTextData"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputData"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Data"
-        android:inputType="date"
-        app:layout_constraintTop_toBottomOf="@id/back_button"
+        android:layout_weight="2"
+        app:layout_constraintTop_toBottomOf="@+id/back_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:hint="Data">
 
-    <EditText
-        android:id="@+id/editTextOrarioInizio"
+        <EditText
+            android:id="@+id/editTextData"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="date" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputOrarioInizio"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Orario di inizio"
-        android:inputType="time"
-        app:layout_constraintTop_toBottomOf="@id/editTextData"
+        android:layout_weight="2"
+        app:layout_constraintTop_toBottomOf="@+id/inputData"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/editTextOrarioFine"
+        app:layout_constraintEnd_toStartOf="@id/inputOrarioFine"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:hint="Orario di inizio">
 
-    <EditText
-        android:id="@+id/editTextOrarioFine"
+        <EditText
+            android:id="@+id/editTextOrarioInizio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="time" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputOrarioFine"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Orario di fine"
-        android:inputType="time"
-        app:layout_constraintTop_toBottomOf="@id/editTextData"
+        android:layout_weight="2"
+        app:layout_constraintTop_toBottomOf="@+id/inputData"
+        app:layout_constraintStart_toEndOf="@+id/inputOrarioInizio"
+        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        app:layout_constraintStart_toEndOf="@+id/editTextOrarioInizio"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:hint="Orario di fine">
+
+        <EditText
+            android:id="@+id/editTextOrarioFine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="time" />
+    </com.google.android.material.textfield.TextInputLayout>
+
 
     <TextView
         android:id="@+id/text_obiettivi"
@@ -62,11 +86,32 @@
         android:layout_height="wrap_content"
         android:text="Obiettivi:"
         android:textSize="20sp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:layout_marginStart="24dp"
-        app:layout_constraintTop_toBottomOf="@+id/editTextOrarioFine"
+        app:layout_constraintTop_toBottomOf="@+id/inputOrarioFine"
         app:layout_constraintStart_toStartOf="parent"
         />
+
+    <ImageButton
+        android:id="@+id/aggiungiObiettivo_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/transparent"
+        android:src="@drawable/add"
+        app:layout_constraintTop_toBottomOf="@+id/inputOrarioFine"
+        app:layout_constraintEnd_toStartOf="@+id/eliminaObiettivo_button"/>
+
+    <ImageButton
+        android:id="@+id/eliminaObiettivo_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:background="@color/transparent"
+        android:src="@drawable/delete"
+        app:layout_constraintTop_toBottomOf="@+id/inputOrarioFine"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 
 
@@ -85,17 +130,7 @@
         android:nestedScrollingEnabled="false" />
 
     <!-- Pulsante per aggiungere/modificare obiettivi -->
-    <Button
-        android:id="@+id/buttonAggiungiObiettivo"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Aggiungi/Modifica Obiettivo"
-        app:layout_constraintTop_toBottomOf="@id/recyclerViewObiettivi"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginTop="16dp" />
+
 
 
     <Button
@@ -103,7 +138,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Aggiungi Allenamento"
-        app:layout_constraintTop_toBottomOf="@id/buttonAggiungiObiettivo"
+        app:layout_constraintTop_toBottomOf="@id/recyclerViewObiettivi"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="24dp"
