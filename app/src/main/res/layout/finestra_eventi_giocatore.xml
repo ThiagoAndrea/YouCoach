@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textEvento"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:text="Nome giocatore"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+
+    <ImageButton
+        android:id="@+id/gol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/gol"
+        android:background="@color/transparent"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/textEvento"
+        app:layout_constraintEnd_toStartOf="@+id/assist"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gol"
+        app:layout_constraintTop_toBottomOf="@+id/gol"
+        app:layout_constraintStart_toStartOf="@id/gol"
+        app:layout_constraintEnd_toEndOf="@+id/gol"/>
+
+
+
+    <ImageButton
+        android:id="@+id/assist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/assist"
+        android:background="@color/transparent"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/textEvento"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Assist"
+        app:layout_constraintTop_toBottomOf="@+id/assist"
+        app:layout_constraintStart_toStartOf="@id/assist"
+        app:layout_constraintEnd_toEndOf="@+id/assist"/>
+
+    <ImageButton
+        android:id="@+id/tiro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/tiro"
+        android:background="@color/transparent"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/textEvento"
+        app:layout_constraintStart_toEndOf="@+id/assist"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tiro"
+        app:layout_constraintTop_toBottomOf="@+id/tiro"
+        app:layout_constraintStart_toStartOf="@id/tiro"
+        app:layout_constraintEnd_toEndOf="@+id/tiro"/>
+
+    <ImageButton
+        android:id="@+id/fuorigioco"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/fuorigioco"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/assist"
+        app:layout_constraintEnd_toStartOf="@+id/cambio"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fuorigioco"
+        app:layout_constraintTop_toBottomOf="@+id/fuorigioco"
+        app:layout_constraintStart_toStartOf="@id/fuorigioco"
+        app:layout_constraintEnd_toEndOf="@+id/fuorigioco"/>
+
+
+
+    <ImageButton
+        android:id="@+id/cambio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/round_arrows"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/assist"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cambio"
+        app:layout_constraintTop_toBottomOf="@+id/cambio"
+        app:layout_constraintStart_toStartOf="@id/cambio"
+        app:layout_constraintEnd_toEndOf="@+id/cambio"/>
+
+    <ImageButton
+        android:id="@+id/infortunio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/infortunio_live"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/assist"
+        app:layout_constraintStart_toEndOf="@+id/cambio"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Infortunio"
+        app:layout_constraintTop_toBottomOf="@+id/infortunio"
+        app:layout_constraintStart_toStartOf="@id/infortunio"
+        app:layout_constraintEnd_toEndOf="@+id/infortunio"/>
+
+
+    <ImageButton
+        android:id="@+id/fallo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/fallo"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/cambio"
+        app:layout_constraintEnd_toStartOf="@+id/giallo"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fallo"
+        app:layout_constraintTop_toBottomOf="@+id/fallo"
+        app:layout_constraintStart_toStartOf="@id/fallo"
+        app:layout_constraintEnd_toEndOf="@+id/fallo"/>
+
+
+
+    <ImageButton
+        android:id="@+id/giallo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/yellow_card"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/cambio"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Giallo"
+        app:layout_constraintTop_toBottomOf="@+id/giallo"
+        app:layout_constraintStart_toStartOf="@id/giallo"
+        app:layout_constraintEnd_toEndOf="@+id/giallo"/>
+
+    <ImageButton
+        android:id="@+id/rosso"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/red_card"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/cambio"
+        app:layout_constraintStart_toEndOf="@+id/giallo"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rosso"
+        app:layout_constraintTop_toBottomOf="@+id/rosso"
+        app:layout_constraintStart_toStartOf="@id/rosso"
+        app:layout_constraintEnd_toEndOf="@+id/rosso"/>
+
+
+    <ImageButton
+        android:id="@+id/parata"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/parata"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/giallo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Parata"
+        app:layout_constraintTop_toBottomOf="@+id/parata"
+        app:layout_constraintStart_toStartOf="@id/parata"
+        app:layout_constraintEnd_toEndOf="@+id/parata"/>
+
+    <Button
+        android:id="@+id/btn_chiudi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:text="Chiudi"
+        app:layout_constraintTop_toBottomOf="@+id/parata"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

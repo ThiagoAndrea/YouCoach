@@ -46,7 +46,7 @@ class AggiungiAllenamentoActivity : BaseActivity() {
         editTextOrarioInizio = findViewById(R.id.editTextOrarioInizio)
         editTextOrarioFine = findViewById(R.id.editTextOrarioFine)
         buttonAggiungi = findViewById(R.id.buttonAggiungiAllenamento)
-        buttonAggiungiObiettivo = findViewById(R.id.buttonAggiungiObiettivo)
+        buttonAggiungiObiettivo = findViewById(R.id.aggiungiObiettivo_button)
         val buttonBack = findViewById<ImageButton>(R.id.back_button)
 
         recyclerViewObiettivi = findViewById(R.id.recyclerViewObiettivi)

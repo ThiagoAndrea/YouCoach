@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-
     <TextView
         android:id="@+id/squadra_casa_text"
         android:layout_width="wrap_content"
@@ -73,9 +72,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/trattino" />
 
-
-
-
     <ImageButton
         android:id="@+id/btn_corner_casa"
         android:layout_width="40dp"
@@ -95,7 +91,6 @@
         android:src="@drawable/corner"
         app:layout_constraintStart_toEndOf="@+id/minutaggio"
         app:layout_constraintTop_toBottomOf="@id/squadra_ospite_text" />
-
 
     <ImageButton
         android:id="@+id/btn_tiri_ospite"
@@ -147,21 +142,42 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <Spinner
-        android:id="@+id/spinner_moduli"
+    <!-- RecyclerView per visualizzare le righe della formazione (senza header del ruolo) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerFormazione"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/giorno_selezionato"
+        app:layout_constraintTop_toBottomOf="@+id/tempo_di_gioco"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/textPanchina"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/tempo_di_gioco"
+        android:text="Panchina:"
+        android:textSize="24dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recyclerFormazione" />
 
-    <GridView
-        android:id="@+id/griglia_titolari"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerPanchina"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
-        app:layout_constraintTop_toBottomOf="@+id/spinner_moduli"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/textPanchina"
+        app:layout_constraintStart_toStartOf="parent"/>
 
-
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_start_match"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/fischietto"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

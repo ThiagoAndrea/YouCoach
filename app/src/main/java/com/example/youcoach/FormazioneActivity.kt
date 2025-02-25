@@ -1,6 +1,7 @@
 package com.example.youcoach
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -24,7 +25,7 @@ class FormazioneActivity : BaseActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var buttonConferma: Button
 
-    private var formazioneAdapter: SelezioneGiocatoreAdapter? = null
+    private var selezioneGiocatoreAdapter: SelezioneGiocatoreAdapter? = null
 
 
     private val rosaConvocati = mutableListOf<Giocatore>()
@@ -41,15 +42,15 @@ class FormazioneActivity : BaseActivity() {
             "Portiere" to 1,
             "Difensore" to 3,
             "Centrocampista" to 4,
-            "Trequartista" to 2,
+            "Trequartista" to 1,
             "Attaccante" to 2
         ),
         "3-4-2-1" to mapOf(
             "Portiere" to 1,
             "Difensore" to 3,
             "Centrocampista" to 4,
-            "Trequartista" to 1,
-            "Attaccante" to 2
+            "Trequartista" to 2,
+            "Attaccante" to 1
         ),
         "4-5-1" to mapOf(
             "Portiere" to 1,
@@ -137,7 +138,7 @@ class FormazioneActivity : BaseActivity() {
         }
 
         buttonConferma.setOnClickListener {
-            val currentAdapter = formazioneAdapter
+            val currentAdapter = selezioneGiocatoreAdapter
 
             if (partitaId != null && data != null && currentAdapter != null) {
                 salvaFormazione(currentAdapter, partitaId, data)
@@ -229,8 +230,8 @@ class FormazioneActivity : BaseActivity() {
                     repeat(quantita) { posizioni.add(Posizione(ruolo, it + 1)) }
                 }
 
-                formazioneAdapter = SelezioneGiocatoreAdapter(this@FormazioneActivity, posizioni, rosaConvocati)
-                recyclerViewPosizioni.adapter = formazioneAdapter
+                selezioneGiocatoreAdapter = SelezioneGiocatoreAdapter(this@FormazioneActivity, posizioni, rosaConvocati)
+                recyclerViewPosizioni.adapter = selezioneGiocatoreAdapter
                 Log.d("FormazioneActivity", "formationAdapter assegnato con ${posizioni.size} posizioni")
             }
 
@@ -259,7 +260,13 @@ class FormazioneActivity : BaseActivity() {
         database.child("Partite").child(dataPartita).child(partitaId).child("formazione")
             .setValue(formazioneMap)
             .addOnSuccessListener {
-                Log.d("FormazioneActivity", "Formazione salvata con successo!")
+                val intent = Intent(this, LiveActivity::class.java)
+                intent.putExtra("PARTITA_ID", partitaId)
+                intent.putExtra("DATA", dataPartita)
+                startActivity(intent)
+            }
+            .addOnFailureListener { error ->
+                Log.e("FormazioneActivity", "Errore durante il salvataggio della formazione: ${error.message}")
             }
             .addOnFailureListener { error ->
                 Log.e("FormazioneActivity", "Errore durante il salvataggio della formazione: ${error.message}")
