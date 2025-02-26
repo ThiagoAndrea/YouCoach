@@ -3,7 +3,9 @@ package com.example.youcoach
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
+import android.view.View
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.tasks.Tasks
@@ -18,6 +20,8 @@ class LiveActivity : BaseActivity() {
 
     private lateinit var minutaggio: TextView
     private lateinit var fabStartMatch: FloatingActionButton
+    private lateinit var fabEndHalf: FloatingActionButton
+    private lateinit var fabEndMatch: FloatingActionButton
     private var startTime = 0L
     private var timeInMilliseconds = 0L
     private var handler = android.os.Handler()
@@ -27,7 +31,11 @@ class LiveActivity : BaseActivity() {
     private lateinit var recyclerPanchina: RecyclerView
     private lateinit var formazioneAdapter: FormazioneAdapter
     private lateinit var panchinaAdapter: PanchinaAdapter
+
     private val eventoManager = EventoManager()
+
+    private var primoTempo = true
+    private var minutiPerTempo = 45
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,19 +91,22 @@ class LiveActivity : BaseActivity() {
 
         minutaggio = findViewById(R.id.minutaggio)
         fabStartMatch = findViewById(R.id.fab_start_match)
+        fabEndHalf = findViewById(R.id.fab_end_half)
+        fabEndMatch = findViewById(R.id.fab_end_match)
 
         fabStartMatch.setOnClickListener {
-            if (!matchStarted) {
-                startTime = SystemClock.elapsedRealtime() - timeInMilliseconds
-                handler.post(updateTimerThread)
-                matchStarted = true
-                fabStartMatch.setImageResource(R.drawable.fallo) // Cambia icona a "pausa"
-            } else {
-                handler.removeCallbacks(updateTimerThread)
-                matchStarted = false
-                fabStartMatch.setImageResource(R.drawable.fischietto) // Cambia icona a "fischietto"
-            }
+            toggleMenu()
         }
+
+        fabEndHalf.setOnClickListener {
+            terminaTempo()
+        }
+
+        fabEndMatch.setOnClickListener {
+            terminaPartita()
+        }
+
+        caricaMinutiPerTempo()
     }
 
     private fun caricaRuoliGiocatori(panchinaList: List<String>) {
@@ -135,7 +146,70 @@ class LiveActivity : BaseActivity() {
     private fun formatTime(milliseconds: Long): String {
         val seconds = (milliseconds / 1000) % 60
         val minutes = (milliseconds / (1000 * 60)) % 60
-        val hours = (milliseconds / (1000 * 60 * 60))
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        return String.format("%02d:%02d", minutes, seconds)
     }
+
+    private fun toggleMenu() {
+        if (!matchStarted) {
+            startTime = SystemClock.elapsedRealtime() - timeInMilliseconds
+            handler.post(updateTimerThread)
+            matchStarted = true
+            fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.delete)
+
+            // Mostra i pulsanti per la gestione dei tempi
+            fabEndHalf.visibility = View.VISIBLE
+            fabEndMatch.visibility = View.VISIBLE
+
+        } else {
+            handler.removeCallbacks(updateTimerThread)
+            matchStarted = false
+            fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
+
+            // Nasconde i pulsanti
+            fabEndHalf.visibility = View.GONE
+            fabEndMatch.visibility = View.GONE
+        }
+    }
+
+    private fun terminaTempo() {
+        handler.removeCallbacks(updateTimerThread)
+        matchStarted = false
+
+        if (primoTempo) {
+            // Se è il primo tempo, aggiorniamo il minutaggio per ripartire dal secondo tempo
+            startTime = SystemClock.elapsedRealtime() - (minutiPerTempo * 60 * 1000)
+            primoTempo = false
+            fabEndHalf.visibility = View.GONE // Nasconde l'opzione "Termina tempo" nel secondo tempo
+        } else {
+            terminaPartita()
+        }
+    }
+
+    private fun terminaPartita() {
+        handler.removeCallbacks(updateTimerThread)
+        matchStarted = false
+        fabEndHalf.visibility = View.GONE
+        fabEndMatch.visibility = View.GONE
+        fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
+
+        // Azione per terminare la partita (puoi aggiungere il salvataggio su Firebase)
+    }
+
+    private fun caricaMinutiPerTempo() {
+        val partitaId = intent.getStringExtra("PARTITA_ID") ?: return
+        val dataPartita = intent.getStringExtra("DATA") ?: return
+        val database = Firebase.database.reference
+
+        database.child("Partite").child(dataPartita).child(partitaId).child("minutiPerTempo")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    minutiPerTempo = snapshot.getValue(Int::class.java) ?: 45
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("LiveActivity", "Errore nel caricamento dei minuti per tempo")
+                }
+            })
+    }
+
 }
