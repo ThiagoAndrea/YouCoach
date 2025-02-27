@@ -152,22 +152,17 @@ class LiveActivity : BaseActivity() {
     private fun toggleMenu() {
         if (!matchStarted) {
             startTime = SystemClock.elapsedRealtime() - timeInMilliseconds
+
             handler.post(updateTimerThread)
             matchStarted = true
             fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.delete)
-
-            // Mostra i pulsanti per la gestione dei tempi
-            fabEndHalf.visibility = View.VISIBLE
-            fabEndMatch.visibility = View.VISIBLE
+            fabStartMatch.setImageResource(R.drawable.pause)
 
         } else {
             handler.removeCallbacks(updateTimerThread)
             matchStarted = false
-            fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
-
-            // Nasconde i pulsanti
-            fabEndHalf.visibility = View.GONE
-            fabEndMatch.visibility = View.GONE
+            fabEndHalf.visibility = View.VISIBLE
+            fabEndMatch.visibility = View.VISIBLE
         }
     }
 
@@ -176,10 +171,13 @@ class LiveActivity : BaseActivity() {
         matchStarted = false
 
         if (primoTempo) {
-            // Se è il primo tempo, aggiorniamo il minutaggio per ripartire dal secondo tempo
             startTime = SystemClock.elapsedRealtime() - (minutiPerTempo * 60 * 1000)
+            minutaggio.text=formatTime(startTime)
             primoTempo = false
-            fabEndHalf.visibility = View.GONE // Nasconde l'opzione "Termina tempo" nel secondo tempo
+            fabEndHalf.visibility = View.GONE
+            fabEndMatch.visibility= View.GONE
+            fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
+            fabStartMatch.setImageResource(R.drawable.fischietto)
         } else {
             terminaPartita()
         }
