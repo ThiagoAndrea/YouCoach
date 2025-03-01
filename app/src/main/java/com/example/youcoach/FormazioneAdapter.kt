@@ -22,23 +22,22 @@ class FormazioneAdapter(
     private val ruoliOrdine: List<String> = listOf("Portiere", "Difensore", "Centrocampista", "Trequartista", "Attaccante")
 ) : RecyclerView.Adapter<FormazioneAdapter.RigaViewHolder>() {
 
-    // Normalizza il ruolo rimuovendo i numeri alla fine (es. "Difensore 2" → "Difensore")
+
     private fun normalizzaRuolo(ruolo: String): String {
-        return ruolo.replace(Regex("\\s\\d+$"), "") // Rimuove lo spazio e il numero finale
+        return ruolo.replace(Regex("\\s\\d+$"), "")
     }
 
-    // Estrae il numero finale da un ruolo (es. "Difensore 2" → 2) per ordinare i giocatori
     private fun estraiNumeroRuolo(ruolo: String): Int {
         return Regex("\\d+$").find(ruolo)?.value?.toIntOrNull() ?: Int.MAX_VALUE
     }
 
-    // Raggruppiamo e ordiniamo i giocatori
+
     private val formazioneRaggruppata: List<List<String>> = ruoliOrdine.map { ruolo ->
         val giocatoriInRuolo = formazione
-            .filter { normalizzaRuolo(it.value) == ruolo }  // Filtra per ruolo corretto
-            .toList()  // Converte in lista di coppie (ID, Ruolo)
-            .sortedBy { estraiNumeroRuolo(it.second) }  // Ordina per numero nel ruolo
-            .map { it.first } // Ottieni solo gli ID
+            .filter { normalizzaRuolo(it.value) == ruolo }
+            .toList()
+            .sortedBy { estraiNumeroRuolo(it.second) }
+            .map { it.first }
 
         Log.d("FormazioneAdapter", "Ruolo: $ruolo → Giocatori: $giocatoriInRuolo")
         giocatoriInRuolo
@@ -187,52 +186,52 @@ class FormazioneAdapter(
 
 
             btnTiro.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Tiro")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Tiro", true)
                 dialog.dismiss()
             }
 
             btnGol.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Gol")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Gol", true)
                 dialog.dismiss()
             }
 
             btnAssist.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data,  idGiocatore, "Assist")
+                eventoManager.registraEvento(idPartita, data,  idGiocatore, "Assist", true)
                 dialog.dismiss()
             }
 
             btnFuorigioco.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Fuorigioco")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Fuorigioco", true)
                 dialog.dismiss()
             }
 
             btnCambio.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cambio")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cambio", true)
                 dialog.dismiss()
             }
 
             btnInfortunio.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Infortunio")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Infortunio", true)
                 dialog.dismiss()
             }
 
             btnFallo.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Fallo")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Fallo", true)
                 dialog.dismiss()
             }
 
             btnGiallo.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cartellino Giallo")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cartellino Giallo", true)
                 dialog.dismiss()
             }
 
             btnRosso.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cartellino Rosso")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cartellino Rosso", true)
                 dialog.dismiss()
             }
 
             btnParata.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Parata")
+                eventoManager.registraEvento(idPartita, data, idGiocatore, "Parata", true)
                 dialog.dismiss()
             }
 

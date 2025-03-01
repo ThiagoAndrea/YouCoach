@@ -7,23 +7,20 @@ import com.google.firebase.database.database
 class EventoManager {
     private val database = Firebase.database.reference
 
-    fun registraEvento(idPartita: String, data: String, idGiocatore: String, tipoEvento: String, dettagli: String? = null) {
-        val eventiRef = database.child("Partite").child(data).child(idPartita).child("Eventi")
+    fun registraEvento(idPartita: String, data: String, idGiocatore: String, nomeEvento: String, squadra: Boolean) {
+        val eventiRef = database.child("Partite").child(data).child(idPartita).child("eventi")
         val eventoId = eventiRef.push().key ?: return
 
-        val evento = hashMapOf(
-            "idGiocatore" to idGiocatore,
-            "tipo" to tipoEvento,
-            "dettagli" to (dettagli ?: ""),
-            "timestamp" to System.currentTimeMillis()
+        val eventoMap = mapOf(
+            "idEvento" to eventoId,
+            "minutaggio" to System.currentTimeMillis(),
+            "nomeEvento" to nomeEvento,
+            "nomeGiocatore" to idGiocatore,
+            "squadra" to squadra,
+            "dettagli" to emptyMap<String, Any?>()
         )
 
-        eventiRef.child(eventoId).setValue(evento)
-            .addOnSuccessListener {
-                Log.d("EventoManager", "Evento registrato con successo: $evento")
-            }
-            .addOnFailureListener { e ->
-                Log.e("EventoManager", "Errore nella registrazione dell'evento", e)
-            }
+        eventiRef.child(eventoId).setValue(eventoMap)
     }
+
 }

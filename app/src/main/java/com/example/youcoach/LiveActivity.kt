@@ -305,18 +305,25 @@ class LiveActivity : BaseActivity() {
 
     private fun loadEventiFromFirebase(partitaId: String, dataPartita: String) {
         val database = Firebase.database.reference
-        // Adatta il percorso al tuo database (es: "Partite/$dataPartita/$partitaId/eventi")
-        val eventiRef = database.child("Partite").child(dataPartita).child(partitaId).child("Eventi")
+        val eventiRef = database.child("Partite").child(dataPartita).child(partitaId).child("eventi")
 
         eventiRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val eventiList = mutableListOf<Evento>()
+
                 for (eventSnapshot in snapshot.children) {
-                    val evento = eventSnapshot.getValue(Evento::class.java)
-                    if (evento != null) {
-                        eventiList.add(evento)
+                    Log.d("LiveActivity", "Dati ricevuti: ${eventSnapshot.value}") // Debug log
+
+                    try {
+                        val evento = eventSnapshot.getValue(Evento::class.java)
+                        if (evento != null) {
+                            eventiList.add(evento)
+                        }
+                    } catch (e: Exception) {
+                        Log.e("LiveActivity", "Errore nel parsing dell'evento: ${e.message}")
                     }
                 }
+
                 eventoAdapter.updateEventi(eventiList)
             }
 
