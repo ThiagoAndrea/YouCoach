@@ -213,6 +213,9 @@ class LiveActivity : BaseActivity() {
         override fun run() {
             timeInMilliseconds = SystemClock.elapsedRealtime() - startTime
             minutaggio.text = formatTime(timeInMilliseconds)
+
+            (recyclerFormazione.adapter as? FormazioneAdapter)?.updateMinutaggio(formatTime(timeInMilliseconds))
+
             handler.postDelayed(this, 1000)
         }
     }

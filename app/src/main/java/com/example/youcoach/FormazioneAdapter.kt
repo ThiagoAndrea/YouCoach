@@ -23,6 +23,8 @@ class FormazioneAdapter(
 ) : RecyclerView.Adapter<FormazioneAdapter.RigaViewHolder>() {
 
 
+    private var minutaggio: String = "00:00"
+
     private fun normalizzaRuolo(ruolo: String): String {
         return ruolo.replace(Regex("\\s\\d+$"), "")
     }
@@ -55,6 +57,11 @@ class FormazioneAdapter(
     }
 
     override fun getItemCount(): Int = formazioneRaggruppata.size
+
+    fun updateMinutaggio(newMinutaggio: String) {
+        minutaggio = newMinutaggio
+        notifyDataSetChanged() // Notifica l'adapter per aggiornare la UI
+    }
 
     inner class RigaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val gridGiocatori: GridLayout = itemView.findViewById(R.id.gridGiocatori)
@@ -186,52 +193,52 @@ class FormazioneAdapter(
 
 
             btnTiro.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Tiro", true)
+                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Tiro", true)
                 dialog.dismiss()
             }
 
             btnGol.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Gol", true)
+                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Gol", true)
                 dialog.dismiss()
             }
 
             btnAssist.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data,  idGiocatore, "Assist", true)
+                eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Assist", true)
                 dialog.dismiss()
             }
 
             btnFuorigioco.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Fuorigioco", true)
+                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Fuorigioco", true)
                 dialog.dismiss()
             }
 
             btnCambio.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cambio", true)
+                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Cambio", true)
                 dialog.dismiss()
             }
 
             btnInfortunio.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Infortunio", true)
+                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Infortunio", true)
                 dialog.dismiss()
             }
 
             btnFallo.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Fallo", true)
+                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Fallo", true)
                 dialog.dismiss()
             }
 
             btnGiallo.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cartellino Giallo", true)
+                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Cartellino Giallo", true)
                 dialog.dismiss()
             }
 
             btnRosso.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Cartellino Rosso", true)
+                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Cartellino Rosso", true)
                 dialog.dismiss()
             }
 
             btnParata.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, idGiocatore, "Parata", true)
+                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Parata", true)
                 dialog.dismiss()
             }
 
