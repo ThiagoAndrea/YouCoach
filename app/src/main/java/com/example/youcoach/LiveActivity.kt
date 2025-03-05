@@ -2,11 +2,12 @@ package com.example.youcoach
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
@@ -24,7 +25,6 @@ import com.google.firebase.ktx.Firebase
 
 class LiveActivity : BaseActivity() {
 
-    // UI elements
     private lateinit var minutaggio: TextView
     private lateinit var fabStartMatch: FloatingActionButton
     private lateinit var fabEndHalf: FloatingActionButton
@@ -38,43 +38,43 @@ class LiveActivity : BaseActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var eventoAdapter: EventoAdapter
 
-
     // Data handling
     private val eventoManager = EventoManager()
     private var startTime = 0L
     private var timeInMilliseconds = 0L
-    private var handler = android.os.Handler()
+    private val handler = Handler(Looper.getMainLooper())
     private var matchStarted = false
     private var minutiPerTempo = 45
     private var tempi = 2
     private var tempoCorrente = 1
     private var pressed = true
+    private lateinit var partitaId: String
+    private lateinit var dataPartita: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live)
 
-        initializeUI()
+        partitaId = intent.getStringExtra("PARTITA_ID") ?: ""
+        dataPartita = intent.getStringExtra("DATA") ?: ""
 
-        val partitaId = intent.getStringExtra("PARTITA_ID")
-        val dataPartita = intent.getStringExtra("DATA")
-
-        if (partitaId.isNullOrEmpty() || dataPartita.isNullOrEmpty()) {
+        if (partitaId.isEmpty() || dataPartita.isEmpty()) {
             Log.e("LiveActivity", "PARTITA_ID o DATA mancanti. Uscita dall'activity.")
             finish()
             return
         }
 
+        initializeUI()
         setupRecyclerViews()
 
         recyclerViewEvents.layoutManager = LinearLayoutManager(this)
         eventoAdapter = EventoAdapter(mutableListOf())
         recyclerViewEvents.adapter = eventoAdapter
-        loadEventiFromFirebase(partitaId, dataPartita)
+        loadEventiFromFirebase()
 
-        loadPartitaData(partitaId, dataPartita)
-        loadMinutiPerTempo(partitaId, dataPartita)
-        loadTempi(partitaId, dataPartita)
+        loadPartitaData()
+        loadMinutiPerTempo()
+        loadTempi()
     }
 
     // Initialize UI elements
@@ -89,7 +89,7 @@ class LiveActivity : BaseActivity() {
         buttonOpenDrawer = findViewById(R.id.buttonOpenDrawer)
         drawerLayout = findViewById(R.id.drawer_layout)
 
-        recyclerViewEvents = findViewById<RecyclerView>(R.id.recyclerViewEvents)
+        recyclerViewEvents = findViewById(R.id.recyclerViewEvents)
 
         fabStartMatch.setOnClickListener { toggleMenu() }
         fabEndHalf.setOnClickListener { confirmEndTime(false) }
@@ -108,10 +108,6 @@ class LiveActivity : BaseActivity() {
 
         recyclerFormazione.layoutManager = LinearLayoutManager(this)
         recyclerPanchina.layoutManager = LinearLayoutManager(this)
-    }
-
-    // Load partita data from Firebase
-    private fun loadPartitaData(partitaId: String, dataPartita: String) {
         val database = Firebase.database.reference
         val formazioneRef = database.child("Partite").child(dataPartita).child(partitaId).child("formazione")
 
@@ -145,6 +141,22 @@ class LiveActivity : BaseActivity() {
         })
     }
 
+    // Load partita data from Firebase
+    private fun loadPartitaData() {
+        val database = Firebase.database.reference
+        val partitaRef = database.child("Partite").child(dataPartita).child(partitaId)
+
+        partitaRef.get().addOnSuccessListener { dataSnapshot ->
+            if (dataSnapshot.exists()) {
+                // Puoi recuperare altri dati della partita qui, se necessario
+            } else {
+                Log.e("LiveActivity", "Dati della partita non trovati per ID: $partitaId")
+            }
+        }.addOnFailureListener {
+            Log.e("LiveActivity", "Errore nel recupero dei dati della partita: ${it.message}")
+        }
+    }
+
     // Load roles for players on the bench
     private fun loadGiocatoriRoles(panchinaList: List<String>) {
         val databaseRef = Firebase.database.reference.child("Giocatori")
@@ -170,7 +182,7 @@ class LiveActivity : BaseActivity() {
     }
 
     // Load minuti per tempo from Firebase
-    private fun loadMinutiPerTempo(partitaId: String, dataPartita: String) {
+    private fun loadMinutiPerTempo() {
         val database = Firebase.database.reference
         database.child("Partite").child(dataPartita).child(partitaId).child("minuti_per_tempo")
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -186,7 +198,7 @@ class LiveActivity : BaseActivity() {
     }
 
     // Load tempi (number of periods) from Firebase
-    private fun loadTempi(partitaId: String, dataPartita: String) {
+    private fun loadTempi() {
         val database = Firebase.database.reference
         database.child("Partite").child(dataPartita).child(partitaId).child("numero_tempi")
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -211,11 +223,9 @@ class LiveActivity : BaseActivity() {
     // Timer update thread
     private val updateTimerThread = object : Runnable {
         override fun run() {
-            timeInMilliseconds = SystemClock.elapsedRealtime() - startTime
-            minutaggio.text = formatTime(timeInMilliseconds)
-
-            (recyclerFormazione.adapter as? FormazioneAdapter)?.updateMinutaggio(formatTime(timeInMilliseconds))
-
+            timeInMilliseconds = System.currentTimeMillis() - startTime
+            val formattedTime = formatTime(timeInMilliseconds)
+            minutaggio.text = formattedTime
             handler.postDelayed(this, 1000)
         }
     }
@@ -288,13 +298,14 @@ class LiveActivity : BaseActivity() {
         fabEndHalf.visibility = View.GONE
         fabEndMatch.visibility = View.GONE
         fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
+        fabStartMatch.setImageResource(R.drawable.fischietto)
     }
 
     // Reset timer after a period ends
     private fun resetTimer() {
-        startTime = (minutiPerTempo * 60 * 1000).toLong()
-        timeInMilliseconds = startTime
-        minutaggio.text = formatTime(startTime)
+        startTime = SystemClock.elapsedRealtime()
+        timeInMilliseconds = 0
+        minutaggio.text = formatTime(0)
         fabStartMatch.setImageResource(R.drawable.fischietto)
     }
 
@@ -306,7 +317,7 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-    private fun loadEventiFromFirebase(partitaId: String, dataPartita: String) {
+    private fun loadEventiFromFirebase() {
         val database = Firebase.database.reference
         val eventiRef = database.child("Partite").child(dataPartita).child(partitaId).child("eventi")
 
@@ -336,5 +347,10 @@ class LiveActivity : BaseActivity() {
         })
     }
 
+    // Method to get the current time
+    fun getCurrentMinutaggio(): String {
+        return minutaggio.text.toString()
+    }
 }
+
 

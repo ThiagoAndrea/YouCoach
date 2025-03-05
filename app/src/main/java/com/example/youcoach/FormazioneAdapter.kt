@@ -23,8 +23,6 @@ class FormazioneAdapter(
 ) : RecyclerView.Adapter<FormazioneAdapter.RigaViewHolder>() {
 
 
-    private var minutaggio: String = "00:00"
-
     private fun normalizzaRuolo(ruolo: String): String {
         return ruolo.replace(Regex("\\s\\d+$"), "")
     }
@@ -58,10 +56,6 @@ class FormazioneAdapter(
 
     override fun getItemCount(): Int = formazioneRaggruppata.size
 
-    fun updateMinutaggio(newMinutaggio: String) {
-        minutaggio = newMinutaggio
-        notifyDataSetChanged() // Notifica l'adapter per aggiornare la UI
-    }
 
     inner class RigaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val gridGiocatori: GridLayout = itemView.findViewById(R.id.gridGiocatori)
@@ -116,7 +110,10 @@ class FormazioneAdapter(
                 gridGiocatori.addView(giocatoreView)
 
                 cerchioGiocatore.setOnClickListener {
-                    mostraDialogEventoGiocatore(itemView, idGiocatore)
+                    // Qui dobbiamo recuperare il minutaggio da LiveActivity
+                    (itemView.context as? LiveActivity)?.getCurrentMinutaggio()?.let { minutaggio ->
+                        mostraDialogEventoGiocatore(itemView, idGiocatore, minutaggio)
+                    }
                 }
 
 
@@ -165,7 +162,7 @@ class FormazioneAdapter(
             }
         }
 
-        private fun mostraDialogEventoGiocatore(view: View, idGiocatore: String) {
+        private fun mostraDialogEventoGiocatore(view: View, idGiocatore: String, minutaggio: String) {
             val context = view.context
             val dialogView = LayoutInflater.from(context).inflate(R.layout.finestra_eventi_giocatore, null)
             val dialog = AlertDialog.Builder(context).setView(dialogView).create()
@@ -193,7 +190,7 @@ class FormazioneAdapter(
 
 
             btnTiro.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Tiro", true)
+                eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Tiro", true)
                 dialog.dismiss()
             }
 
