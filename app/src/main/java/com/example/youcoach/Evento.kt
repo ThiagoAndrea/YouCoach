@@ -4,7 +4,7 @@ import java.io.Serializable
 
 data class Evento(
     val idEvento: String? = null,
-    val minutaggio: Long ?= null,
+    val minutaggio: String ="",
     val nomeEvento: String = "",
     val nomeGiocatore: String = "",
     val squadra: Boolean = true,

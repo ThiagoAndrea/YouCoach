@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingBottom="5dp"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
@@ -11,17 +12,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="74'"
-            android:textSize="24dp"
+            android:textSize="18dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/card_evento"
             app:layout_constraintBottom_toBottomOf="@id/card_evento"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp" />
+            android:layout_marginEnd="8dp" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_evento"
-            android:layout_width="200dp"
-            android:layout_height="95dp"
+            android:layout_width="180dp"
+            android:layout_height="70dp"
             android:layout_marginStart="16dp"
             app:cardCornerRadius="24dp"
             app:cardBackgroundColor="@color/giorno_selezionato"
@@ -32,21 +32,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
-                    android:id="@+id/nome_evento"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="evento"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"/>
-
                 <ImageView
                     android:id="@+id/immagine_evento"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/nome_giocatore"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     android:src="@drawable/assist" />
@@ -56,8 +47,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="cognome"
-                    android:textSize="20dp"
-                    android:layout_marginBottom="20dp"
+                    android:textSize="18dp"
+                    android:textColor="@color/white"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -74,9 +65,11 @@
                     android:src="@drawable/arrow_forward" />
 
                 <TextView
+                    android:id="@+id/dettaglio_evento"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Dettagli"
+                    android:textColor="@color/white"
                     app:layout_constraintTop_toBottomOf="@id/nome_giocatore"
                     app:layout_constraintStart_toStartOf="@id/nome_giocatore"
                     app:layout_constraintEnd_toEndOf="@id/nome_giocatore"/>
@@ -88,20 +81,23 @@
 
     <ImageButton
         android:id="@+id/modificaEvento_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:background="@color/transparent"
         android:src="@drawable/edit"
         app:layout_constraintStart_toEndOf="@id/card_evento"
-        app:layout_constraintTop_toTopOf="@id/card_evento"/>
+        app:layout_constraintTop_toTopOf="@id/card_evento"
+        app:layout_constraintBottom_toBottomOf="@+id/card_evento"/>
 
     <ImageButton
         android:id="@+id/eliminaEvento_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:background="@color/transparent"
         android:src="@drawable/delete"
-        app:layout_constraintStart_toEndOf="@id/card_evento"
+        android:layout_marginStart="10dp"
+        app:layout_constraintStart_toEndOf="@id/modificaEvento_button"
+        app:layout_constraintTop_toTopOf="@+id/card_evento"
         app:layout_constraintBottom_toBottomOf="@id/card_evento"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

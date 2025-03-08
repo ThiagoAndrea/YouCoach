@@ -8,16 +8,22 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import org.w3c.dom.Text
 
 class EventoAdapter(private var eventi: MutableList<Evento>) : RecyclerView.Adapter<EventoAdapter.EventoViewHolder>() {
 
     inner class EventoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val minutaggioTextView: TextView = itemView.findViewById(R.id.minutaggio)
-        val nomeEventoTextView: TextView = itemView.findViewById(R.id.nome_evento)
         val nomeGiocatoreTextView: TextView = itemView.findViewById(R.id.nome_giocatore)
         val modificaButton: ImageButton = itemView.findViewById(R.id.modificaEvento_button)
         val eliminaButton: ImageButton = itemView.findViewById(R.id.eliminaEvento_button)
         val immagineDettaglio: ImageView = itemView.findViewById(R.id.immagine_dettaglio)
+        val immagineEvento: ImageView = itemView.findViewById(R.id.immagine_evento)
+        val dettagliEvento: TextView = itemView.findViewById(R.id.dettaglio_evento)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventoViewHolder {
@@ -28,27 +34,32 @@ class EventoAdapter(private var eventi: MutableList<Evento>) : RecyclerView.Adap
     override fun onBindViewHolder(holder: EventoViewHolder, position: Int) {
         val evento = eventi[position]
 
-        // Imposta i dati principali dell'evento
-        holder.minutaggioTextView.text = evento.minutaggio.toString()
-        holder.nomeEventoTextView.text = evento.nomeEvento
-        holder.nomeGiocatoreTextView.text = evento.nomeGiocatore
+        // Gestione del minutaggio (aggiorna con il minuto incrementato)
+        val minutoString = evento.minutaggio?.split(":")?.get(0)?.toIntOrNull() ?: 0
+        val minuto = minutoString + 1
+        holder.minutaggioTextView.text = "${minuto}'"
 
-        // Listener per l'icona dei dettagli
-        holder.immagineDettaglio.setOnClickListener {
-            val details = buildEventDetails(evento)
-            AlertDialog.Builder(it.context)
-                .setTitle("Dettagli evento")
-                .setMessage(details)
-                .setPositiveButton("Ok", null)
-                .show()
+        getGiocatoreNome(evento.nomeGiocatore) { nomeGiocatore ->
+            holder.nomeGiocatoreTextView.text = nomeGiocatore
         }
 
-        // Listener per la modifica
+        setEventoIcona(evento.nomeEvento, holder.immagineEvento)
+
+        if (evento.dettagli.isEmpty()) {
+            // Se non ci sono dettagli, nascondi la TextView o lasciala vuota
+            holder.dettagliEvento.text = ""
+            holder.dettagliEvento.visibility = View.GONE // Opzionale: nascondi la TextView
+        } else {
+            // Se ci sono dettagli, formattali in una stringa leggibile
+            val dettagliFormattati = formatDettagli(evento.dettagli)
+            holder.dettagliEvento.text = dettagliFormattati
+            holder.dettagliEvento.visibility = View.VISIBLE // Opzionale: mostra la TextView
+        }
+
         holder.modificaButton.setOnClickListener {
             // Logica per modificare l'evento
         }
 
-        // Listener per l'eliminazione
         holder.eliminaButton.setOnClickListener {
             // Logica per eliminare l'evento
         }
@@ -56,31 +67,52 @@ class EventoAdapter(private var eventi: MutableList<Evento>) : RecyclerView.Adap
 
     override fun getItemCount(): Int = eventi.size
 
-    // Aggiorna la lista degli eventi
     fun updateEventi(newEventi: List<Evento>) {
         eventi.clear()
         eventi.addAll(newEventi)
         notifyDataSetChanged()
     }
 
-    // Costruisce i dettagli dinamicamente dalla mappa
-    private fun buildEventDetails(evento: Evento): String {
-        val sb = StringBuilder()
-        sb.append("Minutaggio: ${evento.minutaggio}\n")
-        sb.append("Evento: ${evento.nomeEvento}\n")
-        sb.append("Giocatore: ${evento.nomeGiocatore}\n")
 
-        // Verifica se ci sono dettagli extra
-        evento.dettagli?.forEach { (key, value) ->
-            if (value != null) {
-                sb.append("${formatKey(key)}: $value\n")
+    // Funzione per ottenere il nome del giocatore dal database Firebase
+    private fun getGiocatoreNome(idGiocatore: String, callback: (String) -> Unit) {
+        val databaseReference =
+            FirebaseDatabase.getInstance().getReference("Giocatori").child(idGiocatore)
+
+        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val nome = snapshot.child("cognome").getValue(String::class.java) ?: "Sconosciuto"
+                callback(nome)
             }
-        }
 
-        return sb.toString()
+            override fun onCancelled(error: DatabaseError) {
+                callback("Errore")
+            }
+        })
     }
 
-    // Formatta la chiave per renderla più leggibile
+    private fun setEventoIcona(nomeEvento: String, eventoIcona: ImageView) {
+        when (nomeEvento) {
+            "Tiro" -> eventoIcona.setImageResource(R.drawable.tiro)
+            "Cartellino Giallo" -> eventoIcona.setImageResource(R.drawable.yellow_card)
+            "Cartellino Rosso" -> eventoIcona.setImageResource(R.drawable.red_card)
+            "Gol" -> eventoIcona.setImageResource(R.drawable.gol)
+            "Parata" -> eventoIcona.setImageResource(R.drawable.parata)
+            "Fuorigioco" -> eventoIcona.setImageResource(R.drawable.fuorigioco)
+            "Cambio" -> eventoIcona.setImageResource(R.drawable.round_arrows)
+            "Infortunio" -> eventoIcona.setImageResource(R.drawable.infortunio_live)
+            "Fallo" -> eventoIcona.setImageResource(R.drawable.fallo)
+            else -> eventoIcona.setImageResource(R.drawable.assist)
+        }
+    }
+
+    private fun formatDettagli(dettagli: Map<String, Any?>): String {
+        return dettagli.entries.joinToString("\n") { (key, value) ->
+            "${formatKey(key)}: ${value ?: "N/A"}"
+        }
+    }
+
+    // Funzione per formattare la chiave (es. "nomeEvento" -> "Nome Evento")
     private fun formatKey(key: String): String {
         return key.replace(Regex("([a-z])([A-Z])"), "$1 $2") // Aggiunge spazio tra parole
             .replace("_", " ") // Sostituisce underscore con spazio

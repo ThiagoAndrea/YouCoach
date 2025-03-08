@@ -7,7 +7,10 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.TranslateAnimation
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
@@ -66,12 +69,6 @@ class LiveActivity : BaseActivity() {
 
         initializeUI()
         setupRecyclerViews()
-
-        recyclerViewEvents.layoutManager = LinearLayoutManager(this)
-        eventoAdapter = EventoAdapter(mutableListOf())
-        recyclerViewEvents.adapter = eventoAdapter
-        loadEventiFromFirebase()
-
         loadPartitaData()
         loadMinutiPerTempo()
         loadTempi()
@@ -89,7 +86,12 @@ class LiveActivity : BaseActivity() {
         buttonOpenDrawer = findViewById(R.id.buttonOpenDrawer)
         drawerLayout = findViewById(R.id.drawer_layout)
 
-        recyclerViewEvents = findViewById(R.id.recyclerViewEvents)
+
+        recyclerViewEvents = sideDrawer.findViewById(R.id.recyclerViewEvents)
+        recyclerViewEvents.layoutManager = LinearLayoutManager(this)
+        eventoAdapter = EventoAdapter(mutableListOf())
+        recyclerViewEvents.adapter = eventoAdapter
+
 
         fabStartMatch.setOnClickListener { toggleMenu() }
         fabEndHalf.setOnClickListener { confirmEndTime(false) }
@@ -223,7 +225,7 @@ class LiveActivity : BaseActivity() {
     // Timer update thread
     private val updateTimerThread = object : Runnable {
         override fun run() {
-            timeInMilliseconds = System.currentTimeMillis() - startTime
+            timeInMilliseconds = SystemClock.elapsedRealtime() - startTime
             val formattedTime = formatTime(timeInMilliseconds)
             minutaggio.text = formattedTime
             handler.postDelayed(this, 1000)
@@ -238,6 +240,7 @@ class LiveActivity : BaseActivity() {
             matchStarted = true
             fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.delete)
             fabStartMatch.setImageResource(R.drawable.pause)
+            (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(true)
         } else {
             toggleEndButtonsVisibility()
         }
@@ -289,6 +292,7 @@ class LiveActivity : BaseActivity() {
         fabEndHalf.visibility = View.GONE
         fabEndMatch.visibility = View.GONE
         pressed = true
+        (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(false)
     }
 
     // End match logic
@@ -299,6 +303,7 @@ class LiveActivity : BaseActivity() {
         fabEndMatch.visibility = View.GONE
         fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
         fabStartMatch.setImageResource(R.drawable.fischietto)
+        (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(false)
     }
 
     // Reset timer after a period ends
@@ -314,43 +319,82 @@ class LiveActivity : BaseActivity() {
             drawerLayout.closeDrawer(GravityCompat.START)
         } else {
             drawerLayout.openDrawer(GravityCompat.START)
+            loadEventiFromFirebase()
         }
     }
 
     private fun loadEventiFromFirebase() {
         val database = Firebase.database.reference
         val eventiRef = database.child("Partite").child(dataPartita).child(partitaId).child("eventi")
-
         eventiRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                Log.d("LiveActivity", "Snapshot ricevuto: ${snapshot.value}")
                 val eventiList = mutableListOf<Evento>()
-
                 for (eventSnapshot in snapshot.children) {
-                    Log.d("LiveActivity", "Dati ricevuti: ${eventSnapshot.value}") // Debug log
-
                     try {
                         val evento = eventSnapshot.getValue(Evento::class.java)
                         if (evento != null) {
                             eventiList.add(evento)
                         }
                     } catch (e: Exception) {
-                        Log.e("LiveActivity", "Errore nel parsing dell'evento: ${e.message}")
                     }
                 }
-
+                Log.d("LiveActivity", "Numero di eventi caricati: ${eventiList.size}")
                 eventoAdapter.updateEventi(eventiList)
             }
-
             override fun onCancelled(error: DatabaseError) {
                 Log.e("LiveActivity", "Errore nel caricamento degli eventi: ${error.message}")
             }
         })
     }
 
-    // Method to get the current time
+    fun animaIconaEvento(startX: Float, startY: Float, iconaResId: Int) {
+        val iconaAnimata = findViewById<ImageView>(R.id.iconaAnimata)
+        iconaAnimata.setImageResource(iconaResId) // Imposta l'icona dell'evento
+        iconaAnimata.visibility = View.VISIBLE // Rendi l'icona visibile
+
+        // Posizione iniziale dell'icona (sul giocatore)
+        iconaAnimata.x = startX - iconaAnimata.width / 2f // Centra l'icona sul giocatore
+        iconaAnimata.y = startY - iconaAnimata.height / 2f
+
+        // Posizione finale (sul pulsante che apre il side drawer)
+        val buttonOpenDrawer = findViewById<ImageButton>(R.id.buttonOpenDrawer)
+        val endX = buttonOpenDrawer.x + buttonOpenDrawer.width / 2f - iconaAnimata.width / 2f
+        val endY = buttonOpenDrawer.y + buttonOpenDrawer.height / 2f - iconaAnimata.height / 2f
+
+        // Animazione di traslazione
+        val animazione = TranslateAnimation(
+            0f, endX - startX, // Spostamento orizzontale
+            0f, endY - startY  // Spostamento verticale
+        ).apply {
+            duration = 1000 // Durata dell'animazione in millisecondi
+            fillAfter = true // Mantiene la posizione finale
+            setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    // Rimuovi l'icona alla fine dell'animazione
+                    iconaAnimata.visibility = View.GONE
+                }
+
+                override fun onAnimationRepeat(animation: Animation?) {}
+            })
+        }
+        Log.d("Animazione", "Start X: $startX, Start Y: $startY")
+        Log.d("Animazione", "End X: $endX, End Y: $endY")
+        iconaAnimata.startAnimation(animazione)
+    }
+
+
+
+
+
     fun getCurrentMinutaggio(): String {
         return minutaggio.text.toString()
     }
+
+
+
 }
 
 

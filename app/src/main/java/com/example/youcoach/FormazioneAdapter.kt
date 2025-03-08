@@ -22,6 +22,7 @@ class FormazioneAdapter(
     private val ruoliOrdine: List<String> = listOf("Portiere", "Difensore", "Centrocampista", "Trequartista", "Attaccante")
 ) : RecyclerView.Adapter<FormazioneAdapter.RigaViewHolder>() {
 
+    private var buttonsEnabled: Boolean = false
 
     private fun normalizzaRuolo(ruolo: String): String {
         return ruolo.replace(Regex("\\s\\d+$"), "")
@@ -66,7 +67,6 @@ class FormazioneAdapter(
             gridGiocatori.removeAllViews()
             gridGiocatori.columnCount = 5
 
-
             giocatori.forEach { idGiocatore ->
                 val giocatoreView = LayoutInflater.from(itemView.context)
                     .inflate(R.layout.item_giocatore_live, gridGiocatori, false) as ConstraintLayout
@@ -84,7 +84,6 @@ class FormazioneAdapter(
                         )
                     }
                 }
-
 
                 recuperaNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
                     if (nome != null && cognome != null) {
@@ -106,17 +105,19 @@ class FormazioneAdapter(
                 }
                 giocatoreView.layoutParams = params
 
-
                 gridGiocatori.addView(giocatoreView)
 
+                // Abilita o disabilita il pulsante in base a buttonsEnabled
+                cerchioGiocatore.isEnabled = buttonsEnabled
+                cerchioGiocatore.alpha = if (buttonsEnabled) 1f else 0.5f // Opzionale: cambia l'opacità
+
                 cerchioGiocatore.setOnClickListener {
-                    // Qui dobbiamo recuperare il minutaggio da LiveActivity
-                    (itemView.context as? LiveActivity)?.getCurrentMinutaggio()?.let { minutaggio ->
-                        mostraDialogEventoGiocatore(itemView, idGiocatore, minutaggio)
+                    if (buttonsEnabled) { // Solo se i pulsanti sono abilitati
+                        (itemView.context as? LiveActivity)?.getCurrentMinutaggio()?.let { minutaggio ->
+                            mostraDialogEventoGiocatore(itemView, idGiocatore, minutaggio)
+                        }
                     }
                 }
-
-
             }
         }
 
@@ -178,7 +179,6 @@ class FormazioneAdapter(
 
             val btnTiro: ImageButton = dialogView.findViewById(R.id.tiro)
             val btnGol: ImageButton = dialogView.findViewById(R.id.gol)
-            val btnAssist: ImageButton = dialogView.findViewById(R.id.assist)
             val btnFuorigioco: ImageButton = dialogView.findViewById(R.id.fuorigioco)
             val btnCambio: ImageButton = dialogView.findViewById(R.id.cambio)
             val btnInfortunio: ImageButton = dialogView.findViewById(R.id.infortunio)
@@ -191,51 +191,55 @@ class FormazioneAdapter(
 
             btnTiro.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Tiro", true)
+                avviaAnimazione(view, R.drawable.tiro)
                 dialog.dismiss()
             }
 
             btnGol.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Gol", true)
-                dialog.dismiss()
-            }
-
-            btnAssist.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Assist", true)
+                avviaAnimazione(view, R.drawable.gol)
                 dialog.dismiss()
             }
 
             btnFuorigioco.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Fuorigioco", true)
+                avviaAnimazione(view, R.drawable.fuorigioco)
                 dialog.dismiss()
             }
 
             btnCambio.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Cambio", true)
+                avviaAnimazione(view, R.drawable.round_arrows)
                 dialog.dismiss()
             }
 
             btnInfortunio.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Infortunio", true)
+                avviaAnimazione(view, R.drawable.infortunio_live)
                 dialog.dismiss()
             }
 
             btnFallo.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Fallo", true)
+                avviaAnimazione(view, R.drawable.fallo)
                 dialog.dismiss()
             }
 
             btnGiallo.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Cartellino Giallo", true)
+                avviaAnimazione(view, R.drawable.yellow_card)
                 dialog.dismiss()
             }
 
             btnRosso.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Cartellino Rosso", true)
+                avviaAnimazione(view, R.drawable.red_card)
                 dialog.dismiss()
             }
 
             btnParata.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Parata", true)
+                avviaAnimazione(view, R.drawable.parata)
                 dialog.dismiss()
             }
 
@@ -246,8 +250,24 @@ class FormazioneAdapter(
             dialog.show()
         }
 
+        private fun avviaAnimazione(view: View, iconaResId: Int) {
+            val giocatoreView = view.findViewById<ConstraintLayout>(R.id.item_giocatore_live)
+            val location = IntArray(2)
+            giocatoreView.getLocationOnScreen(location)
+
+            // Coordinate di partenza (centro del giocatore)
+            val startX = location[0].toFloat() + giocatoreView.width / 2f
+            val startY = location[1].toFloat() + giocatoreView.height / 2f
 
 
 
+            (view.context as? LiveActivity)?.animaIconaEvento(startX, startY, iconaResId)
+        }
+
+    }
+
+    fun setButtonsEnabled(enabled: Boolean) {
+        buttonsEnabled = enabled
+        notifyDataSetChanged() // Notifica l'adapter per aggiornare la vista
     }
 }
