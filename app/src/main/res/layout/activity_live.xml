@@ -7,13 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- Icona animata -->
-    <ImageView
-        android:id="@+id/iconaAnimata"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:visibility="gone"
-        android:src="@drawable/gol"
-        android:scaleType="centerCrop"/>
+
 
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/drawer_layout"
@@ -279,5 +273,13 @@
         </com.google.android.material.navigation.NavigationView>
     
     </androidx.drawerlayout.widget.DrawerLayout>
+
+    <ImageView
+        android:id="@+id/iconaAnimata"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        android:src="@drawable/gol"
+        android:scaleType="centerCrop"/>
     
 </FrameLayout>

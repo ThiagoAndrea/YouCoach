@@ -19,83 +19,194 @@
     <!-- Nome del giocatore -->
 
     <!-- Cognome del giocatore -->
-    <TextView
-        android:id="@+id/textViewNome"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardGiocatore"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
         android:layout_marginStart="16dp"
-        android:padding="16dp"
-        android:text="Nome"
+        android:layout_marginEnd="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:strokeColor="@color/lb_grey"
+        app:strokeWidth="1dp"
+        app:layout_constraintTop_toBottomOf="@+id/modificagiocatore_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- Nome e Cognome -->
+            <TextView
+                android:id="@+id/textViewNome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nome"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/textViewCognome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cognome"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/textViewNome"
+                android:layout_marginStart="8dp" />
+
+            <!-- Età -->
+            <TextView
+                android:id="@+id/textViewEta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="25"
+                android:textSize="18sp"
+                app:layout_constraintTop_toBottomOf="@+id/textViewNome"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp" />
+
+            <!-- Ruolo -->
+            <TextView
+                android:id="@+id/textViewRuolo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Attaccante"
+                android:textSize="18sp"
+                app:layout_constraintTop_toBottomOf="@+id/textViewNome"
+                app:layout_constraintStart_toEndOf="@+id/textViewEta"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+
+        <ImageButton
+        android:id="@+id/modificagiocatore_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@color/transparent"
+        android:src="@drawable/edit"
+        app:layout_constraintTop_toBottomOf="@+id/back_button"
+        app:layout_constraintEnd_toStartOf="@+id/eliminagiocatore_button"
+        android:layout_marginEnd="8dp"/>
+
+        <ImageButton
+        android:id="@+id/eliminagiocatore_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:background="@color/transparent"
+        android:src="@drawable/delete"
+        app:layout_constraintTop_toBottomOf="@+id/back_button"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
+    <TextView
+        android:id="@+id/textStatsAllenamenti"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Allenamenti"
+        app:layout_constraintTop_toBottomOf="@+id/cardGiocatore"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp"
         android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/icona_presenze"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@+id/textStatsAllenamenti"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsAllenamenti"
+        android:src="@drawable/check" />
 
     <TextView
-        android:id="@+id/textViewCognome"
-        android:layout_width="0dp"
+        android:id="@+id/num_presenze"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="Cognome"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/textViewNome"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:padding="16dp"/>
+        android:text="24"
+        android:textSize="24dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_presenze"
+        app:layout_constraintTop_toTopOf="@+id/icona_presenze"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
 
-    <!-- Età del giocatore -->
+    <ImageView
+        android:id="@+id/icona_ritardo"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/num_presenze"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsAllenamenti"
+        android:src="@drawable/ritardo" />
+
     <TextView
-        android:id="@+id/textViewEta"
-        android:layout_width="0dp"
+        android:id="@+id/num_ritardi"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="Età: 25"
-        android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@id/textViewCognome"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:padding="16dp"/>
+        android:text="3"
+        android:textSize="24dp"
+        android:layout_marginStart="4dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_ritardo"
+        app:layout_constraintTop_toTopOf="@+id/icona_presenze"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
 
-    <!-- Ruolo del giocatore -->
+    <ImageView
+        android:id="@+id/icona_assenze"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/num_ritardi"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsAllenamenti"
+        android:src="@drawable/croce" />
+
     <TextView
-        android:id="@+id/textViewRuolo"
-        android:layout_width="0dp"
+        android:id="@+id/num_assenze"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="4"
+        android:textSize="24dp"
+        android:layout_margin="4dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_assenze"
+        app:layout_constraintTop_toTopOf="@+id/icona_presenze"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
+
+
+
+    <ImageView
+        android:id="@+id/icona_infortunio"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
-        android:text="Ruolo: Attaccante"
-        android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@id/textViewEta"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:padding="16dp"/>
+        app:layout_constraintStart_toEndOf="@+id/num_assenze"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsAllenamenti"
+        android:src="@drawable/infortunio" />
 
-    <!-- Pulsante per modificare il giocatore -->
-    <Button
-        android:id="@+id/buttonModificaGiocatore"
-        android:layout_width="0dp"
+    <TextView
+        android:id="@+id/num_infortunati"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Modifica Giocatore"
-        app:layout_constraintTop_toBottomOf="@id/textViewRuolo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.8"
-        android:layout_marginTop="32dp" />
+        android:text="0"
+        android:textSize="24dp"
+        android:layout_marginStart="4dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_infortunio"
+        app:layout_constraintTop_toTopOf="@+id/icona_presenze"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
 
-    <!-- Pulsante per eliminare il giocatore -->
-    <Button
-        android:id="@+id/buttonEliminaGiocatore"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Elimina Giocatore"
-        app:layout_constraintTop_toBottomOf="@id/buttonModificaGiocatore"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.8"
-        android:layout_marginTop="16dp" />
+
+
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"

@@ -8,6 +8,8 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation
+import android.view.animation.AnimationSet
+import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -25,6 +27,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import androidx.core.view.doOnPreDraw
+
 
 class LiveActivity : BaseActivity() {
 
@@ -183,7 +187,7 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-    // Load minuti per tempo from Firebase
+
     private fun loadMinutiPerTempo() {
         val database = Firebase.database.reference
         database.child("Partite").child(dataPartita).child(partitaId).child("minuti_per_tempo")
@@ -199,7 +203,6 @@ class LiveActivity : BaseActivity() {
             })
     }
 
-    // Load tempi (number of periods) from Firebase
     private fun loadTempi() {
         val database = Firebase.database.reference
         database.child("Partite").child(dataPartita).child(partitaId).child("numero_tempi")
@@ -215,14 +218,14 @@ class LiveActivity : BaseActivity() {
             })
     }
 
-    // Format time in MM:SS format
+
     private fun formatTime(milliseconds: Long): String {
         val seconds = (milliseconds / 1000) % 60
         val minutes = (milliseconds / (1000 * 60)) % 60
         return String.format("%02d:%02d", minutes, seconds)
     }
 
-    // Timer update thread
+
     private val updateTimerThread = object : Runnable {
         override fun run() {
             timeInMilliseconds = SystemClock.elapsedRealtime() - startTime
@@ -232,7 +235,7 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-    // Toggle match state (start/pause)
+
     private fun toggleMenu() {
         if (!matchStarted) {
             startTime = SystemClock.elapsedRealtime() - timeInMilliseconds
@@ -246,7 +249,7 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-    // Toggle visibility for end buttons
+
     private fun toggleEndButtonsVisibility() {
         if (pressed) {
             fabEndMatch.visibility = View.VISIBLE
@@ -259,7 +262,6 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-    // Confirm and finish time/partita
     private fun confirmEndTime(isEndMatch: Boolean) {
         if (isEndMatch) {
             showConfirmationDialog("Conferma Fine Partita", "Sei sicuro di voler terminare la partita?") {
@@ -282,7 +284,7 @@ class LiveActivity : BaseActivity() {
             .show()
     }
 
-    // End time logic
+
     private fun endTime() {
         handler.removeCallbacks(updateTimerThread)
         matchStarted = false
@@ -312,6 +314,7 @@ class LiveActivity : BaseActivity() {
         timeInMilliseconds = 0
         minutaggio.text = formatTime(0)
         fabStartMatch.setImageResource(R.drawable.fischietto)
+        fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
     }
 
     private fun toggleSideDrawer() {
@@ -350,41 +353,59 @@ class LiveActivity : BaseActivity() {
 
     fun animaIconaEvento(startX: Float, startY: Float, iconaResId: Int) {
         val iconaAnimata = findViewById<ImageView>(R.id.iconaAnimata)
-        iconaAnimata.setImageResource(iconaResId) // Imposta l'icona dell'evento
-        iconaAnimata.visibility = View.VISIBLE // Rendi l'icona visibile
+        iconaAnimata.setImageResource(iconaResId)
+        iconaAnimata.visibility = View.VISIBLE
 
-        // Posizione iniziale dell'icona (sul giocatore)
-        iconaAnimata.x = startX - iconaAnimata.width / 2f // Centra l'icona sul giocatore
-        iconaAnimata.y = startY - iconaAnimata.height / 2f
+        iconaAnimata.post {
+            // Imposta la posizione iniziale
+            iconaAnimata.x = startX - iconaAnimata.width / 2f
+            iconaAnimata.y = startY - iconaAnimata.height / 2f
 
-        // Posizione finale (sul pulsante che apre il side drawer)
-        val buttonOpenDrawer = findViewById<ImageButton>(R.id.buttonOpenDrawer)
-        val endX = buttonOpenDrawer.x + buttonOpenDrawer.width / 2f - iconaAnimata.width / 2f
-        val endY = buttonOpenDrawer.y + buttonOpenDrawer.height / 2f - iconaAnimata.height / 2f
+            val buttonOpenDrawer = findViewById<ImageButton>(R.id.buttonOpenDrawer)
 
-        // Animazione di traslazione
-        val animazione = TranslateAnimation(
-            0f, endX - startX, // Spostamento orizzontale
-            0f, endY - startY  // Spostamento verticale
-        ).apply {
-            duration = 1000 // Durata dell'animazione in millisecondi
-            fillAfter = true // Mantiene la posizione finale
-            setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationStart(animation: Animation?) {}
+            // Aspettiamo che il layout sia pronto
+            buttonOpenDrawer.doOnPreDraw {
+                val buttonCoordinates = IntArray(2)
+                buttonOpenDrawer.getLocationInWindow(buttonCoordinates)
+                val buttonX = buttonCoordinates[0].toFloat()
+                val buttonY = buttonCoordinates[1].toFloat()
 
-                override fun onAnimationEnd(animation: Animation?) {
-                    // Rimuovi l'icona alla fine dell'animazione
-                    iconaAnimata.visibility = View.GONE
+                val iconaCoordinates = IntArray(2)
+                iconaAnimata.getLocationInWindow(iconaCoordinates)
+                val iconaX = iconaCoordinates[0].toFloat()
+                val iconaY = iconaCoordinates[1].toFloat()
+
+                val endX = buttonX + buttonOpenDrawer.width / 2f - iconaAnimata.width / 4f
+                val endY = buttonY
+
+                val deltaX = endX - iconaX
+                val deltaY = endY - iconaY
+
+                val animazioneTraslazione = TranslateAnimation(0f, deltaX, 0f, deltaY).apply {
+                    duration = 1000
+                    setAnimationListener(object : Animation.AnimationListener {
+                        override fun onAnimationStart(animation: Animation?) {}
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                            // Imposta manualmente la posizione finale
+                            iconaAnimata.x = endX
+                            iconaAnimata.y = endY
+                            // Ora possiamo nascondere l'icona
+                            iconaAnimata.visibility = View.GONE
+                        }
+
+                        override fun onAnimationRepeat(animation: Animation?) {}
+                    })
                 }
 
-                override fun onAnimationRepeat(animation: Animation?) {}
-            })
-        }
-        Log.d("Animazione", "Start X: $startX, Start Y: $startY")
-        Log.d("Animazione", "End X: $endX, End Y: $endY")
-        iconaAnimata.startAnimation(animazione)
-    }
+                iconaAnimata.startAnimation(animazioneTraslazione)
 
+                Log.d("Animazione", "Posizione iniziale icona: X = $iconaX, Y = $iconaY")
+                Log.d("Animazione", "Posizione finale icona: X = $endX, Y = $endY")
+                Log.d("Animazione", "Delta X: $deltaX, Delta Y: $deltaY")
+            }
+        }
+    }
 
 
 

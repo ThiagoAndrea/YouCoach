@@ -171,7 +171,6 @@ class DettaglioPartitaActivity : BaseActivity() {
                                 convocazioniIniziali[playerId] = stato
                             }
 
-                            // Se convocazioniIniziali è vuota, vuol dire che non c'è ancora una lista salvata, quindi passa una mappa vuota
                             apriDialogConvocati(giocatori, convocazioniIniziali)
                         }
 

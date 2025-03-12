@@ -33,8 +33,8 @@ class DettaglioGiocatoreActivity : BaseActivity() {
         mostraDettagliGiocatore()
 
         // Riferimenti ai pulsanti
-        val buttonModifica = findViewById<Button>(R.id.buttonModificaGiocatore)
-        val buttonElimina = findViewById<Button>(R.id.buttonEliminaGiocatore)
+        val buttonModifica = findViewById<ImageButton>(R.id.modificagiocatore_button)
+        val buttonElimina = findViewById<ImageButton>(R.id.eliminagiocatore_button)
         val buttonBack = findViewById<ImageButton>(R.id.back_button)
 
         buttonModifica.setOnClickListener {

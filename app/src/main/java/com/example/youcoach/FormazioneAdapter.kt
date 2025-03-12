@@ -5,9 +5,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.GridLayout
 import android.widget.ImageButton
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -190,14 +192,26 @@ class FormazioneAdapter(
 
 
             btnTiro.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Tiro", true)
-                avviaAnimazione(view, R.drawable.tiro)
+                val options = arrayOf("In porta", "Fuori porta")
+                val builder = AlertDialog.Builder(view.context)
+
+                builder.setTitle("Seleziona se il tiro è in porta o fuori porta")
+                    .setItems(options) { dialog, which ->
+                        val tipoTiro = options[which]
+                        val dettagliTiro = mapOf("tipoTiro" to tipoTiro)
+                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Tiro", true, dettagliTiro)
+                        avviaAnimazione(view, R.drawable.tiro)
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("Annulla") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                builder.create().show()
                 dialog.dismiss()
             }
 
             btnGol.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Gol", true)
-                avviaAnimazione(view, R.drawable.gol)
+                mostraDialogAssist(view, idGiocatore, minutaggio)
                 dialog.dismiss()
             }
 
@@ -214,28 +228,83 @@ class FormazioneAdapter(
             }
 
             btnInfortunio.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Infortunio", true)
-                avviaAnimazione(view, R.drawable.infortunio_live)
+                val options = arrayOf("Muscolare", "Traumatico")
+                val builder = AlertDialog.Builder(view.context)
+                builder.setTitle("Seleziona tipo di infortunio")
+                    .setItems(options) { dialog, which ->
+                        val tipoInfortunio = options[which]
+                        val dettagliInfortunio = mapOf("tipoInfortunio" to tipoInfortunio)
+                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Infortunio", true, dettagliInfortunio)
+                        avviaAnimazione(view, R.drawable.infortunio_live)
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("Annulla") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                builder.create().show()
                 dialog.dismiss()
             }
+
 
             btnFallo.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Fallo", true)
-                avviaAnimazione(view, R.drawable.fallo)
+                val options = arrayOf("Subito", "Fatto")
+                val builder = AlertDialog.Builder(view.context)
+
+                builder.setTitle("Seleziona tipo di fallo")
+                    .setItems(options) { dialog, which ->
+                        val tipoFallo = options[which]
+                        val dettagliFallo = mapOf("tipoFallo" to tipoFallo)
+                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Fallo", true, dettagliFallo)
+                        avviaAnimazione(view, R.drawable.fallo)
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("Annulla") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+
+                builder.create().show()
                 dialog.dismiss()
             }
+
 
             btnGiallo.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Cartellino Giallo", true)
-                avviaAnimazione(view, R.drawable.yellow_card)
+                val options = arrayOf("Proteste", "Fallo")
+                val builder = AlertDialog.Builder(view.context)
+                builder.setTitle("Seleziona il motivo per il cartellino giallo")
+                    .setItems(options) { dialog, which ->
+                        val motivoCartellinoGiallo = options[which]
+                        val dettagliCartellinoGiallo = mapOf("motivo" to motivoCartellinoGiallo)
+                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Cartellino Giallo", true, dettagliCartellinoGiallo)
+                        avviaAnimazione(view, R.drawable.yellow_card)
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("Annulla") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                builder.create().show()
                 dialog.dismiss()
             }
 
+
             btnRosso.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Cartellino Rosso", true)
-                avviaAnimazione(view, R.drawable.red_card)
+                val options = arrayOf("Doppia Ammonizione", "Rosso Diretto")
+                val builder = AlertDialog.Builder(view.context)
+
+                builder.setTitle("Seleziona il motivo per il cartellino rosso")
+                    .setItems(options) { dialog, which ->
+                        val motivoCartellinoRosso = options[which]
+                        val dettagliCartellinoRosso = mapOf("motivo" to motivoCartellinoRosso)
+                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Cartellino Rosso", true, dettagliCartellinoRosso)
+                        avviaAnimazione(view, R.drawable.red_card)
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("Annulla") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                builder.create().show()
                 dialog.dismiss()
             }
+
 
             btnParata.setOnClickListener {
                 eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Parata", true)
@@ -255,14 +324,64 @@ class FormazioneAdapter(
             val location = IntArray(2)
             giocatoreView.getLocationOnScreen(location)
 
-            // Coordinate di partenza (centro del giocatore)
             val startX = location[0].toFloat() + giocatoreView.width / 2f
             val startY = location[1].toFloat() + giocatoreView.height / 2f
-
-
-
             (view.context as? LiveActivity)?.animaIconaEvento(startX, startY, iconaResId)
         }
+
+        private fun mostraDialogAssist(view: View, idMarcatore: String, minutaggio: String) {
+            val context = view.context
+            val dialogView = LayoutInflater.from(context).inflate(R.layout.finestra_assist, null)
+            val dialog = AlertDialog.Builder(context).setView(dialogView).create()
+
+            val spinnerAssist: Spinner = dialogView.findViewById(R.id.spinnerAssist)
+            val btnConferma: Button = dialogView.findViewById(R.id.btnConfermaAssist)
+            val btnNessunAssist: Button = dialogView.findViewById(R.id.btnNessunAssist)
+            val btnChiudi: ImageButton = dialogView.findViewById(R.id.btnChiudiAssist)
+
+            val giocatoriTitolari = formazione.keys.toList()
+
+            val giocatoriNomi = mutableListOf("Seleziona giocatore")
+            val giocatoriIdMap = mutableMapOf<String, String>()
+
+            giocatoriTitolari.forEach { idGiocatore ->
+                recuperaNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
+                    if (nome != null && cognome != null) {
+                        val nomeCompleto = "$nome $cognome"
+                        giocatoriNomi.add(nomeCompleto)
+                        giocatoriIdMap[nomeCompleto] = idGiocatore
+
+                        if (giocatoriNomi.size == giocatoriTitolari.size + 1) {
+                            val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, giocatoriNomi)
+                            spinnerAssist.adapter = adapter
+                        }
+                    }
+                }
+            }
+
+            btnConferma.setOnClickListener {
+                val assistSelezionato = spinnerAssist.selectedItem.toString()
+                val idAssistMan = giocatoriIdMap[assistSelezionato]
+                val dettagliGol = mapOf("idAssist" to idAssistMan)
+                eventoManager.registraEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true, dettagliGol)
+                avviaAnimazione(view, R.drawable.gol)
+                dialog.dismiss()
+            }
+
+
+            btnNessunAssist.setOnClickListener {
+                eventoManager.registraEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true)
+                avviaAnimazione(view, R.drawable.gol)
+                dialog.dismiss()
+            }
+
+            btnChiudi.setOnClickListener {
+                dialog.dismiss()
+            }
+
+            dialog.show()
+        }
+
 
     }
 
@@ -270,4 +389,6 @@ class FormazioneAdapter(
         buttonsEnabled = enabled
         notifyDataSetChanged() // Notifica l'adapter per aggiornare la vista
     }
+
+
 }

@@ -33,8 +33,6 @@ class EventoAdapter(private var eventi: MutableList<Evento>) : RecyclerView.Adap
 
     override fun onBindViewHolder(holder: EventoViewHolder, position: Int) {
         val evento = eventi[position]
-
-        // Gestione del minutaggio (aggiorna con il minuto incrementato)
         val minutoString = evento.minutaggio?.split(":")?.get(0)?.toIntOrNull() ?: 0
         val minuto = minutoString + 1
         holder.minutaggioTextView.text = "${minuto}'"
@@ -46,15 +44,15 @@ class EventoAdapter(private var eventi: MutableList<Evento>) : RecyclerView.Adap
         setEventoIcona(evento.nomeEvento, holder.immagineEvento)
 
         if (evento.dettagli.isEmpty()) {
-            // Se non ci sono dettagli, nascondi la TextView o lasciala vuota
             holder.dettagliEvento.text = ""
-            holder.dettagliEvento.visibility = View.GONE // Opzionale: nascondi la TextView
+            holder.dettagliEvento.visibility = View.GONE
         } else {
-            // Se ci sono dettagli, formattali in una stringa leggibile
-            val dettagliFormattati = formatDettagli(evento.dettagli)
-            holder.dettagliEvento.text = dettagliFormattati
-            holder.dettagliEvento.visibility = View.VISIBLE // Opzionale: mostra la TextView
+            formatDettagli(evento.dettagli) { dettagliFormattati ->
+                holder.dettagliEvento.text = dettagliFormattati
+                holder.dettagliEvento.visibility = View.VISIBLE
+            }
         }
+
 
         holder.modificaButton.setOnClickListener {
             // Logica per modificare l'evento
@@ -74,7 +72,6 @@ class EventoAdapter(private var eventi: MutableList<Evento>) : RecyclerView.Adap
     }
 
 
-    // Funzione per ottenere il nome del giocatore dal database Firebase
     private fun getGiocatoreNome(idGiocatore: String, callback: (String) -> Unit) {
         val databaseReference =
             FirebaseDatabase.getInstance().getReference("Giocatori").child(idGiocatore)
@@ -106,13 +103,21 @@ class EventoAdapter(private var eventi: MutableList<Evento>) : RecyclerView.Adap
         }
     }
 
-    private fun formatDettagli(dettagli: Map<String, Any?>): String {
-        return dettagli.entries.joinToString("\n") { (key, value) ->
-            "${formatKey(key)}: ${value ?: "N/A"}"
+    private fun formatDettagli(dettagli: Map<String, Any?>, callback: (String) -> Unit) {
+        val result = StringBuilder()
+        dettagli.entries.forEach { (key, value) ->
+            if (key == "idAssist" && value is String) {
+                getGiocatoreNome(value) { cognome ->
+                    result.append("Ass: $cognome\n")
+                    callback(result.toString())
+                }
+            } else {
+                result.append("${value ?: "N/A"}\n")
+            }
         }
     }
 
-    // Funzione per formattare la chiave (es. "nomeEvento" -> "Nome Evento")
+
     private fun formatKey(key: String): String {
         return key.replace(Regex("([a-z])([A-Z])"), "$1 $2") // Aggiunge spazio tra parole
             .replace("_", " ") // Sostituisce underscore con spazio

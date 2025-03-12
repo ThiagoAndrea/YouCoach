@@ -27,6 +27,10 @@ class DettaglioAllenamentoActivity : BaseActivity() {
     private lateinit var deleteButton: ImageButton
     private lateinit var editButton: ImageButton
     private lateinit var presenzeButton: Button
+    private lateinit var numPresenze: TextView
+    private lateinit var numRitardi: TextView
+    private lateinit var numAssenze: TextView
+    private lateinit var numInfortunati: TextView
 
     // RecyclerView for Obiettivi
     private lateinit var recyclerViewObiettivi: RecyclerView
@@ -54,6 +58,10 @@ class DettaglioAllenamentoActivity : BaseActivity() {
         deleteButton = findViewById(R.id.eliminaAllenamento_button)
         editButton = findViewById(R.id.modificaAllenamento_button)
         presenzeButton = findViewById(R.id.presenze_button)
+        numPresenze = findViewById(R.id.num_presenze)
+        numRitardi = findViewById(R.id.num_ritardi)
+        numAssenze = findViewById(R.id.num_assenze)
+        numInfortunati = findViewById(R.id.num_infortunati)
         recyclerViewObiettivi = findViewById(R.id.recyclerViewObiettivi)
         recyclerViewObiettivi.layoutManager = LinearLayoutManager(this)
         obiettiviList = mutableListOf()
@@ -132,6 +140,7 @@ class DettaglioAllenamentoActivity : BaseActivity() {
                                 presenzeIniziali[playerId] = stato
                             }
 
+                            aggiornaNumeriGiocatori(presenzeIniziali)
                             apriDialogPresenze(giocatori, presenzeIniziali)
                         }
 
@@ -197,5 +206,25 @@ class DettaglioAllenamentoActivity : BaseActivity() {
         } else {
             Toast.makeText(this, "Errore: Nessun allenamento selezionato", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun aggiornaNumeriGiocatori(presenze: Map<String, Int>) {
+        var presenti = 0
+        var ritardi = 0
+        var assenti = 0
+        var infortunati = 0
+
+        presenze.values.forEach { stato ->
+            when (stato) {
+                1 -> presenti++
+                2 -> ritardi++
+                3 -> assenti++
+                4 -> infortunati++
+            }
+        }
+        numPresenze.text = presenti.toString()
+        numRitardi.text = ritardi.toString()
+        numAssenze.text = assenti.toString()
+        numInfortunati.text = infortunati.toString()
     }
 }

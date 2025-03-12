@@ -7,7 +7,7 @@ import com.google.firebase.database.database
 class EventoManager {
     private val database = Firebase.database.reference
 
-    fun registraEvento(idPartita: String, data: String, minutaggio: String,idGiocatore: String, nomeEvento: String, squadra: Boolean) {
+    fun registraEvento(idPartita: String, data: String, minutaggio: String,idGiocatore: String, nomeEvento: String, squadra: Boolean, dettagliEvento: Map<String, Any?> = emptyMap()) {
         val eventiRef = database.child("Partite").child(data).child(idPartita).child("eventi")
         val eventoId = eventiRef.push().key ?: return
 
@@ -17,7 +17,7 @@ class EventoManager {
             "nomeEvento" to nomeEvento,
             "nomeGiocatore" to idGiocatore,
             "squadra" to squadra,
-            "dettagli" to emptyMap<String, Any?>()
+            "dettagli" to dettagliEvento
         )
 
         eventiRef.child(eventoId).setValue(eventoMap)
