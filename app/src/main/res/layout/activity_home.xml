@@ -15,7 +15,8 @@
         app:layout_constraintBottom_toTopOf="@+id/ultima_partita_text"
         android:src="@drawable/logo"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        app:tint="@color/giorno_selezionato" />
 
 
     <!-- Bottom Navigation View in basso -->
@@ -29,7 +30,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/ultima_partita_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/logo_squadra" />
+        app:layout_constraintStart_toStartOf="@id/logo_squadra"
+        />
+
+    <ImageButton
+        android:id="@+id/modifica_impostazioni"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@color/transparent"
+        android:src="@drawable/impostazioni"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toEndOf="@+id/nome_squadra"
+        app:layout_constraintBottom_toBottomOf="@id/nome_squadra"/>
+
 
     <TextView
         android:id="@+id/ultima_partita_text"

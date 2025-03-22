@@ -66,9 +66,6 @@ class CalendarAdapter(
             viewHolder.imgMatch.visibility = View.GONE
         }
 
-
-
-        // Evidenzia solo la data di oggi
         if (days[position].toIntOrNull() == currentDay &&
             displayedMonth == currentMonth &&
             displayedYear == currentYear) {
@@ -82,7 +79,6 @@ class CalendarAdapter(
         return view
     }
 
-    // ViewHolder per migliorare le prestazioni
     private class ViewHolder(view: View) {
         val txtDay: TextView = view.findViewById(R.id.txtDay)
         val imgTraining: ImageView = view.findViewById(R.id.img_training)

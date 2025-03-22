@@ -15,11 +15,10 @@ import com.google.firebase.database.*
 
 class DettaglioAllenamentoActivity : BaseActivity() {
 
-    private lateinit var database: DatabaseReference
     private var allenamentoId: String? = null
     private lateinit var formattedDate: String
+    private val db = DatabaseManager()
 
-    // UI Components
     private lateinit var cardTraining: MaterialCardView
     private lateinit var cardDate: TextView
     private lateinit var cardTime: TextView
@@ -32,7 +31,6 @@ class DettaglioAllenamentoActivity : BaseActivity() {
     private lateinit var numAssenze: TextView
     private lateinit var numInfortunati: TextView
 
-    // RecyclerView for Obiettivi
     private lateinit var recyclerViewObiettivi: RecyclerView
     private lateinit var obiettiviAdapter: ObiettiviAdapter
     private lateinit var obiettiviList: MutableList<String>
@@ -41,9 +39,6 @@ class DettaglioAllenamentoActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dettaglio_allenamento)
         setupBottomNavigation(R.id.nav_calendar)
-
-        database = FirebaseDatabase.getInstance().reference
-
         initUI()
         loadSelectedDate()
         caricaAllenamento(formattedDate)
@@ -91,66 +86,34 @@ class DettaglioAllenamentoActivity : BaseActivity() {
     }
 
     private fun caricaAllenamento(formattedDate: String) {
-        database.child("Allenamenti").child(formattedDate)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        val allenamentoSnapshot = snapshot.children.firstOrNull()
-                        allenamentoSnapshot?.let {
-                            allenamentoId = it.key
-                            val orarioInizio = it.child("orarioInizio").value as? String ?: "N/A"
-                            val orarioFine = it.child("orarioFine").value as? String ?: "N/A"
-                            val obiettivi = it.child("obiettivi").children.mapNotNull { obiettivo ->
-                                obiettivo.getValue(String::class.java)
-                            }
+        db.getAllenamento(formattedDate){
+            allenamentoID, orarioInizio, orarioFine, obiettivi ->
+            if(orarioInizio != null && orarioFine != null){
+                allenamentoId = allenamentoID
+                cardTraining.visibility = View.VISIBLE
+                recyclerViewObiettivi.visibility = View.VISIBLE
+                cardTime.text="$orarioInizio - $orarioFine"
 
-                            cardTime.text = "$orarioInizio - $orarioFine"
-
-                            obiettiviList.clear()
-                            obiettiviList.addAll(obiettivi)
-                            obiettiviAdapter.notifyDataSetChanged()
-                        }
-                    } else {
-                        cardTraining.visibility = View.GONE
-                        recyclerViewObiettivi.visibility = View.GONE
-                    }
+                obiettiviList.clear()
+                if (obiettivi != null) {
+                    obiettiviList.addAll(obiettivi)
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@DettaglioAllenamentoActivity, "Errore nel recupero dell'allenamento", Toast.LENGTH_SHORT).show()
-                }
-            })
+                obiettiviAdapter.notifyDataSetChanged()
+            } else {
+                cardTraining.visibility = View.GONE
+                recyclerViewObiettivi.visibility = View.GONE
+                Toast.makeText(this, "Nessun allenamento trovato", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun caricaGiocatoriEApriDialog() {
-        val giocatoriRef = database.child("Giocatori")
-
-        giocatoriRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(giocatoriSnapshot: DataSnapshot) {
-                if (giocatoriSnapshot.exists()) {
-                    val giocatori = giocatoriSnapshot.children.mapNotNull { it.getValue(Giocatore::class.java) }
-
-                    val presenzeRef = database.child("Allenamenti").child(formattedDate).child(allenamentoId ?: "").child("presenze")
-                    presenzeRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(presenzeSnapshot: DataSnapshot) {
-                            val presenzeIniziali = mutableMapOf<String, Int>()
-                            presenzeSnapshot.children.forEach {
-                                val playerId = it.key ?: ""
-                                val stato = it.value.toString().toIntOrNull() ?: 0
-                                presenzeIniziali[playerId] = stato
-                            }
-
-                            aggiornaNumeriGiocatori(presenzeIniziali)
-                            apriDialogPresenze(giocatori, presenzeIniziali)
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {}
-                    })
-                }
+        db.getGiocatori { giocatori ->
+            db.getPresenzePerAllenamento(formattedDate, allenamentoId ?: "") { presenzeIniziali ->
+                aggiornaNumeriGiocatori(presenzeIniziali)
+                apriDialogPresenze(giocatori, presenzeIniziali)
             }
-
-            override fun onCancelled(error: DatabaseError) {}
-        })
+        }
     }
 
     private fun apriDialogPresenze(giocatori: List<Giocatore>, presenzeIniziali: Map<String, Int>) {
@@ -161,10 +124,15 @@ class DettaglioAllenamentoActivity : BaseActivity() {
     }
 
     private fun salvaPresenzeNelDatabase(presenzeConfermate: Map<String, Int>) {
-        val presenzeRef = database.child("Allenamenti").child(formattedDate).child(allenamentoId ?: "").child("presenze")
-        presenzeRef.setValue(presenzeConfermate)
-            .addOnSuccessListener { Toast.makeText(this, "Presenze aggiornate!", Toast.LENGTH_SHORT).show() }
-            .addOnFailureListener { Toast.makeText(this, "Errore!", Toast.LENGTH_SHORT).show() }
+        if(allenamentoId != null) {
+            db.aggiungiPresenzeAllenamento(formattedDate, allenamentoId!!, presenzeConfermate) { success, message ->
+                if (success) {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun modificaAllenamento() {
@@ -182,7 +150,6 @@ class DettaglioAllenamentoActivity : BaseActivity() {
         }
     }
 
-
     private fun confermaEliminazione() {
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Conferma eliminazione")
@@ -194,15 +161,12 @@ class DettaglioAllenamentoActivity : BaseActivity() {
 
     private fun eliminaAllenamento() {
         if (allenamentoId != null) {
-            database.child("Allenamenti").child(formattedDate).child(allenamentoId!!)
-                .removeValue()
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Allenamento eliminato con successo", Toast.LENGTH_SHORT).show()
+            db.eliminaAllenamento(formattedDate, allenamentoId!!) { success, message ->
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                if (success) {
                     finish()
                 }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Errore durante l'eliminazione", Toast.LENGTH_SHORT).show()
-                }
+            }
         } else {
             Toast.makeText(this, "Errore: Nessun allenamento selezionato", Toast.LENGTH_SHORT).show()
         }

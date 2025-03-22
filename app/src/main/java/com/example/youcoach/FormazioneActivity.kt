@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.DataSnapshot
@@ -22,7 +23,7 @@ class FormazioneActivity : BaseActivity() {
 
     private lateinit var spinnerModuli: Spinner
     private lateinit var recyclerViewPosizioni: RecyclerView
-    private lateinit var database: DatabaseReference
+    private val db = DatabaseManager()
     private lateinit var buttonConferma: Button
 
     private var selezioneGiocatoreAdapter: SelezioneGiocatoreAdapter? = null
@@ -119,7 +120,6 @@ class FormazioneActivity : BaseActivity() {
         spinnerModuli = findViewById(R.id.spinnerModuli)
         recyclerViewPosizioni = findViewById(R.id.recyclerPosizioni)
         recyclerViewPosizioni.layoutManager = LinearLayoutManager(this)
-        database = Firebase.database.reference
         buttonConferma = findViewById(R.id.buttonConferma)
 
         val moduliList = moduli.keys.toList()
@@ -130,7 +130,7 @@ class FormazioneActivity : BaseActivity() {
         val partitaId = intent.getStringExtra("PARTITA_ID")
         val data = intent.getStringExtra("DATA")
         if (partitaId != null && data != null) {
-            caricaDatiPartita(partitaId, data)
+            caricaDatiPartita(data)
             caricaGiocatori(partitaId, data) {
                 setupModuloListener(moduliList)
                 spinnerModuli.setSelection(0)
@@ -149,69 +149,28 @@ class FormazioneActivity : BaseActivity() {
         }
     }
 
-
     private fun caricaGiocatori(partitaId: String, dataPartita: String, onComplete: () -> Unit) {
-        val convocatiRef =
-            database.child("Partite").child(dataPartita).child(partitaId).child("convocati")
-
-        convocatiRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(convSnapshot: DataSnapshot) {
-                val convocatiMap = convSnapshot.children
-                    .associate { it.key!! to (it.getValue(Boolean::class.java) ?: false) }
-
-                val giocatoriRef = database.child("Giocatori")
-                giocatoriRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        rosaConvocati.clear()
-                        for (data in snapshot.children) {
-                            val giocatore = data.getValue(Giocatore::class.java)
-                            if (giocatore != null && convocatiMap[giocatore.id] == true) {
-                                rosaConvocati.add(giocatore)
-                            }
-                        }
-                        onComplete()
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        Log.e(
-                            "FormazioneActivity",
-                            "Errore caricamento giocatori: ${error.message}"
-                        )
-                        onComplete()
-                    }
-                })
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("FormazioneActivity", "Errore caricamento convocati: ${error.message}")
+        db.getConvocati(partitaId, dataPartita) { convocatiIds ->
+            db.getGiocatori { giocatori ->
+                rosaConvocati.clear()
+                rosaConvocati.addAll(giocatori.filter { it.id in convocatiIds })
                 onComplete()
             }
-        })
+        }
     }
 
-    private fun caricaDatiPartita(partitaId: String, dataPartita: String) {
-        val partitaRef = database.child("Partite").child(dataPartita).child(partitaId)
-        partitaRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    val isCasa = snapshot.child("casa").getValue(Boolean::class.java) ?: true
-                    val avversario =
-                        snapshot.child("avversario").getValue(String::class.java) ?: "Avversario"
-                    val titoloPartita = if (isCasa) {
-                        "BedizzoleU16 - $avversario"
-                    } else {
-                        "$avversario - BedizzoleU16"
-                    }
-                    findViewById<TextView>(R.id.testo_partita).text = titoloPartita
+    private fun caricaDatiPartita(formattedDate: String) {
+        db.getPartita(formattedDate) { _, avversario, _, _, _, casa, _, _ ->
+            if (avversario != null && casa != null) {
+                val titoloPartita = if (casa) {
+                    "BedizzoleU16 - $avversario"
+                } else {
+                    "$avversario - BedizzoleU16"
                 }
+                findViewById<TextView>(R.id.testo_partita).text = titoloPartita
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Gestisci l'errore
-            }
-        })
+        }
     }
-
 
     @SuppressLint("SetTextI18n")
     private fun setupModuloListener(moduliList: List<String>) {
@@ -241,36 +200,18 @@ class FormazioneActivity : BaseActivity() {
         })
     }
 
-
     private fun salvaFormazione(adapter: SelezioneGiocatoreAdapter, partitaId: String, dataPartita: String) {
-        val titolari = mutableMapOf<String, String>()
-        adapter.selezioni.forEach { (posizione, giocatoreId) ->
-            val key = giocatoreId
-            titolari[key] = "${posizione.ruolo} ${posizione.posizioneIndex}"
-        }
-
-        val titolariIds = titolari.keys.toSet()
-        val panchina = rosaConvocati.filter { it.id !in titolariIds }.map { it.id }
-
-        val formazioneMap = mapOf(
-            "titolari" to titolari,
-            "panchina" to panchina
-        )
-
-        database.child("Partite").child(dataPartita).child(partitaId).child("formazione")
-            .setValue(formazioneMap)
-            .addOnSuccessListener {
+        db.aggiungiFormazionePartita(adapter, partitaId, dataPartita) { success, message ->
+            if (success) {
                 val intent = Intent(this, LiveActivity::class.java)
                 intent.putExtra("PARTITA_ID", partitaId)
                 intent.putExtra("DATA", dataPartita)
                 startActivity(intent)
+            } else {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { error ->
-                Log.e("FormazioneActivity", "Errore durante il salvataggio della formazione: ${error.message}")
-            }
-            .addOnFailureListener { error ->
-                Log.e("FormazioneActivity", "Errore durante il salvataggio della formazione: ${error.message}")
-            }
+        }
     }
+
 }
 

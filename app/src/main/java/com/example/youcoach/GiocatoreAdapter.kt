@@ -30,7 +30,6 @@ class GiocatoreAdapter(private val giocatoreList: List<Giocatore>): RecyclerView
     override fun onBindViewHolder(holder: GiocatoreViewHolder, position: Int) {
         val giocatore = giocatoreList[position]
 
-        // Imposta i dati del giocatore nei TextView
         holder.nomeTextView.text = giocatore.nome
         holder.cognomeTextView.text = giocatore.cognome
         holder.etaTextView.text = "${giocatore.eta}"
@@ -46,7 +45,6 @@ class GiocatoreAdapter(private val giocatoreList: List<Giocatore>): RecyclerView
 
         holder.sfondoGiocatore.setBackgroundResource(backgroundColor)
 
-        // Gestisci il click sul pulsante "Dettagli"
         holder.detailsButton.setOnClickListener {
             val context = holder.itemView.context
             val intent = Intent(context, DettaglioGiocatoreActivity::class.java).apply {

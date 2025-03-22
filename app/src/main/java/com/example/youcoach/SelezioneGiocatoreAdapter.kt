@@ -59,7 +59,6 @@ class SelezioneGiocatoreAdapter(
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         holder.giocatoreSpinner.adapter = spinnerAdapter
 
-        // Impostiamo la selezione corrente (se esiste) cercando l'indice corrispondente
         val index = giocatoriConsentiti.indexOfFirst { it.id == currentSelection }
         if (index >= 0) {
             holder.giocatoreSpinner.setSelection(index)
@@ -78,10 +77,8 @@ class SelezioneGiocatoreAdapter(
                 parent: AdapterView<*>?, view: View?, spinnerPosition: Int, id: Long
             ) {
                 val nuovoId = giocatoriConsentiti[spinnerPosition].id
-                // Se la selezione è cambiata, aggiorniamo la mappa
                 if (selezioni[posizioneItem] != nuovoId) {
                     selezioni[posizioneItem] = nuovoId
-                    // Notifichiamo l'adapter per aggiornare gli spinner in tutte le righe
                     notifyDataSetChanged()
                 }
             }

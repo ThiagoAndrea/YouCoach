@@ -14,12 +14,9 @@ import androidx.appcompat.app.AlertDialog
 import com.google.android.material.card.MaterialCardView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 class DettaglioPartitaActivity : BaseActivity() {
-    private lateinit var database: DatabaseReference
     private var partitaId: String? = null
     private lateinit var formattedDate: String
 
@@ -39,16 +36,16 @@ class DettaglioPartitaActivity : BaseActivity() {
     private lateinit var convocatiButton: Button
     private lateinit var goLiveButton: Button
 
+    private val db = DatabaseManager()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dettaglio_partita)
         setupBottomNavigation(R.id.nav_calendar)
 
-        database = FirebaseDatabase.getInstance().reference
-
         initUI()
         loadSelectedDate()
-        caricaPartita(formattedDate!!)
+        caricaPartita(formattedDate)
         setupButtonListeners()
     }
 
@@ -87,8 +84,6 @@ class DettaglioPartitaActivity : BaseActivity() {
         convocatiButton.setOnClickListener{caricaGiocatoriEApriDialog()}
         goLiveButton.setOnClickListener{goLive()}
 
-        //convocatiButton!!.setOnClickListener { v: View? -> caricaConvocatiEApriDialog() }
-        //goLiveButton!!.setOnClickListener { v: View? -> avviaLive() }
     }
 
     private fun goLive() {
@@ -99,115 +94,66 @@ class DettaglioPartitaActivity : BaseActivity() {
     }
 
     private fun caricaPartita(formattedDate: String) {
-        database.child("Partite").child(formattedDate)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        val partitaSnapshot = snapshot.children.firstOrNull()
-                        partitaSnapshot?.let {
-                            partitaId = it.key
-                            val avversario = it.child("avversario").value as? String ?: "N/A"
-                            val orario = it.child("orario").value as? String ?: "N/A"
-                            val location = it.child("luogo").value as? String ?: "N/A"
-                            val competizione = it.child("competizione").value as? String ?: "N/A"
-                            val casa = it.child("casa").value as? Boolean ?: false
-                            val minPerTempo = (it.child("minuti_per_tempo").value as? Number)?.toInt() ?: 0
-                            val numCalciatori = (it.child("numero_calciatori").value as? Number)?.toInt() ?: 0
-                            val numeroTempi = (it.child("numero_tempi").value as? Number)?.toInt() ?: 0
-
-
-                            if (casa) {
-                                cardTitle.text = "Bedizzole U16 - $avversario"
-                            } else {
-                                cardTitle.text = "$avversario - Bedizzole U16"
-                            }
-                            cardTime.text="$orario"
-                            matchLocation.text="$location"
-                            durataTempo.text="Durata per tempo: $minPerTempo"
-                            numGiocatori.text="Giocatori: $numCalciatori"
-                            numTempi.text="Tempi: $numeroTempi"
-
-                            when(competizione){
-                                "Campionato" -> competitionIcon.setImageResource(R.drawable.campionato)
-                                "Coppa" -> competitionIcon.setImageResource(R.drawable.coppa)
-                                else -> competitionIcon.setImageResource(R.drawable.fair_play)
-                            }
-                        }
-
-
-                    } else {
-                        cardMatch.visibility = View.GONE
-                    }
+        db.getPartita(formattedDate) { idPartita, avversario, orario, luogo, competizione, casa, minutiPerTempo, numeroCalciatori ->
+            this.partitaId = idPartita
+            if (avversario != null && orario != null && luogo != null) {
+                if (casa == true) {
+                    cardTitle.text = "Bedizzole U16 - $avversario"
+                } else {
+                    cardTitle.text = "$avversario - Bedizzole U16"
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(
-                        this@DettaglioPartitaActivity,
-                        "Errore nel recupero della partita",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                cardTime.text = orario
+                matchLocation.text = luogo
+                durataTempo.text = "Durata per tempo: $minutiPerTempo"
+                numGiocatori.text = "Giocatori: $numeroCalciatori"
+                if (numeroCalciatori != null) {
+                    numTempi.text = "Tempi: ${numeroCalciatori / 11}"
                 }
-            })
+                when (competizione) {
+                    "Campionato" -> competitionIcon.setImageResource(R.drawable.campionato)
+                    "Coppa" -> competitionIcon.setImageResource(R.drawable.coppa)
+                    else -> competitionIcon.setImageResource(R.drawable.fair_play)
+                }
+            } else {
+                cardMatch.visibility = View.GONE
+            }
+        }
     }
 
     private fun caricaGiocatoriEApriDialog() {
-        val giocatoriRef = database.child("Giocatori")
-
-        giocatoriRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(giocatoriSnapshot: DataSnapshot) {
-                if (giocatoriSnapshot.exists()) {
-                    val giocatori = giocatoriSnapshot.children.mapNotNull { it.getValue(Giocatore::class.java) }
-
-                    val convocazioniRef = database.child("Partite")
-                        .child(formattedDate)
-                        .child(partitaId ?: "")
-                        .child("convocati")
-                    convocazioniRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(presenzeSnapshot: DataSnapshot) {
-                            val convocazioniIniziali = mutableMapOf<String, Boolean>()
-                            presenzeSnapshot.children.forEach {
-                                val playerId = it.key ?: ""
-                                val stato = it.getValue(Boolean::class.java) ?: true
-                                convocazioniIniziali[playerId] = stato
-                            }
-
-                            apriDialogConvocati(giocatori, convocazioniIniziali)
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {}
-                    })
+        if (partitaId != null) {
+            // Ottieni prima i giocatori
+            db.getGiocatori { giocatori ->
+                db.getConvocatiMap(formattedDate, partitaId!!) { convocati ->
+                    apriDialogConvocati(giocatori, convocati)
                 }
             }
-
-            override fun onCancelled(error: DatabaseError) {}
-        })
+        } else {
+            Toast.makeText(this, "Errore: Partita o data mancanti", Toast.LENGTH_SHORT).show()
+        }
     }
-
 
     private fun apriDialogConvocati(giocatori: List<Giocatore>, convocazioniIniziali: Map<String, Boolean>) {
         val dialog = ConvocazioniDialogFragment(giocatori, convocazioniIniziali) { convocazioniIniziali ->
-            salvaConvocatiNelDatabase(convocazioniIniziali)
+            salvaConvocati(convocazioniIniziali)
         }
         dialog.show(supportFragmentManager, "ConvocazioniDialogFragment")
     }
 
-    private fun salvaConvocatiNelDatabase(convocazioniConfermate: Map<String, Boolean>) {
-        val presenzeRef = database.child("Partite")
-            .child(formattedDate)
-            .child(partitaId ?: "")
-            .child("convocati")
-
-        // Salva la mappa intera, che contiene sia true che false.
-        presenzeRef.setValue(convocazioniConfermate)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Convocazioni aggiornate!", Toast.LENGTH_SHORT).show()
+    private fun salvaConvocati(convocazioniConfermate: Map<String, Boolean>) {
+        if (partitaId != null) {
+            db.aggiungiConvocatiPartita(partitaId!!, formattedDate, convocazioniConfermate) { success, message ->
+                if (success) {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Errore!", Toast.LENGTH_SHORT).show()
-            }
+        } else {
+            Toast.makeText(this, "Errore: Dati della partita mancanti", Toast.LENGTH_SHORT).show()
+        }
     }
-
-
 
     private fun modificaPartita() {
         if (partitaId != null) {
@@ -233,7 +179,6 @@ class DettaglioPartitaActivity : BaseActivity() {
         }
     }
 
-
     private fun confermaEliminazione() {
         AlertDialog.Builder(this)
             .setTitle("Conferma eliminazione")
@@ -247,29 +192,17 @@ class DettaglioPartitaActivity : BaseActivity() {
 
     private fun eliminaPartita() {
         if (partitaId != null) {
-            database!!.child("Partite").child(formattedDate!!).child(partitaId!!)
-                .removeValue()
-                .addOnSuccessListener { aVoid: Void? ->
-                    Toast.makeText(
-                        this,
-                        "Partita eliminata con successo",
-                        Toast.LENGTH_SHORT
-                    ).show()
+            db.eliminaPartita(formattedDate ?: "", partitaId!!) { success, message ->
+                if (success) {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     finish()
+                } else {
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                 }
-                .addOnFailureListener { e: Exception? ->
-                    Toast.makeText(
-                        this,
-                        "Errore durante l'eliminazione",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+            }
         } else {
             Toast.makeText(this, "Errore: Nessuna partita selezionata", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun avviaLive() {
-        Toast.makeText(this, "Funzione live non ancora implementata", Toast.LENGTH_SHORT).show()
-    }
 }

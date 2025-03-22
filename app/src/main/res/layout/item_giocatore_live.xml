@@ -7,8 +7,8 @@
 
     <TextView
         android:id="@+id/cerchio_giocatore"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
         android:background="@drawable/circle_background_live"
         android:gravity="center"
         android:textColor="@android:color/white"
@@ -26,6 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Cognome"
+        android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cerchio_giocatore"/>

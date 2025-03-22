@@ -13,70 +13,70 @@
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
-    
-    
+
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
-    
+            android:layout_height="match_parent">
+
             <TextView
                 android:id="@+id/squadra_casa_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="24dp"
                 android:text="Squadra casa"
                 android:textSize="20sp"
-                app:layout_constraintEnd_toStartOf="@+id/risultato_casa"
-                app:layout_constraintTop_toTopOf="parent"
                 android:textStyle="bold"
-                app:layout_constraintBaseline_toBaselineOf="@id/trattino"
-                android:layout_marginEnd="24dp"/>
-    
+                app:layout_constraintBottom_toBottomOf="@id/risultato_casa"
+                app:layout_constraintEnd_toStartOf="@+id/risultato_casa"
+                app:layout_constraintTop_toTopOf="@+id/risultato_casa" />
+
             <TextView
                 android:id="@+id/risultato_casa"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="46sp"
-                app:layout_constraintEnd_toStartOf="@id/trattino"
-                app:layout_constraintTop_toTopOf="parent"
-                android:layout_marginTop="16dp"
                 android:layout_marginStart="16dp"
-                android:layout_marginEnd="8dp"/>
-    
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="8dp"
+                android:text="0"
+                android:textSize="40sp"
+                app:layout_constraintEnd_toStartOf="@id/trattino"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <TextView
                 android:id="@+id/trattino"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="-"
-                android:textSize="46sp"
-                app:layout_constraintStart_toStartOf="parent"
+                android:textSize="40sp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:layout_marginTop="16dp"/>
-    
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
             <TextView
                 android:id="@+id/risultato_trasferta"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0"
-                android:textSize="46sp"
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="16dp"
+                android:text="0"
+                android:textSize="40sp"
                 app:layout_constraintStart_toEndOf="@+id/trattino"
-                app:layout_constraintTop_toTopOf="parent"
-                android:layout_marginTop="16dp"/>
-    
+                app:layout_constraintTop_toTopOf="parent" />
+
             <TextView
                 android:id="@+id/squadra_ospite_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
                 android:text="Squadra ospite"
                 android:textSize="20sp"
-                android:layout_marginStart="24dp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/risultato_trasferta"
                 android:textStyle="bold"
-                app:layout_constraintBaseline_toBaselineOf="@+id/trattino"/>
-    
+                app:layout_constraintBottom_toBottomOf="@id/risultato_trasferta"
+                app:layout_constraintStart_toEndOf="@+id/risultato_trasferta"
+                app:layout_constraintTop_toTopOf="@id/risultato_trasferta" />
+
             <TextView
                 android:id="@+id/minutaggio"
                 android:layout_width="wrap_content"
@@ -86,156 +86,120 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/trattino" />
-    
+
             <ImageButton
-                android:id="@+id/btn_corner_casa"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="24dp"
+                android:id="@+id/btn_eventi_casa"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="4dp"
-                android:src="@drawable/corner"
-                app:layout_constraintEnd_toStartOf="@+id/minutaggio"
-                app:layout_constraintTop_toBottomOf="@id/squadra_casa_text" />
-    
-            <ImageButton
-                android:id="@+id/btn_corner_ospite"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="4dp"
-                android:src="@drawable/corner"
-                app:layout_constraintStart_toEndOf="@+id/minutaggio"
-                app:layout_constraintTop_toBottomOf="@id/squadra_ospite_text" />
-    
-            <ImageButton
-                android:id="@+id/btn_tiri_ospite"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="4dp"
-                android:src="@drawable/tiro"
-                app:layout_constraintStart_toEndOf="@+id/btn_corner_ospite"
-                app:layout_constraintTop_toBottomOf="@id/squadra_ospite_text" />
-    
-            <ImageButton
-                android:id="@+id/btn_tiri_casa"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
                 android:layout_marginEnd="12dp"
-                android:layout_marginTop="4dp"
-                android:src="@drawable/tiro"
-                app:layout_constraintEnd_toStartOf="@+id/btn_corner_casa"
+                android:src="@drawable/punto_esclamativo"
+                app:layout_constraintStart_toStartOf="@id/squadra_casa_text"
+                app:layout_constraintEnd_toEndOf="@+id/squadra_casa_text"
                 app:layout_constraintTop_toBottomOf="@id/squadra_casa_text" />
-    
+
+
+
             <ImageButton
-                android:id="@+id/btn_gol_ospite"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="12dp"
+                android:id="@+id/btn_eventi_ospite"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="4dp"
-                android:src="@drawable/pallone"
-                app:layout_constraintStart_toEndOf="@+id/btn_tiri_ospite"
-                app:layout_constraintTop_toBottomOf="@id/squadra_ospite_text" />
-    
-            <ImageButton
-                android:id="@+id/btn_gol_casa"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
                 android:layout_marginEnd="12dp"
-                android:layout_marginTop="4dp"
-                android:src="@drawable/pallone"
-                app:layout_constraintEnd_toStartOf="@+id/btn_tiri_casa"
-                app:layout_constraintTop_toBottomOf="@id/squadra_casa_text" />
-    
+                android:src="@drawable/punto_esclamativo"
+                app:layout_constraintStart_toStartOf="@id/squadra_ospite_text"
+                app:layout_constraintEnd_toEndOf="@+id/squadra_ospite_text"
+                app:layout_constraintTop_toBottomOf="@id/squadra_ospite_text" />
+
+
             <TextView
                 android:id="@+id/tempo_di_gioco"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1T"
                 android:textSize="16sp"
-                app:layout_constraintTop_toBottomOf="@+id/minutaggio"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-    
+                app:layout_constraintTop_toBottomOf="@+id/minutaggio" />
+
             <!-- RecyclerView per visualizzare le righe della formazione (senza header del ruolo) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerFormazione"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/giorno_selezionato"
-                app:layout_constraintTop_toBottomOf="@+id/tempo_di_gioco"
-                app:layout_constraintStart_toStartOf="parent"/>
-    
-    
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tempo_di_gioco" />
+
+
             <TextView
                 android:id="@+id/textPanchina"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="Panchina:"
                 android:textSize="24dp"
-                android:layout_marginTop="16dp"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/recyclerFormazione" />
-    
+
             <androidx.recyclerview.widget.RecyclerView
-                android:layout_marginTop="16dp"
                 android:id="@+id/recyclerPanchina"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@+id/textPanchina"
-                app:layout_constraintStart_toStartOf="parent"/>
-    
+                android:layout_marginTop="16dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textPanchina" />
+
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fab_start_match"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/fischietto"
+                android:layout_margin="16dp"
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="16dp"
+                android:src="@drawable/fischietto"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_margin="16dp" />
-    
+                app:layout_constraintEnd_toEndOf="parent" />
+
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fab_end_half"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
                 android:src="@drawable/half_time"
                 android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@id/fab_start_match"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginBottom="16dp"
-                android:layout_marginEnd="16dp"/>
-    
-    
+                app:layout_constraintEnd_toEndOf="parent" />
+
+
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/fab_end_match"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
                 android:src="@drawable/end"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/fab_start_match"
-                android:layout_marginBottom="16dp"
-                android:layout_marginEnd="16dp"/>
-    
-    
+                app:layout_constraintEnd_toStartOf="@+id/fab_start_match" />
+
+
             <ImageButton
                 android:id="@+id/buttonOpenDrawer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/freccia_destra"
                 android:layout_alignParentRight="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Apri eventi"
-                app:layout_constraintStart_toStartOf="parent"
+                android:src="@drawable/freccia_destra"
                 app:layout_constraintBottom_toTopOf="@+id/recyclerPanchina"
-                app:layout_constraintTop_toBottomOf="@+id/recyclerFormazione"
-                android:background="?android:attr/selectableItemBackgroundBorderless" />
-    
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/recyclerFormazione" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
-    
-    
+
         <com.google.android.material.navigation.NavigationView
             android:id="@+id/sideDrawer"
             android:layout_width="300dp"

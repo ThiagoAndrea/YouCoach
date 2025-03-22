@@ -23,7 +23,6 @@ class ConvocazioniDialogFragment(
     private val onConfermaClick: (Map<String, Boolean>) -> Unit
 ) : DialogFragment() {
 
-    // Se la mappa è vuota, inizializza tutti i giocatori a true, altrimenti usa i valori esistenti
     private val convocazioniMap: MutableMap<String, Boolean> by lazy {
         if (convocazioniIniziali.isEmpty()) {
             giocatori.associate { it.id to true }.toMutableMap()

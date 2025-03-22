@@ -10,7 +10,6 @@ open class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Le Activity che estendono BaseActivity devono chiamare setContentView() nel loro onCreate
     }
 
     protected fun setupBottomNavigation(selectedItemId: Int) {

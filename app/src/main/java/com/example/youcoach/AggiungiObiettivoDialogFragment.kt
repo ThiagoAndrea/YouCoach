@@ -13,10 +13,9 @@ import com.google.firebase.database.FirebaseDatabase
 
 class AggiungiObiettivoDialogFragment(private val onObiettivoAggiunto: () -> Unit) : DialogFragment() {
 
-    private lateinit var database: DatabaseReference
+    private val db = DatabaseManager()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        database = FirebaseDatabase.getInstance().reference.child("Obiettivi")
 
         val builder = AlertDialog.Builder(requireContext())
         val inflater = requireActivity().layoutInflater
@@ -31,9 +30,16 @@ class AggiungiObiettivoDialogFragment(private val onObiettivoAggiunto: () -> Uni
         buttonSalva.setOnClickListener {
             val nuovoObiettivo = editTextObiettivo.text.toString().trim()
             if (nuovoObiettivo.isNotEmpty()) {
-                salvaObiettivoInFirebase(nuovoObiettivo)
-                dialog.dismiss()
-            } else {
+                db.aggiungiObiettivo(nuovoObiettivo) { success, message ->
+                    if (success) {
+                        onObiettivoAggiunto()
+                        dialog.dismiss()
+                    } else {
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                }
+            }else {
                 Toast.makeText(requireContext(), "Inserisci un obiettivo", Toast.LENGTH_SHORT).show()
             }
         }
@@ -41,18 +47,5 @@ class AggiungiObiettivoDialogFragment(private val onObiettivoAggiunto: () -> Uni
         return dialog
     }
 
-    private fun salvaObiettivoInFirebase(nuovoObiettivo: String) {
-        val obiettivoId = database.push().key
-        if (obiettivoId != null) {
-            database.child(obiettivoId).setValue(nuovoObiettivo)
-                .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Obiettivo aggiunto!", Toast.LENGTH_SHORT).show()
-                    onObiettivoAggiunto()
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(requireContext(), "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
-                    Log.e("AggiungiObiettivoDialog", "Errore aggiunta obiettivo", e)
-                }
-        }
-    }
+
 }

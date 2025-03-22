@@ -1,0 +1,649 @@
+package com.example.youcoach
+
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+
+class DatabaseManager {
+    private val database = FirebaseDatabase.getInstance().reference
+
+    fun getNomeCognomeGiocatore(idGiocatore: String, callback: (String?, String?) -> Unit) {
+        database.child("Giocatori").child(idGiocatore).get()
+            .addOnSuccessListener { snapshot ->
+                val nome = snapshot.child("nome").getValue(String::class.java) ?: "Sconosciuto"
+                val cognome = snapshot.child("cognome").getValue(String::class.java) ?: "Sconosciuto"
+                callback(nome, cognome)
+            }
+            .addOnFailureListener {
+                callback(null, null)
+            }
+    }
+
+
+    fun getGiocatori(callback: (List<Giocatore>) -> Unit) {
+        val giocatoriRef = database.child("Giocatori")
+
+        giocatoriRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(giocatoriSnapshot: DataSnapshot) {
+                if (giocatoriSnapshot.exists()) {
+                    val giocatori = giocatoriSnapshot.children.mapNotNull { it.getValue(Giocatore::class.java) }
+                    callback(giocatori)
+                } else {
+                    callback(emptyList())
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                callback(emptyList())
+            }
+        })
+    }
+
+    fun getGiocatore(giocatoreId: String, callback: (Giocatore?) -> Unit) {
+        val giocatoreRef = database.child("Giocatori").child(giocatoreId)
+        giocatoreRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val giocatore = snapshot.getValue(Giocatore::class.java)
+                callback(giocatore)
+            }
+            override fun onCancelled(error: DatabaseError) {
+                callback(null)
+            }
+        })
+    }
+
+    fun getGiocatoreIdPerCognome(cognome: String, callback: (String?) -> Unit){
+        getGiocatori{ giocatori ->
+            val giocatore = giocatori.find { it.cognome == cognome }
+            callback(giocatore?.id)
+            if (giocatore != null) {
+                callback(giocatore.id)
+            } else {
+                callback(null)
+            }
+        }
+    }
+
+    fun getConvocatiMap(formattedDate: String, partitaId: String, callback: (Map<String, Boolean>) -> Unit) {
+        val convocazioniRef = database.child("Partite")
+            .child(formattedDate)
+            .child(partitaId)
+            .child("convocati")
+
+        convocazioniRef.get().addOnSuccessListener { convocazioniSnapshot ->
+            val convocazioniIniziali = mutableMapOf<String, Boolean>()
+            convocazioniSnapshot.children.forEach {
+                val playerId = it.key ?: ""
+                val stato = it.getValue(Boolean::class.java) ?: true
+                convocazioniIniziali[playerId] = stato
+            }
+            callback(convocazioniIniziali)
+        } .addOnFailureListener{
+            callback(emptyMap())
+        }
+    }
+
+
+    fun getPresenzePerAllenamento(data: String, allenamentoId: String, callback: (Map<String, Int>) -> Unit) {
+        val presenzeRef = database.child("Allenamenti").child(data).child(allenamentoId).child("presenze")
+
+        presenzeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val presenzeIniziali = mutableMapOf<String, Int>()
+                snapshot.children.forEach {
+                    val playerId = it.key ?: ""
+                    val stato = it.value.toString().toIntOrNull() ?: 0
+                    presenzeIniziali[playerId] = stato
+                }
+                callback(presenzeIniziali)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(emptyMap())
+            }
+        })
+    }
+
+    fun getObiettivi(callback: (List<String>, Map<String, Boolean>) -> Unit) {
+        database.child("Obiettivi").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val obiettiviList = mutableListOf<String>()
+                val obiettiviMappa = mutableMapOf<String, Boolean>()
+
+                for (document in snapshot.children) {
+                    val obiettivo = document.getValue(String::class.java)
+                    if (obiettivo != null) {
+                        obiettiviList.add(obiettivo)
+                        obiettiviMappa[obiettivo] = false
+                    }
+                }
+                callback(obiettiviList, obiettiviMappa)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(emptyList(), emptyMap())
+            }
+        })
+    }
+
+    fun getTitolari(idPartita: String, dataPartita: String, callback: (Map<String, String>) -> Unit) {
+        val titolariRef = database.child("Partite").child(dataPartita).child(idPartita).child("formazione").child("titolari")
+
+        titolariRef.get().addOnSuccessListener { snapshot ->
+            val titolari = snapshot.children
+                .mapNotNull { it.key?.let { idGiocatore -> it.getValue(String::class.java)?.let { nome -> idGiocatore to nome } } }
+                .toMap()
+            callback(titolari)
+        }.addOnFailureListener {
+            callback(emptyMap())
+        }
+    }
+
+    fun getPanchina(idPartita: String, dataPartita: String, callback: (List<String>) -> Unit) {
+        val panchinaRef = database.child("Partite").child(dataPartita).child(idPartita).child("formazione").child("panchina")
+
+        panchinaRef.get().addOnSuccessListener { snapshot ->
+            val panchina = snapshot.children.mapNotNull { it.getValue(String::class.java) }
+            callback(panchina)
+        }.addOnFailureListener {
+            callback(emptyList())
+        }
+    }
+
+    fun getFormazioneMap(idPartita: String, dataPartita: String, callback: (Map<String, String>, List<String>) -> Unit) {
+        getTitolari(idPartita, dataPartita) { titolari ->
+            getPanchina(idPartita, dataPartita) { panchina ->
+                callback(titolari, panchina)
+            }
+        }
+    }
+
+    fun getConvocati(idPartita: String, dataPartita: String, callback: (List<String>) -> Unit) {
+        database.child("Partite").child(dataPartita).child(idPartita).child("convocati").get().addOnSuccessListener {
+            snapshot -> val giocatori = snapshot.children.mapNotNull { it.key }
+            callback(giocatori)
+        }
+            .addOnFailureListener {
+                callback(emptyList())
+            }
+    }
+
+    fun getGiorniOccupatiMensili(year: Int, month: Int, callback:  (Map<String, Boolean>, Map<String, Boolean>)  -> Unit){
+        val monthKey = "$year-${"%02d".format(month + 1)}"
+        val trainingRef = database.child("Allenamenti").orderByKey().startAt(monthKey).endAt("$monthKey-31")
+        val matchRef = database.child("Partite").orderByKey().startAt(monthKey).endAt("$monthKey-31")
+        val trainingDays = mutableMapOf<String, Boolean>()
+        val matchDays = mutableMapOf<String, Boolean>()
+
+        trainingRef.get().addOnSuccessListener { trainingSnapshot ->
+            for (dateSnapshot in trainingSnapshot.children) {
+                dateSnapshot.key?.let { trainingDays[it] = true }
+            }
+
+            matchRef.get().addOnSuccessListener { matchSnapshot ->
+                for (dateSnapshot in matchSnapshot.children) {
+                    dateSnapshot.key?.let { matchDays[it] = true }
+                }
+
+                callback(trainingDays, matchDays)
+            }.addOnFailureListener {
+                callback(trainingDays, emptyMap())
+            }
+        }.addOnFailureListener {
+            callback(emptyMap(), emptyMap())
+        }
+    }
+
+    fun getEventoPerData(date: String, callback: (String?) -> Unit) {
+        database.child("Partite").child(date).get().addOnSuccessListener { snapshot ->
+            if (snapshot.exists()) {
+                callback("partita")
+            } else {
+                database.child("Allenamenti").child(date).get().addOnSuccessListener { snap ->
+                    callback(if (snap.exists()) "allenamento" else null)
+                }.addOnFailureListener { callback(null) }
+            }
+        }.addOnFailureListener { callback(null) }
+    }
+
+    fun getAllenamento(date: String, callback: (String?, String?, String?, List<String>?) -> Unit) {
+        val allenamentoRef = database.child("Allenamenti").child(date)
+        allenamentoRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val firstAllenamento = snapshot.children.firstOrNull()
+                    if (firstAllenamento != null) {
+                        val allenamentoID = firstAllenamento.key
+                        val orarioInizio = firstAllenamento.child("orarioInizio").getValue(String::class.java) ?: "N/A"
+                        val orarioFine = firstAllenamento.child("orarioFine").getValue(String::class.java) ?: "N/A"
+                        val obiettivi = firstAllenamento.child("obiettivi").children.mapNotNull { obiettivo ->
+                            obiettivo.getValue(String::class.java)
+                        }
+                        callback(allenamentoID, orarioInizio, orarioFine, obiettivi)
+                    } else {
+                        callback(null, null, null, null)
+                    }
+                } else {
+                    callback(null, null, null, null)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(null, null, null, null)
+            }
+        })
+    }
+
+    fun getPartita(formattedDate: String, callback: (String?, String?, String?, String?, String?, Boolean?, Int?, Int?) -> Unit) {
+        val partitaRef = database.child("Partite").child(formattedDate)
+        partitaRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val firstPartita = snapshot.children.firstOrNull()
+                    if (firstPartita != null) {
+                        val idPartita = firstPartita.key
+                        val avversario = firstPartita.child("avversario").value as? String ?: "N/A"
+                        val orario = firstPartita.child("orario").value as? String ?: "N/A"
+                        val luogo = firstPartita.child("luogo").value as? String ?: "N/A"
+                        val competizione = firstPartita.child("competizione").value as? String ?: "N/A"
+                        val casa = firstPartita.child("casa").value as? Boolean ?: false
+                        val minutiPerTempo = (firstPartita.child("minuti_per_tempo").value as? Number)?.toInt() ?: 0
+                        val numeroCalciatori = (firstPartita.child("numero_calciatori").value as? Number)?.toInt() ?: 0
+                        callback(idPartita, avversario, orario, luogo, competizione, casa, minutiPerTempo, numeroCalciatori)
+                    } else {
+                        callback(null, null, null, null, null, null, null, null)
+                    }
+                } else {
+                    callback(null, null, null, null, null, null, null, null)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(null, null, null, null, null, null, null, null)
+            }
+        })
+    }
+
+    fun getMinutiPerTempo(partitaId: String, dataPartita: String, callback: (Int) -> Unit) {
+        database.child("Partite").child(dataPartita).child(partitaId).child("minuti_per_tempo")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val minutiPerTempo = snapshot.getValue(Int::class.java) ?: 45
+                    callback(minutiPerTempo)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    callback(45)
+                }
+            })
+    }
+
+    fun getTempi(partitaId: String, dataPartita: String, callback: (Int) -> Unit) {
+        database.child("Partite").child(dataPartita).child(partitaId).child("numero_tempi")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val tempi = snapshot.getValue(Int::class.java) ?: 2
+                    callback(tempi)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    callback(2) // Valore predefinito in caso di errore
+                }
+            })
+    }
+
+    fun getEventi(partitaId: String, dataPartita: String, callback: (List<Evento>) -> Unit) {
+        val eventiRef = database.child("Partite").child(dataPartita).child(partitaId).child("eventi")
+
+        eventiRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val eventiList = mutableListOf<Evento>()
+                for (eventSnapshot in snapshot.children) {
+                    try {
+                        val evento = eventSnapshot.getValue(Evento::class.java)
+                        if (evento != null) {
+                            eventiList.add(evento)
+                        }
+                    } catch (e: Exception) {
+                        callback(emptyList())
+                    }
+                }
+                callback(eventiList)
+            }
+            override fun onCancelled(error: DatabaseError){
+                callback(emptyList())
+            }
+        })
+    }
+
+    fun getSquadraPrincipale(callback: (String?, String?) -> Unit) {
+        val squadraRef = database.child("Squadra")
+        squadraRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                try {
+                    val nome = snapshot.child("nome").getValue(String::class.java)
+                    val indirizzo = snapshot.child("indirizzo").getValue(String::class.java)
+                    callback(nome, indirizzo)
+                } catch (e: Exception) {
+                    callback(null, null)
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                callback(null, null)
+            }
+        })
+    }
+
+
+
+
+
+    /**
+     * Funzioni di aggiunta al database
+     */
+
+    fun aggiungiGiocatore(
+        nome: String,
+        cognome: String,
+        eta: Int,
+        ruolo: String,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val giocatoreId = database.child("Giocatori").push().key
+        if (giocatoreId != null) {
+            val giocatore = Giocatore(giocatoreId, nome, cognome, eta, ruolo)
+            database.child("Giocatori").child(giocatoreId).setValue(giocatore)
+                .addOnSuccessListener {
+                    callback(true, "Giocatore aggiunto con successo")
+                }
+                .addOnFailureListener { e ->
+                    callback(false, "Errore durante l'aggiunta: ${e.message}")
+                }
+        }
+        else {
+            callback(false, "Errore: impossibile generare l'ID del giocatore")
+        }
+    }
+
+    fun aggiungiAllenamento(
+        data: String,
+        orarioInizio: String,
+        orarioFine: String,
+        obiettiviSelezionati: List<String>,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val allenamentoId = database.child("Allenamenti").child(data).push().key
+        if (allenamentoId != null) {
+            val allenamento = Allenamento(
+                id = allenamentoId,
+                orarioInizio = orarioInizio,
+                orarioFine = orarioFine,
+                obiettivi = obiettiviSelezionati
+            )
+            database.child("Allenamenti").child(data).child(allenamentoId).setValue(allenamento)
+                .addOnSuccessListener {
+                    callback(true, "Allenamento aggiunto con successo")
+                }
+                .addOnFailureListener { e ->
+                    callback(false, "Errore durante l'aggiunta: ${e.message}")
+                }
+        } else {
+            callback(false, "Errore: impossibile generare l'ID dell'allenamento")
+        }
+    }
+
+    fun aggiungiObiettivo(
+        obiettivo: String,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val obiettivoId = database.child("Obiettivi").push().key
+        if(obiettivoId != null) {
+            database.child("Obiettivi").child(obiettivoId).setValue(obiettivo).addOnSuccessListener {
+                callback(true, "Obiettivo aggiunto con successo")
+            }
+                .addOnFailureListener { e ->
+                    callback(false, "Errore durante l'aggiunta: ${e.message}")
+            }
+        } else
+            callback(false, "Errore: impossibile generare l'ID dell'obiettivo")
+    }
+
+
+    fun aggiungiPartita(
+        selectedDate: String,
+        partitaId: String?,
+        orario: String,
+        luogo: String,
+        avversario: String,
+        competizione: String,
+        numTempi: Int,
+        minTempi: Int,
+        numGiocatori: Int,
+        casa: Boolean,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val partitaUpdates = mutableMapOf<String, Any>(
+            "orario" to orario,
+            "luogo" to luogo,
+            "avversario" to avversario,
+            "competizione" to competizione,
+            "numero_tempi" to numTempi,
+            "minuti_per_tempo" to minTempi,
+            "numero_calciatori" to numGiocatori,
+            "casa" to casa
+        )
+        val partitaIdFinal = partitaId ?: database.child("Partite").child(selectedDate).push().key!!
+        database.child("Partite").child(selectedDate).child(partitaIdFinal)
+            .updateChildren(partitaUpdates)
+            .addOnSuccessListener {
+                callback(true, "Partita salvata con successo")
+            }
+            .addOnFailureListener { e ->
+                callback(false, "Errore durante il salvataggio: ${e.message}")
+            }
+    }
+
+    fun aggiungiPresenzeAllenamento(
+        data: String,
+        allenamentoId: String,
+        presenze: Map<String, Int>,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val presenzeRef = database.child("Allenamenti").child(data).child(allenamentoId).child("presenze")
+        presenzeRef.setValue(presenze)
+            .addOnSuccessListener {
+                callback(true, "Presenze salvate con successo")
+            } .addOnFailureListener {
+                callback(false, "Errore durante il salvataggio: ${it.message}")
+            }
+    }
+
+    fun aggiungiConvocatiPartita(
+        partitaId: String,
+        data: String,
+        convocazioniConfermate: Map<String, Boolean>,
+        callback: (Boolean, String) -> Unit)
+    {
+        val convocatiRef = database.child("Partite").child(data).child(partitaId).child("convocati")
+        convocatiRef.setValue(convocazioniConfermate)
+            .addOnSuccessListener {
+                callback(true, "Convocazioni aggiornate con successo!")
+            }
+            .addOnFailureListener { exception ->
+                callback(false, "Errore durante l'aggiornamento delle convocazioni: ${exception.message}")
+            }
+    }
+
+    fun aggiungiFormazionePartita(
+        adapter: SelezioneGiocatoreAdapter,
+        partitaId: String,
+        dataPartita: String,
+        callback: (Boolean, String) -> Unit
+    ) {
+        getConvocati(partitaId, dataPartita) { convocati ->
+            val titolari = mutableMapOf<String, String>()
+            adapter.selezioni.forEach { (posizione, giocatoreId) ->
+                titolari[giocatoreId] = "${posizione.ruolo} ${posizione.posizioneIndex}"
+            }
+            val titolariIds = titolari.keys.toSet()
+            val panchina = convocati.filter { it !in titolariIds }
+
+            val formazioneMap = mapOf(
+                "titolari" to titolari,
+                "panchina" to panchina
+            )
+
+            database.child("Partite").child(dataPartita).child(partitaId).child("formazione")
+                .setValue(formazioneMap)
+                .addOnSuccessListener { callback(true, "Formazione aggiornata con successo!") }
+                .addOnFailureListener { error ->
+                    callback(false, "Errore durante l'aggiornamento delle formazioni: ${error.message}")
+                }
+        }
+    }
+
+    fun aggiungiEvento (idPartita: String, data: String, minutaggio: String,idGiocatore: String, nomeEvento: String, squadra: Boolean, dettagliEvento: Map<String, Any?> = emptyMap()) {
+        val eventiRef = database.child("Partite").child(data).child(idPartita).child("eventi")
+        val eventoId = eventiRef.push().key ?: return
+
+        val eventoMap = mapOf(
+            "idEvento" to eventoId,
+            "minutaggio" to minutaggio,
+            "nomeEvento" to nomeEvento,
+            "nomeGiocatore" to idGiocatore,
+            "squadra" to squadra,
+            "dettagli" to dettagliEvento
+        )
+
+        eventiRef.child(eventoId).setValue(eventoMap)
+    }
+
+    /**
+     *  Funzioni di modifica del database
+     */
+
+    fun modificaGiocatore(
+        giocatoreId: String,
+        nome: String,
+        cognome: String,
+        eta: Int,
+        ruolo: String,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val giocatore = Giocatore(giocatoreId, nome, cognome, eta, ruolo)
+        database.child("Giocatori").child(giocatoreId).setValue(giocatore)
+            .addOnSuccessListener {
+                callback(true, "Giocatore modificato con successo")
+            }
+            .addOnFailureListener { e ->
+                callback(false, "Errore durante la modifica del giocatore: ${e.message}")
+            }
+    }
+
+    fun modificaAllenamento(
+        data: String,
+        allenamentoId: String,
+        orarioInizio: String,
+        orarioFine: String,
+        obiettiviSelezionati: List<String>,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val aggiornamenti = mapOf(
+            "orarioInizio" to orarioInizio,
+            "orarioFine" to orarioFine,
+            "obiettivi" to obiettiviSelezionati
+        )
+        database.child("Allenamenti").child(data).child(allenamentoId)
+            .updateChildren(aggiornamenti)
+            .addOnSuccessListener {
+                callback(true, "Allenamento modificato con successo")
+            }
+            .addOnFailureListener { e ->
+                callback(false, "Errore durante la modifica: ${e.message}")
+            }
+    }
+
+    fun modificaEvento(
+        eventoId: String,
+        partitaId: String,
+        dataPartita: String,
+        minutaggio: String,
+        nomeGiocatore: String,
+        nomeEvento: String,
+        dettagli: Map<String, Any?>,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val eventoRef = database.child("Partite").child(dataPartita).child(partitaId).child("eventi").child(eventoId)
+        val aggiornamenti = mapOf(
+            "minutaggio" to minutaggio,
+            "nomeGiocatore" to nomeGiocatore,
+            "nomeEvento" to nomeEvento,
+            "dettagli" to dettagli
+        )
+        eventoRef.updateChildren(aggiornamenti)
+            .addOnSuccessListener {
+                callback(true, "Evento modificato con successo")
+            }
+            .addOnFailureListener { e ->
+                callback(false, "Errore durante la modifica: ${e.message}")
+    }
+    }
+
+    fun modificaSquadraPrincipale(
+        nome: String,
+        indirizzo: String,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val squadraRef = database.child("Squadra")
+
+        val aggiornamenti = mapOf(
+            "nome" to nome,
+            "indirizzo" to indirizzo
+        )
+
+        squadraRef.updateChildren(aggiornamenti)
+            .addOnSuccessListener {
+                callback(true, "Squadra aggiornata con successo")
+            }
+            .addOnFailureListener {
+                callback(false, "Errore durante l'aggiornamento: ${it.message}")
+            }
+    }
+
+
+    /**
+     * Funzioni di eliminazione dal database
+     */
+    fun eliminaAllenamento(data: String, allenamentoId: String, callback: (Boolean, String) -> Unit){
+        val allenamentoRef = database.child("Allenamenti").child(data).child(allenamentoId)
+        allenamentoRef.removeValue()
+            .addOnSuccessListener { callback (true, "Allenamento eliminato con successo") }
+            .addOnFailureListener{ callback(true, "Errore durante l'eliminazione: ${it.message}")}
+    }
+
+    fun eliminaGiocatore(giocatoreId: String, callback: (Boolean, String) -> Unit) {
+        val giocatoreRef = database.child("Giocatori").child(giocatoreId)
+        giocatoreRef.removeValue()
+            .addOnSuccessListener { callback(true, "Giocatore eliminato con successo") }
+            .addOnFailureListener { callback(false, "Errore durante l'eliminazione del giocatore: ${it.message}")}
+    }
+
+    fun eliminaPartita(data: String, partitaId: String, callback: (Boolean, String) -> Unit) {
+        val partitaRef = database.child("Partite").child(data).child(partitaId)
+        partitaRef.removeValue()
+            .addOnSuccessListener { callback(true, "Partita eliminata con successo")}
+            .addOnFailureListener { callback(false, "Errore durante l'eliminazione della partita: ${it.message}")
+            }
+    }
+
+    fun eliminaEvento(eventoId: String, partitaId: String, dataPartita: String, callback: (Boolean, String) -> Unit){
+        val eventoRef=database.child("Partite").child(dataPartita).child(partitaId).child("eventi").child(eventoId)
+
+        eventoRef.removeValue()
+            .addOnSuccessListener { callback(true, "Evento eliminato con successo") }
+            .addOnFailureListener { callback(false, "Errore durante l'eliminazione: ${it.message}")}
+    }
+
+
+}
+

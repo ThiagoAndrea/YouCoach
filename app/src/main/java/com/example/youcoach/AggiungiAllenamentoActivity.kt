@@ -6,12 +6,10 @@ import android.os.Bundle
 import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.*
 import java.util.*
 
 class AggiungiAllenamentoActivity : BaseActivity() {
 
-    private lateinit var database: DatabaseReference
     private var allenamentoId: String? = null
     private var selectedDate: String = ""
 
@@ -20,7 +18,7 @@ class AggiungiAllenamentoActivity : BaseActivity() {
     private lateinit var editTextOrarioInizio: EditText
     private lateinit var editTextOrarioFine: EditText
     private lateinit var buttonAggiungi: Button
-    private lateinit var buttonAggiungiObiettivo: Button
+    private lateinit var buttonAggiungiObiettivo: ImageButton
     private lateinit var recyclerViewObiettivi: RecyclerView
 
     // Adapter and Data
@@ -28,15 +26,15 @@ class AggiungiAllenamentoActivity : BaseActivity() {
     private lateinit var obiettiviList: MutableList<String>
     private lateinit var obiettiviMappa: MutableMap<String, Boolean>
 
+    private val db = DatabaseManager()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_aggiungi_allenamento)
         setupBottomNavigation(R.id.nav_calendar)
 
-        database = FirebaseDatabase.getInstance().reference
-
         initUI()
-        caricaObiettiviDaFirebase()
+        caricaObiettivi()
         handleIntent()
         setupButtonListeners()
     }
@@ -45,7 +43,7 @@ class AggiungiAllenamentoActivity : BaseActivity() {
         editTextData = findViewById(R.id.editTextData)
         editTextOrarioInizio = findViewById(R.id.editTextOrarioInizio)
         editTextOrarioFine = findViewById(R.id.editTextOrarioFine)
-        buttonAggiungi = findViewById(R.id.buttonAggiungiAllenamento)
+        buttonAggiungi = findViewById(R.id.btnAggiungiAllenamento)
         buttonAggiungiObiettivo = findViewById(R.id.aggiungiObiettivo_button)
         val buttonBack = findViewById<ImageButton>(R.id.back_button)
 
@@ -66,37 +64,29 @@ class AggiungiAllenamentoActivity : BaseActivity() {
             val orarioInizio = intent.getStringExtra("ORARIO_INIZIO") ?: ""
             val orarioFine = intent.getStringExtra("ORARIO_FINE") ?: ""
             val obiettivi = intent.getStringArrayListExtra("OBIETTIVI") ?: arrayListOf()
-
             editTextOrarioInizio.setText(orarioInizio)
             editTextOrarioFine.setText(orarioFine)
-            editTextData.setText(selectedDate.replace("-", "/"))  // Mostra la data in formato leggibile
+            editTextData.setText(selectedDate.replace("-", "/"))
 
-            // Impostiamo la mappa con gli obiettivi selezionati
             obiettivi.forEach { obiettiviMappa[it] = true }
 
             buttonAggiungi.text = "Modifica Allenamento"
 
-            // Ricarica gli obiettivi selezionati nel RecyclerView
             aggiornaRecyclerView()
         }
     }
 
-
-
     private fun setupButtonListeners() {
-
         editTextData.setOnClickListener { selezionaData() }
 
         editTextOrarioInizio.setOnClickListener { selezionaOrario(editTextOrarioInizio) }
         editTextOrarioFine.setOnClickListener { selezionaOrario(editTextOrarioFine) }
 
-        // Add obiettivo dialog
         buttonAggiungiObiettivo.setOnClickListener {
-            val dialog = AggiungiObiettivoDialogFragment { caricaObiettiviDaFirebase() }
+            val dialog = AggiungiObiettivoDialogFragment { caricaObiettivi() }
             dialog.show(supportFragmentManager, "AggiungiObiettivoDialog")
         }
 
-        // Save or update allenamento
         buttonAggiungi.setOnClickListener {
             val orarioInizio = editTextOrarioInizio.text.toString().trim()
             val orarioFine = editTextOrarioFine.text.toString().trim()
@@ -104,10 +94,26 @@ class AggiungiAllenamentoActivity : BaseActivity() {
             if (selectedDate.isEmpty() || orarioInizio.isEmpty() || orarioFine.isEmpty()) {
                 Toast.makeText(this, "Compila tutti i campi", Toast.LENGTH_SHORT).show()
             } else {
+                val obiettiviSelezionati = obiettiviMappa.filter { it.value }.keys.toList()
+
                 if (allenamentoId != null) {
-                    modificaAllenamento(selectedDate, allenamentoId!!, orarioInizio, orarioFine)
+                    db.modificaAllenamento(selectedDate, allenamentoId!!, orarioInizio, orarioFine, obiettiviSelezionati) { success, message ->
+                        if (success) {
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                            finish()
+                        } else {
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 } else {
-                    aggiungiAllenamento(selectedDate, orarioInizio, orarioFine)
+                    db.aggiungiAllenamento(selectedDate, orarioInizio, orarioFine, obiettiviSelezionati) { success, message ->
+                        if (success) {
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                            finish()
+                        } else {
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
             }
         }
@@ -142,25 +148,14 @@ class AggiungiAllenamentoActivity : BaseActivity() {
         timePickerDialog.show()
     }
 
-    private fun caricaObiettiviDaFirebase() {
-        database.child("Obiettivi").addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                obiettiviList.clear()
-                obiettiviMappa.clear()
-                for (document in snapshot.children) {
-                    val obiettivo = document.getValue(String::class.java)
-                    if (obiettivo != null) {
-                        obiettiviList.add(obiettivo)
-                        obiettiviMappa[obiettivo] = false
-                    }
-                }
-                aggiornaRecyclerView()
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@AggiungiAllenamentoActivity, "Errore nel recupero degli obiettivi", Toast.LENGTH_SHORT).show()
-            }
-        })
+    private fun caricaObiettivi() {
+        db.getObiettivi { obiettivi, mappa ->
+            obiettiviList.clear()
+            obiettiviList.addAll(obiettivi)
+            obiettiviMappa.clear()
+            obiettiviMappa.putAll(mappa)
+            aggiornaRecyclerView()
+        }
     }
 
     private fun aggiornaRecyclerView() {
@@ -169,50 +164,8 @@ class AggiungiAllenamentoActivity : BaseActivity() {
             true,
             obiettiviMappa
         ) { obiettivo, isChecked ->
-            obiettiviMappa[obiettivo] = isChecked  // Aggiorna la mappa quando una checkbox cambia
+            obiettiviMappa[obiettivo] = isChecked
         }
         recyclerViewObiettivi.adapter = obiettiviAdapter
     }
-
-
-
-    private fun aggiungiAllenamento(data: String, orarioInizio: String, orarioFine: String) {
-        val allenamentoId = database.child("Allenamenti").child(data).push().key
-        if (allenamentoId != null) {
-            val allenamento = Allenamento(
-                allenamentoId,
-                orarioInizio,
-                orarioFine,
-                obiettiviMappa.filterValues { it }.keys.toList()
-            )
-            database.child("Allenamenti").child(data).child(allenamentoId).setValue(allenamento)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Allenamento aggiunto con successo", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Errore durante l'aggiunta", Toast.LENGTH_SHORT).show()
-                }
-        }
-    }
-
-    private fun modificaAllenamento(data: String, allenamentoId: String, orarioInizio: String, orarioFine: String) {
-        val aggiornamenti = mapOf(
-            "orarioInizio" to orarioInizio,
-            "orarioFine" to orarioFine,
-            "obiettivi" to obiettiviMappa.filterValues { it }.keys.toList()  // Filtra gli obiettivi selezionati
-        )
-
-        database.child("Allenamenti").child(data).child(allenamentoId)
-            .updateChildren(aggiornamenti)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Allenamento modificato con successo", Toast.LENGTH_SHORT).show()
-                finish()
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Errore durante la modifica", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-
 }

@@ -13,18 +13,18 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.Firebase
-import com.google.firebase.database.database
 
 class FormazioneAdapter(
     private val formazione: Map<String, String>,
     private val data: String,
     private val idPartita: String,
-    private val eventoManager: EventoManager,
     private val ruoliOrdine: List<String> = listOf("Portiere", "Difensore", "Centrocampista", "Trequartista", "Attaccante")
+
+
 ) : RecyclerView.Adapter<FormazioneAdapter.RigaViewHolder>() {
 
     private var buttonsEnabled: Boolean = false
+    private val db = DatabaseManager()
 
     private fun normalizzaRuolo(ruolo: String): String {
         return ruolo.replace(Regex("\\s\\d+$"), "")
@@ -76,45 +76,35 @@ class FormazioneAdapter(
                 val cognomeGiocatore: TextView = giocatoreView.findViewById(R.id.cognome_giocatore)
                 val cerchioGiocatore: TextView = giocatoreView.findViewById(R.id.cerchio_giocatore)
 
-                recuperaCognomeGiocatore(idGiocatore) { cognome ->
-                    cognome?.let {
-                        cognomeGiocatore.text = it
-                    } ?: run {
-                        Log.e(
-                            "FormazioneAdapter",
-                            "Cognome non trovato per il giocatore con id: $idGiocatore"
-                        )
+                db.getNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
+                    if (cognome != null) {
+                        cognomeGiocatore.text = cognome
+                    } else {
+                        Log.e("FormazioneAdapter", "Cognome non trovato per il giocatore con id: $idGiocatore")
                     }
+
+                    val iniziali = "${nome?.firstOrNull() ?: ""}${cognome?.firstOrNull() ?: ""}".uppercase()
+                    cerchioGiocatore.text = if (iniziali.isNotBlank()) iniziali else "?"
                 }
 
-                recuperaNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
-                    if (nome != null && cognome != null) {
-                        val iniziali =
-                            "${nome.firstOrNull() ?: ""}${cognome.firstOrNull() ?: ""}".uppercase()
-                        cerchioGiocatore.text = iniziali
-                    } else {
-                        cerchioGiocatore.text = "?"
-                    }
-                }
 
                 val params = GridLayout.LayoutParams().apply {
-                    width = 0  // Può essere MATCH_PARENT se vuoi che si espanda
+                    width = 0
                     height = GridLayout.LayoutParams.WRAP_CONTENT
                     columnSpec = GridLayout.spec(
                         GridLayout.UNDEFINED,
                         1f
-                    ) // Occupa una sola colonna in modo equo
+                    )
                 }
                 giocatoreView.layoutParams = params
 
                 gridGiocatori.addView(giocatoreView)
 
-                // Abilita o disabilita il pulsante in base a buttonsEnabled
                 cerchioGiocatore.isEnabled = buttonsEnabled
-                cerchioGiocatore.alpha = if (buttonsEnabled) 1f else 0.5f // Opzionale: cambia l'opacità
+                cerchioGiocatore.alpha = if (buttonsEnabled) 1f else 0.5f
 
                 cerchioGiocatore.setOnClickListener {
-                    if (buttonsEnabled) { // Solo se i pulsanti sono abilitati
+                    if (buttonsEnabled) {
                         (itemView.context as? LiveActivity)?.getCurrentMinutaggio()?.let { minutaggio ->
                             mostraDialogEventoGiocatore(itemView, idGiocatore, minutaggio)
                         }
@@ -124,46 +114,7 @@ class FormazioneAdapter(
         }
 
 
-        // Funzione per recuperare il cognome dal database
-        private fun recuperaCognomeGiocatore(idGiocatore: String, callback: (String?) -> Unit) {
-            val database = Firebase.database.reference
-            val giocatoriRef = database.child("Giocatori")
 
-            Log.d("FormazioneAdapter", "Recuperando cognome per il giocatore con ID: $idGiocatore")
-
-            giocatoriRef.child(idGiocatore).get().addOnSuccessListener { dataSnapshot ->
-                if (dataSnapshot.exists()) {
-                    val cognome = dataSnapshot.child("cognome").getValue(String::class.java)
-                    Log.d("FormazioneAdapter", "Cognome trovato: $cognome")
-                    callback(cognome)
-                } else {
-                    Log.e(
-                        "FormazioneAdapter",
-                        "Giocatore con ID: $idGiocatore non trovato nel database"
-                    )
-                    callback(null)
-                }
-            }.addOnFailureListener {
-                Log.e("FormazioneAdapter", "Errore nel recupero del cognome: ${it.message}")
-                callback(null)
-            }
-        }
-
-        private fun recuperaNomeCognomeGiocatore(
-            idGiocatore: String,
-            callback: (String?, String?) -> Unit
-        ) {
-            val database = Firebase.database.reference.child("Giocatori").child(idGiocatore)
-
-            database.get().addOnSuccessListener { snapshot ->
-                val nome = snapshot.child("nome").getValue(String::class.java)
-                val cognome = snapshot.child("cognome").getValue(String::class.java)
-                callback(nome, cognome)
-            }.addOnFailureListener {
-                Log.e("Adapter", "Errore nel recupero dati per $idGiocatore")
-                callback(null, null)
-            }
-        }
 
         private fun mostraDialogEventoGiocatore(view: View, idGiocatore: String, minutaggio: String) {
             val context = view.context
@@ -171,7 +122,7 @@ class FormazioneAdapter(
             val dialog = AlertDialog.Builder(context).setView(dialogView).create()
 
             val textEvento: TextView = dialogView.findViewById(R.id.textEvento)
-            recuperaNomeCognomeGiocatore(idGiocatore){nome, cognome ->
+            db.getNomeCognomeGiocatore(idGiocatore){nome, cognome ->
                 if(nome!=null && cognome!=null ){
                     textEvento.text="$nome $cognome"
                 } else {
@@ -199,7 +150,7 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val tipoTiro = options[which]
                         val dettagliTiro = mapOf("tipoTiro" to tipoTiro)
-                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Tiro", true, dettagliTiro)
+                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Tiro", true, dettagliTiro)
                         avviaAnimazione(view, R.drawable.tiro)
                         dialog.dismiss()
                     }
@@ -216,13 +167,13 @@ class FormazioneAdapter(
             }
 
             btnFuorigioco.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio,idGiocatore, "Fuorigioco", true)
+                db.aggiungiEvento(idPartita, data, minutaggio,idGiocatore, "Fuorigioco", true)
                 avviaAnimazione(view, R.drawable.fuorigioco)
                 dialog.dismiss()
             }
 
             btnCambio.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Cambio", true)
+                db.aggiungiEvento(idPartita, data,minutaggio, idGiocatore, "Cambio", true)
                 avviaAnimazione(view, R.drawable.round_arrows)
                 dialog.dismiss()
             }
@@ -234,7 +185,7 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val tipoInfortunio = options[which]
                         val dettagliInfortunio = mapOf("tipoInfortunio" to tipoInfortunio)
-                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Infortunio", true, dettagliInfortunio)
+                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Infortunio", true, dettagliInfortunio)
                         avviaAnimazione(view, R.drawable.infortunio_live)
                         dialog.dismiss()
                     }
@@ -254,7 +205,7 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val tipoFallo = options[which]
                         val dettagliFallo = mapOf("tipoFallo" to tipoFallo)
-                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Fallo", true, dettagliFallo)
+                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Fallo", true, dettagliFallo)
                         avviaAnimazione(view, R.drawable.fallo)
                         dialog.dismiss()
                     }
@@ -274,7 +225,7 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val motivoCartellinoGiallo = options[which]
                         val dettagliCartellinoGiallo = mapOf("motivo" to motivoCartellinoGiallo)
-                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Cartellino Giallo", true, dettagliCartellinoGiallo)
+                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Giallo", true, dettagliCartellinoGiallo)
                         avviaAnimazione(view, R.drawable.yellow_card)
                         dialog.dismiss()
                     }
@@ -294,7 +245,7 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val motivoCartellinoRosso = options[which]
                         val dettagliCartellinoRosso = mapOf("motivo" to motivoCartellinoRosso)
-                        eventoManager.registraEvento(idPartita, data, minutaggio, idGiocatore, "Cartellino Rosso", true, dettagliCartellinoRosso)
+                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Rosso", true, dettagliCartellinoRosso)
                         avviaAnimazione(view, R.drawable.red_card)
                         dialog.dismiss()
                     }
@@ -307,7 +258,7 @@ class FormazioneAdapter(
 
 
             btnParata.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data,minutaggio, idGiocatore, "Parata", true)
+                db.aggiungiEvento(idPartita, data,minutaggio, idGiocatore, "Parata", true)
                 avviaAnimazione(view, R.drawable.parata)
                 dialog.dismiss()
             }
@@ -345,7 +296,7 @@ class FormazioneAdapter(
             val giocatoriIdMap = mutableMapOf<String, String>()
 
             giocatoriTitolari.forEach { idGiocatore ->
-                recuperaNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
+                db.getNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
                     if (nome != null && cognome != null) {
                         val nomeCompleto = "$nome $cognome"
                         giocatoriNomi.add(nomeCompleto)
@@ -363,14 +314,14 @@ class FormazioneAdapter(
                 val assistSelezionato = spinnerAssist.selectedItem.toString()
                 val idAssistMan = giocatoriIdMap[assistSelezionato]
                 val dettagliGol = mapOf("idAssist" to idAssistMan)
-                eventoManager.registraEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true, dettagliGol)
+                db.aggiungiEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true, dettagliGol)
                 avviaAnimazione(view, R.drawable.gol)
                 dialog.dismiss()
             }
 
 
             btnNessunAssist.setOnClickListener {
-                eventoManager.registraEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true)
+                db.aggiungiEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true)
                 avviaAnimazione(view, R.drawable.gol)
                 dialog.dismiss()
             }
@@ -382,12 +333,11 @@ class FormazioneAdapter(
             dialog.show()
         }
 
-
     }
 
     fun setButtonsEnabled(enabled: Boolean) {
         buttonsEnabled = enabled
-        notifyDataSetChanged() // Notifica l'adapter per aggiornare la vista
+        notifyDataSetChanged()
     }
 
 

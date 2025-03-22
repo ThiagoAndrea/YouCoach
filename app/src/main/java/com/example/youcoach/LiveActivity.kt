@@ -11,10 +11,13 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,9 +28,8 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 import androidx.core.view.doOnPreDraw
+import org.w3c.dom.Text
 
 
 class LiveActivity : BaseActivity() {
@@ -44,9 +46,13 @@ class LiveActivity : BaseActivity() {
     private lateinit var buttonOpenDrawer: ImageButton
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var eventoAdapter: EventoAdapter
+    private lateinit var squadraCasa: TextView
+    private lateinit var squadraOspite: TextView
+    private lateinit var punteggioCasa: TextView
+    private lateinit var punteggioOspite: TextView
+    private lateinit var buttonEventiCasa: ImageButton
+    private lateinit var buttonEventiOspite: ImageButton
 
-    // Data handling
-    private val eventoManager = EventoManager()
     private var startTime = 0L
     private var timeInMilliseconds = 0L
     private val handler = Handler(Looper.getMainLooper())
@@ -57,6 +63,8 @@ class LiveActivity : BaseActivity() {
     private var pressed = true
     private lateinit var partitaId: String
     private lateinit var dataPartita: String
+
+    private val db = DatabaseManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,30 +80,45 @@ class LiveActivity : BaseActivity() {
         }
 
         initializeUI()
+        setUpNomi()
         setupRecyclerViews()
-        loadPartitaData()
-        loadMinutiPerTempo()
-        loadTempi()
+        setUpIconeSuperiori()
+        setUpListeners()
+        db.getPartita(dataPartita) { _, avversario, _, _, _, _, _, _ ->
+            if (avversario == null) {
+                Toast.makeText(this, "Dati della partita non trovati per ID: $partitaId", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        db.getMinutiPerTempo(partitaId, dataPartita){minuti ->
+            minutiPerTempo = minuti
+        }
+
+        db.getTempi(partitaId, dataPartita){numeroTempi ->
+            tempi = numeroTempi
+        }
     }
 
-    // Initialize UI elements
     private fun initializeUI() {
         minutaggio = findViewById(R.id.minutaggio)
         fabStartMatch = findViewById(R.id.fab_start_match)
         fabEndHalf = findViewById(R.id.fab_end_half)
         fabEndMatch = findViewById(R.id.fab_end_match)
         tempoDiGioco = findViewById(R.id.tempo_di_gioco)
-
+        squadraCasa = findViewById(R.id.squadra_casa_text)
+        squadraOspite = findViewById(R.id.squadra_ospite_text)
+        punteggioCasa = findViewById(R.id.risultato_casa)
+        punteggioOspite = findViewById(R.id.risultato_trasferta)
+        buttonEventiCasa = findViewById(R.id.btn_eventi_casa)
+        buttonEventiOspite = findViewById(R.id.btn_eventi_ospite)
         sideDrawer = findViewById(R.id.sideDrawer)
         buttonOpenDrawer = findViewById(R.id.buttonOpenDrawer)
         drawerLayout = findViewById(R.id.drawer_layout)
 
-
         recyclerViewEvents = sideDrawer.findViewById(R.id.recyclerViewEvents)
         recyclerViewEvents.layoutManager = LinearLayoutManager(this)
-        eventoAdapter = EventoAdapter(mutableListOf())
+        eventoAdapter = EventoAdapter(mutableListOf(), dataPartita, partitaId, this)
         recyclerViewEvents.adapter = eventoAdapter
-
 
         fabStartMatch.setOnClickListener { toggleMenu() }
         fabEndHalf.setOnClickListener { confirmEndTime(false) }
@@ -107,124 +130,44 @@ class LiveActivity : BaseActivity() {
         buttonOpenDrawer.setOnClickListener { toggleSideDrawer() }
     }
 
-    // Set up RecyclerViews
     private fun setupRecyclerViews() {
         recyclerFormazione = findViewById(R.id.recyclerFormazione)
         recyclerPanchina = findViewById(R.id.recyclerPanchina)
 
         recyclerFormazione.layoutManager = LinearLayoutManager(this)
         recyclerPanchina.layoutManager = LinearLayoutManager(this)
-        val database = Firebase.database.reference
-        val formazioneRef = database.child("Partite").child(dataPartita).child(partitaId).child("formazione")
 
-        formazioneRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                Log.d("LiveActivity", "Snapshot ricevuto: ${snapshot.value}")
-
-                val formazioneMap = snapshot.child("titolari").children
-                    .mapNotNull { it.key?.let { idGiocatore -> idGiocatore to it.getValue(String::class.java) } }
-                    .toMap() as Map<String, String>
-
-                if (formazioneMap.isNotEmpty()) {
-                    val formazioneAdapter = FormazioneAdapter(formazioneMap, dataPartita, partitaId, eventoManager)
-                    recyclerFormazione.adapter = formazioneAdapter
-                } else {
-                    Log.e("LiveActivity", "Nessun dato per 'titolari'")
-                }
-
-                val panchinaList = snapshot.child("panchina").children.mapNotNull { it.getValue(String::class.java) }
-
-                if (panchinaList.isNotEmpty()) {
-                    loadGiocatoriRoles(panchinaList)
-                } else {
-                    Log.e("LiveActivity", "Nessun dato per 'panchina'")
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("LiveActivity", "Errore Firebase: ${error.message}")
-            }
-        })
-    }
-
-    // Load partita data from Firebase
-    private fun loadPartitaData() {
-        val database = Firebase.database.reference
-        val partitaRef = database.child("Partite").child(dataPartita).child(partitaId)
-
-        partitaRef.get().addOnSuccessListener { dataSnapshot ->
-            if (dataSnapshot.exists()) {
-                // Puoi recuperare altri dati della partita qui, se necessario
+        db.getFormazioneMap(partitaId, dataPartita) { titolari, panchina ->
+            if (titolari.isNotEmpty()) {
+                recyclerFormazione.adapter = FormazioneAdapter(titolari, dataPartita, partitaId)
             } else {
-                Log.e("LiveActivity", "Dati della partita non trovati per ID: $partitaId")
+                Toast.makeText(this, "Nessun dato per 'titolari'", Toast.LENGTH_SHORT).show()
             }
-        }.addOnFailureListener {
-            Log.e("LiveActivity", "Errore nel recupero dei dati della partita: ${it.message}")
+
+            if (panchina.isNotEmpty()) {
+                loadGiocatoriRoles(panchina)
+            } else {
+                Toast.makeText(this, "Nessun dato per 'panchina'", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    // Load roles for players on the bench
     private fun loadGiocatoriRoles(panchinaList: List<String>) {
-        val databaseRef = Firebase.database.reference.child("Giocatori")
         val ordineRuoli = mapOf("Portiere" to 1, "Difensore" to 2, "Centrocampista" to 3, "Attaccante" to 4)
-
-        val tasks = panchinaList.map { idGiocatore ->
-            databaseRef.child(idGiocatore).child("ruolo").get()
-                .continueWith { task -> idGiocatore to (task.result?.getValue(String::class.java) ?: "Altro") }
-        }
-
-        Tasks.whenAllComplete(tasks).addOnSuccessListener {
-            val giocatoriOrdinati = tasks.mapNotNull { it.result as? Pair<String, String> }
-                .sortedBy { ordineRuoli[it.second] ?: Int.MAX_VALUE }
-                .map { it.first }
-
-            val panchinaAdapter = PanchinaAdapter(giocatoriOrdinati)
+        db.getGiocatori { giocatori ->
+            val giocatoriFiltrati = giocatori.filter { it.id in panchinaList }
+            val giocatoriOrdinati = giocatoriFiltrati.sortedBy { ordineRuoli[it.ruolo] ?: Int.MAX_VALUE }
+            val idGiocatoriOrdinati = giocatoriOrdinati.map { it.id }
+            val panchinaAdapter = PanchinaAdapter(idGiocatoriOrdinati)
             recyclerPanchina.adapter = panchinaAdapter
-
-            Log.d("LiveActivity", "Panchina caricata con ${giocatoriOrdinati.size} giocatori")
-        }.addOnFailureListener {
-            Log.e("LiveActivity", "Errore nel caricamento dei ruoli")
         }
     }
-
-
-    private fun loadMinutiPerTempo() {
-        val database = Firebase.database.reference
-        database.child("Partite").child(dataPartita).child(partitaId).child("minuti_per_tempo")
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    minutiPerTempo = snapshot.getValue(Int::class.java) ?: 45
-                    Log.d("LiveActivity", "Minuti per tempo caricati: $minutiPerTempo")
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("LiveActivity", "Errore nel caricamento dei minuti per tempo")
-                }
-            })
-    }
-
-    private fun loadTempi() {
-        val database = Firebase.database.reference
-        database.child("Partite").child(dataPartita).child(partitaId).child("numero_tempi")
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    tempi = snapshot.getValue(Int::class.java) ?: 2
-                    Log.d("LiveActivity", "Numero tempi caricati: $tempi")
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("LiveActivity", "Errore nel caricamento del numero di tempi")
-                }
-            })
-    }
-
 
     private fun formatTime(milliseconds: Long): String {
         val seconds = (milliseconds / 1000) % 60
         val minutes = (milliseconds / (1000 * 60)) % 60
         return String.format("%02d:%02d", minutes, seconds)
     }
-
 
     private val updateTimerThread = object : Runnable {
         override fun run() {
@@ -234,7 +177,6 @@ class LiveActivity : BaseActivity() {
             handler.postDelayed(this, 1000)
         }
     }
-
 
     private fun toggleMenu() {
         if (!matchStarted) {
@@ -248,7 +190,6 @@ class LiveActivity : BaseActivity() {
             toggleEndButtonsVisibility()
         }
     }
-
 
     private fun toggleEndButtonsVisibility() {
         if (pressed) {
@@ -274,7 +215,6 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-    // Show a confirmation dialog
     private fun showConfirmationDialog(title: String, message: String, onConfirm: () -> Unit) {
         AlertDialog.Builder(this)
             .setTitle(title)
@@ -283,7 +223,6 @@ class LiveActivity : BaseActivity() {
             .setNegativeButton("No", null)
             .show()
     }
-
 
     private fun endTime() {
         handler.removeCallbacks(updateTimerThread)
@@ -297,7 +236,6 @@ class LiveActivity : BaseActivity() {
         (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(false)
     }
 
-    // End match logic
     private fun endMatch() {
         handler.removeCallbacks(updateTimerThread)
         matchStarted = false
@@ -308,7 +246,6 @@ class LiveActivity : BaseActivity() {
         (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(false)
     }
 
-    // Reset timer after a period ends
     private fun resetTimer() {
         startTime = SystemClock.elapsedRealtime()
         timeInMilliseconds = 0
@@ -322,34 +259,139 @@ class LiveActivity : BaseActivity() {
             drawerLayout.closeDrawer(GravityCompat.START)
         } else {
             drawerLayout.openDrawer(GravityCompat.START)
-            loadEventiFromFirebase()
+            db.getEventi(partitaId, dataPartita) { eventiList ->
+                eventoAdapter.updateEventi(eventiList)
+            }
         }
     }
 
-    private fun loadEventiFromFirebase() {
-        val database = Firebase.database.reference
-        val eventiRef = database.child("Partite").child(dataPartita).child(partitaId).child("eventi")
-        eventiRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                Log.d("LiveActivity", "Snapshot ricevuto: ${snapshot.value}")
-                val eventiList = mutableListOf<Evento>()
-                for (eventSnapshot in snapshot.children) {
-                    try {
-                        val evento = eventSnapshot.getValue(Evento::class.java)
-                        if (evento != null) {
-                            eventiList.add(evento)
-                        }
-                    } catch (e: Exception) {
+    private fun setUpNomi(){
+        db.getPartita(dataPartita) { idPartita, avversario, _, _, _, casa, _, _ ->
+            if (idPartita != null) {
+                db.getSquadraPrincipale { nome, _ ->
+                    if (casa == true) {
+                        squadraCasa.text = nome ?: "N/A"
+                        squadraOspite.text = avversario
+                    } else {
+                        squadraCasa.text = avversario
+                        squadraOspite.text = nome ?: "N/A"
                     }
                 }
-                Log.d("LiveActivity", "Numero di eventi caricati: ${eventiList.size}")
-                eventoAdapter.updateEventi(eventiList)
             }
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("LiveActivity", "Errore nel caricamento degli eventi: ${error.message}")
-            }
-        })
+        }
     }
+
+    private fun setUpIconeSuperiori(){
+        db.getPartita(dataPartita){ idPartita, _, _, _, _, casa, _, _ ->
+            if(idPartita != null){
+                if(casa == true){
+                    buttonEventiCasa.setImageResource(R.drawable.corner)
+                    buttonEventiOspite.setImageResource(R.drawable.punto_esclamativo)
+                }else{
+                    buttonEventiCasa.setImageResource(R.drawable.punto_esclamativo)
+                    buttonEventiOspite.setImageResource(R.drawable.corner)
+                }
+            }
+        }
+    }
+
+    private fun setUpListeners() {
+        val resources = buttonEventiCasa.resources
+        val cornerDrawable = ResourcesCompat.getDrawable(resources, R.drawable.corner, null)
+        val puntoEsclamativoDrawable = ResourcesCompat.getDrawable(resources, R.drawable.punto_esclamativo, null)
+
+        buttonEventiCasa.setOnClickListener {
+            val casaDrawableState = buttonEventiCasa.drawable?.constantState
+            Log.d("setUpListeners", "Button Eventi Casa clicked. Drawable state: $casaDrawableState")
+
+            when (casaDrawableState) {
+                cornerDrawable?.constantState -> {
+                    Log.d("setUpListeners", "Casa: Angolo rilevato")
+                    aggiungiAngolo()
+                }
+                puntoEsclamativoDrawable?.constantState -> {
+                    Log.d("setUpListeners", "Casa: Mostra dialog avversari")
+                    mostraDialogAvversari()
+                }
+            }
+        }
+
+        buttonEventiOspite.setOnClickListener {
+            val ospiteDrawableState = buttonEventiOspite.drawable?.constantState
+            Log.d("setUpListeners", "Button Eventi Ospite clicked. Drawable state: $ospiteDrawableState")
+
+            when (ospiteDrawableState) {
+                cornerDrawable?.constantState -> {
+                    Log.d("setUpListeners", "Ospite: Angolo rilevato")
+                    aggiungiAngolo()
+                }
+                puntoEsclamativoDrawable?.constantState -> {
+                    Log.d("setUpListeners", "Ospite: Mostra dialog avversari")
+                    mostraDialogAvversari()
+                }
+            }
+        }
+    }
+
+    private fun aggiungiAngolo() {
+        getCurrentMinutaggio()?.let { minutaggio ->
+            Log.d("aggiungiAngolo", "Aggiunto evento angolo: minutaggio = $minutaggio")
+            db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "Angolo", true)
+        } ?: Log.e("aggiungiAngolo", "Minutaggio nullo, impossibile aggiungere evento")
+    }
+
+    private fun mostraDialogAvversari() {
+        Log.d("mostraDialogAvversari", "Apertura finestra eventi avversari")
+        val dialogView = layoutInflater.inflate(R.layout.finestra_eventi_avversari, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+
+        val btnGolAvversari: ImageButton = dialogView.findViewById(R.id.gol_avversari)
+        val btnTiroAvversari: ImageButton = dialogView.findViewById(R.id.tiro_avversari)
+        val btnFuorigiocoAvversari: ImageButton = dialogView.findViewById(R.id.fuorigioco_avversari)
+        val btnAngoliAvversari: ImageButton = dialogView.findViewById(R.id.angoli_avversari)
+        val btnChiudiAvversari: Button = dialogView.findViewById(R.id.btn_chiudi)
+
+        getCurrentMinutaggio()?.let { minutaggio ->
+            Log.d("mostraDialogAvversari", "Minutaggio attuale: $minutaggio")
+
+            btnGolAvversari.setOnClickListener {
+                Log.d("mostraDialogAvversari", "Evento: Gol Avversario")
+                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "gol", false)
+                animaIconaEvento(500f, 500f, R.drawable.gol)
+                dialog.dismiss()
+            }
+
+            btnTiroAvversari.setOnClickListener {
+                Log.d("mostraDialogAvversari", "Evento: Tiro Avversario")
+                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "tiro", false)
+                animaIconaEvento(500f, 500f, R.drawable.tiro)
+                dialog.dismiss()
+            }
+
+            btnFuorigiocoAvversari.setOnClickListener {
+                Log.d("mostraDialogAvversari", "Evento: Fuorigioco Avversario")
+                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "fuorigioco", false)
+                animaIconaEvento(500f, 500f, R.drawable.fuorigioco)
+                dialog.dismiss()
+            }
+
+            btnAngoliAvversari.setOnClickListener {
+                Log.d("mostraDialogAvversari", "Evento: Angolo Avversario")
+                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "angolo", false)
+                animaIconaEvento(500f, 500f, R.drawable.corner)
+                dialog.dismiss()
+            }
+        } ?: Log.e("mostraDialogAvversari", "Minutaggio nullo, impossibile registrare evento")
+
+        btnChiudiAvversari.setOnClickListener {
+            Log.d("mostraDialogAvversari", "Chiusura finestra eventi avversari")
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+
 
     fun animaIconaEvento(startX: Float, startY: Float, iconaResId: Int) {
         val iconaAnimata = findViewById<ImageView>(R.id.iconaAnimata)
@@ -357,13 +399,11 @@ class LiveActivity : BaseActivity() {
         iconaAnimata.visibility = View.VISIBLE
 
         iconaAnimata.post {
-            // Imposta la posizione iniziale
             iconaAnimata.x = startX - iconaAnimata.width / 2f
             iconaAnimata.y = startY - iconaAnimata.height / 2f
 
             val buttonOpenDrawer = findViewById<ImageButton>(R.id.buttonOpenDrawer)
 
-            // Aspettiamo che il layout sia pronto
             buttonOpenDrawer.doOnPreDraw {
                 val buttonCoordinates = IntArray(2)
                 buttonOpenDrawer.getLocationInWindow(buttonCoordinates)
@@ -387,10 +427,8 @@ class LiveActivity : BaseActivity() {
                         override fun onAnimationStart(animation: Animation?) {}
 
                         override fun onAnimationEnd(animation: Animation?) {
-                            // Imposta manualmente la posizione finale
                             iconaAnimata.x = endX
                             iconaAnimata.y = endY
-                            // Ora possiamo nascondere l'icona
                             iconaAnimata.visibility = View.GONE
                         }
 
@@ -408,13 +446,9 @@ class LiveActivity : BaseActivity() {
     }
 
 
-
-
     fun getCurrentMinutaggio(): String {
         return minutaggio.text.toString()
     }
-
-
 
 }
 

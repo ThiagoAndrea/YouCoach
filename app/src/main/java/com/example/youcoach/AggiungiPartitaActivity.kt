@@ -11,7 +11,6 @@ import java.util.*
 
 class AggiungiPartitaActivity : BaseActivity() {
 
-    private lateinit var database: DatabaseReference
     private var partitaId: String? = null
     private var selectedDate: String = ""
 
@@ -27,13 +26,13 @@ class AggiungiPartitaActivity : BaseActivity() {
     private lateinit var editTextData: EditText
     private lateinit var buttonAggiungi: Button
 
+    private val db = DatabaseManager()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_aggiungi_partita)
         setupBottomNavigation(R.id.nav_calendar)
-
-        database = FirebaseDatabase.getInstance().reference
 
         initUI()
         checkIntentData() // Controlla se ci sono dati da precompilare
@@ -142,30 +141,13 @@ class AggiungiPartitaActivity : BaseActivity() {
             return
         }
 
-        val partita = Partita(
-            id = partitaId ?: database.child("Partite").child(selectedDate).push().key!!,
-            orario = orario,
-            luogo = luogo,
-            avversario = avversario,
-            competizione = competizione,
-            numero_tempi = numTempi,
-            minuti_per_tempo = minTempi,
-            numero_calciatori = numGiocatori,
-            casa = casa,
-            risultato = "",
-            modulo = "",
-            convocati = emptyMap(),
-            titolari = emptyMap()
-        )
-
-        database.child("Partite").child(selectedDate).child(partita.id)
-            .setValue(partita)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Partita salvata con successo", Toast.LENGTH_SHORT).show()
+        db.aggiungiPartita(selectedDate, partitaId, orario, luogo, avversario, competizione, numTempi, minTempi, numGiocatori, casa) { success, message ->
+            if (success) {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                 finish()
+            } else {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Errore: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        }
     }
 }
