@@ -46,7 +46,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.7"
+        app:layout_constraintHeight_percent="0.55"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
         app:layout_constraintStart_toStartOf="parent"
@@ -102,12 +102,11 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="24dp"
                 android:layout_marginBottom="8dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/card_time"
-                app:layout_constraintBottom_toTopOf="@id/presenze_button">
+                app:layout_constraintTop_toBottomOf="@id/card_time">
 
                 <TextView
                     android:id="@+id/obiettivi_txt"
@@ -124,7 +123,7 @@
                     android:id="@+id/recyclerViewObiettivi"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="8dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/obiettivi_txt" />
 
@@ -145,31 +144,12 @@
                 android:id="@+id/num_presenze"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="24"
+                android:text="0"
                 android:layout_marginStart="8dp"
                 app:layout_constraintStart_toEndOf="@+id/icona_presenze"
                 app:layout_constraintTop_toTopOf="@+id/icona_presenze"
                 app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
 
-            <ImageView
-                android:id="@+id/icona_ritardo"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginStart="16dp"
-                app:layout_constraintStart_toEndOf="@+id/num_presenze"
-                app:layout_constraintBottom_toTopOf="@+id/presenze_button"
-                android:src="@drawable/ritardo" />
-
-            <TextView
-                android:id="@+id/num_ritardi"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="24"
-                android:layout_marginStart="4dp"
-                app:layout_constraintStart_toEndOf="@+id/icona_ritardo"
-                app:layout_constraintTop_toTopOf="@+id/icona_presenze"
-                app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
 
             <ImageView
                 android:id="@+id/icona_assenze"
@@ -177,7 +157,7 @@
                 android:layout_height="24dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="16dp"
-                app:layout_constraintStart_toEndOf="@+id/num_ritardi"
+                app:layout_constraintStart_toEndOf="@+id/num_presenze"
                 app:layout_constraintBottom_toTopOf="@+id/presenze_button"
                 android:src="@drawable/croce" />
 
@@ -185,13 +165,32 @@
                 android:id="@+id/num_assenze"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="24"
+                android:text="0"
                 android:layout_marginStart="4dp"
                 app:layout_constraintStart_toEndOf="@+id/icona_assenze"
                 app:layout_constraintTop_toTopOf="@+id/icona_presenze"
                 app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
 
 
+            <ImageView
+                android:id="@+id/icona_ritardo"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginStart="16dp"
+                app:layout_constraintStart_toEndOf="@+id/num_assenze"
+                app:layout_constraintBottom_toTopOf="@+id/presenze_button"
+                android:src="@drawable/ritardo" />
+
+            <TextView
+                android:id="@+id/num_ritardi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:layout_marginStart="4dp"
+                app:layout_constraintStart_toEndOf="@+id/icona_ritardo"
+                app:layout_constraintTop_toTopOf="@+id/icona_presenze"
+                app:layout_constraintBottom_toBottomOf="@+id/icona_presenze"/>
 
             <ImageView
                 android:id="@+id/icona_infortunio"
@@ -199,7 +198,7 @@
                 android:layout_height="24dp"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="16dp"
-                app:layout_constraintStart_toEndOf="@+id/num_assenze"
+                app:layout_constraintStart_toEndOf="@+id/num_ritardi"
                 app:layout_constraintBottom_toTopOf="@+id/presenze_button"
                 android:src="@drawable/infortunio" />
 
@@ -207,7 +206,7 @@
                 android:id="@+id/num_infortunati"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="24"
+                android:text="0"
                 android:layout_marginStart="4dp"
                 app:layout_constraintStart_toEndOf="@+id/icona_infortunio"
                 app:layout_constraintTop_toTopOf="@+id/icona_presenze"

@@ -1,20 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:padding="20dp">
 
-    <EditText
-        android:id="@+id/editTextObiettivo"
-        android:layout_width="match_parent"
+    <!-- TextInputLayout for EditText -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayoutObiettivo"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Inserisci nuovo obiettivo" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:hint="Obiettivo">
 
+        <!-- TextInputEditText inside TextInputLayout -->
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextObiettivo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Button to Save the Goal -->
     <Button
         android:id="@+id/buttonSalvaObiettivo"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Salva Obiettivo"
-        android:layout_marginTop="10dp"/>
-</LinearLayout>
+        android:text="Salva"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayoutObiettivo"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="10dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

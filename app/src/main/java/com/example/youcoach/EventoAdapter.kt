@@ -14,8 +14,9 @@ import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.FirebaseDatabase
+import com.google.android.material.card.MaterialCardView
 
 class EventoAdapter(
     private var eventi: MutableList<Evento>,
@@ -33,6 +34,7 @@ class EventoAdapter(
         val eliminaButton: ImageButton = itemView.findViewById(R.id.eliminaEvento_button)
         val immagineEvento: ImageView = itemView.findViewById(R.id.immagine_evento)
         val dettagliEvento: TextView = itemView.findViewById(R.id.dettaglio_evento)
+        val cardEvento: MaterialCardView = itemView.findViewById(R.id.card_evento)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventoViewHolder {
@@ -42,7 +44,7 @@ class EventoAdapter(
 
     override fun onBindViewHolder(holder: EventoViewHolder, position: Int) {
         val evento = eventi[position]
-        val minutoString = evento.minutaggio?.split(":")?.get(0)?.toIntOrNull() ?: 0
+        val minutoString = evento.minutaggio.split(":").get(0).toIntOrNull() ?: 0
         val minuto = minutoString + 1
         holder.minutaggioTextView.text = "${minuto}'"
 
@@ -59,7 +61,7 @@ class EventoAdapter(
         }
 
         setEventoIcona(evento.nomeEvento, holder.immagineEvento)
-
+        setBackground(evento.squadra, holder.cardEvento)
         if (evento.dettagli.isEmpty()) {
             holder.dettagliEvento.text = ""
             holder.dettagliEvento.visibility = View.GONE
@@ -69,6 +71,8 @@ class EventoAdapter(
                 holder.dettagliEvento.visibility = View.VISIBLE
             }
         }
+        if(evento.nomeGiocatore == "N/A")
+            holder.nomeGiocatoreTextView.visibility = View.GONE
 
         holder.modificaButton.setOnClickListener {
 
@@ -102,7 +106,7 @@ class EventoAdapter(
 
                 var counter = 0
                 idGiocatori.forEach { idGiocatore ->
-                    val ruolo = titolari[idGiocatore] ?: "Sconosciuto"
+                    val ruolo = titolari[idGiocatore] ?: ""
 
                     db.getNomeCognomeGiocatore(idGiocatore) { _, cognome ->
                         listaGiocatori.add((ruolo to cognome) as Pair<String, String>)
@@ -303,8 +307,6 @@ class EventoAdapter(
 
             dialog.show()
         }
-
-
         holder.eliminaButton.setOnClickListener {
             if (evento.idEvento != null) {
                 val alertDialog = AlertDialog.Builder(context).apply {
@@ -346,9 +348,19 @@ class EventoAdapter(
             "Cambio" -> eventoIcona.setImageResource(R.drawable.round_arrows)
             "Infortunio" -> eventoIcona.setImageResource(R.drawable.infortunio_live)
             "Fallo" -> eventoIcona.setImageResource(R.drawable.fallo)
+            "Angolo" -> eventoIcona.setImageResource(R.drawable.corner)
             else -> eventoIcona.setImageResource(R.drawable.assist)
         }
     }
+
+    private fun setBackground(squadra: Boolean, cardView: MaterialCardView) {
+        val background = ContextCompat.getColor(
+            cardView.context,
+            if (squadra) R.color.green_base else R.color.opposite_base
+        )
+        cardView.setCardBackgroundColor(background)
+    }
+
 
     private fun formatDettagli(dettagli: Map<String, Any?>, callback: (String) -> Unit) {
         val result = StringBuilder()
@@ -358,7 +370,14 @@ class EventoAdapter(
                     result.append("Ass: $cognome\n")
                     callback(result.toString())
                 }
-            } else {
+            }
+            else if (key == "Entra: " && value is String){
+                db.getNomeCognomeGiocatore(value) { nome, cognome ->
+                    result.append("Entra: $cognome\n")
+                    callback(result.toString())
+                }
+            }
+            else {
                 result.append("${value ?: "N/A"}\n")
                 callback(result.toString())
             }

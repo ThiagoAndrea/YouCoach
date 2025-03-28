@@ -1,21 +1,43 @@
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
-
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <CheckBox
         android:id="@+id/checkBoxObiettivo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:enabled="false" />
+        android:enabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
+    <!-- Testo dell'obiettivo -->
     <TextView
         android:id="@+id/textViewObiettivo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Obiettivo"
-        android:textSize="16sp"/>
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@id/checkBoxObiettivo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:maxLines="1"
+        android:ellipsize="end"/>
 
-</LinearLayout>
+    <!-- Pulsante di eliminazione -->
+    <ImageButton
+        android:id="@+id/button_delete_obiettivo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/delete"
+        android:background="@android:color/transparent"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@+id/textViewObiettivo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -35,6 +35,7 @@ class DettaglioPartitaActivity : BaseActivity() {
     private lateinit var editButton: ImageButton
     private lateinit var convocatiButton: Button
     private lateinit var goLiveButton: Button
+    private lateinit var numConvocati: TextView
 
     private val db = DatabaseManager()
 
@@ -64,6 +65,7 @@ class DettaglioPartitaActivity : BaseActivity() {
         goLiveButton = findViewById(R.id.go_live_button)
         editButton = findViewById(R.id.modificaPartita_button)
         deleteButton = findViewById(R.id.eliminaPartita_button)
+        numConvocati = findViewById(R.id.num_convocati)
     }
 
     private fun loadSelectedDate() {
@@ -114,6 +116,10 @@ class DettaglioPartitaActivity : BaseActivity() {
                     "Coppa" -> competitionIcon.setImageResource(R.drawable.coppa)
                     else -> competitionIcon.setImageResource(R.drawable.fair_play)
                 }
+
+                db.getConvocatiMap(formattedDate, partitaId ?: "") { convocati ->
+                    aggiornaNumeriConvocati(convocati)
+                }
             } else {
                 cardMatch.visibility = View.GONE
             }
@@ -122,7 +128,6 @@ class DettaglioPartitaActivity : BaseActivity() {
 
     private fun caricaGiocatoriEApriDialog() {
         if (partitaId != null) {
-            // Ottieni prima i giocatori
             db.getGiocatori { giocatori ->
                 db.getConvocatiMap(formattedDate, partitaId!!) { convocati ->
                     apriDialogConvocati(giocatori, convocati)
@@ -144,8 +149,8 @@ class DettaglioPartitaActivity : BaseActivity() {
         if (partitaId != null) {
             db.aggiungiConvocatiPartita(partitaId!!, formattedDate, convocazioniConfermate) { success, message ->
                 if (success) {
+                    aggiornaNumeriConvocati(convocazioniConfermate)
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                    finish()
                 } else {
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                 }
@@ -203,6 +208,16 @@ class DettaglioPartitaActivity : BaseActivity() {
         } else {
             Toast.makeText(this, "Errore: Nessuna partita selezionata", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun aggiornaNumeriConvocati(convocazioni: Map<String, Boolean>) {
+        var convocati = 0
+
+        convocazioni.values.forEach { stato ->
+            if (stato)
+                convocati++
+        }
+        numConvocati.text = convocati.toString()
     }
 
 }

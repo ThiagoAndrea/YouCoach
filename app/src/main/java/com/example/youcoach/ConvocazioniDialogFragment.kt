@@ -25,9 +25,9 @@ class ConvocazioniDialogFragment(
 
     private val convocazioniMap: MutableMap<String, Boolean> by lazy {
         if (convocazioniIniziali.isEmpty()) {
-            giocatori.associate { it.id to true }.toMutableMap()
+            giocatori.associate { it.id to false }.toMutableMap()
         } else {
-            giocatori.associate { it.id to (convocazioniIniziali[it.id] ?: true) }.toMutableMap()
+            giocatori.associate { it.id to (convocazioniIniziali[it.id] ?: false) }.toMutableMap()
         }
     }
 

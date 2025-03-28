@@ -69,7 +69,7 @@ class CalendarAdapter(
         if (days[position].toIntOrNull() == currentDay &&
             displayedMonth == currentMonth &&
             displayedYear == currentYear) {
-            view.setBackgroundColor(ContextCompat.getColor(context, R.color.giorno_selezionato))
+            view.setBackgroundColor(ContextCompat.getColor(context, R.color.green_base))
             viewHolder.txtDay.setTextColor(ContextCompat.getColor(context, R.color.white))
         } else {
             view.setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))

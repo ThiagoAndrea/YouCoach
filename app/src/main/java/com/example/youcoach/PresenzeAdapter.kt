@@ -56,18 +56,16 @@ class PresenzeAdapter(
         }
 
         private fun aggiornaPresenza(idGiocatore: String, stato: Int) {
-            onPresenzaUpdated(idGiocatore, stato) // Notifica l'aggiornamento
-            aggiornaUI(stato) // Aggiorna l'UI
+            onPresenzaUpdated(idGiocatore, stato)
+            aggiornaUI(stato)
         }
 
         private fun aggiornaUI(stato: Int) {
-            // Reset background per tutti i bottoni
             btnPresente.setBackgroundResource(R.drawable.background_circle_base)
             btnAssente.setBackgroundResource(R.drawable.background_circle_base)
             btnRitardo.setBackgroundResource(R.drawable.background_circle_base)
             btnInfortunato.setBackgroundResource(R.drawable.background_circle_base)
 
-            // Evidenzia solo il bottone selezionato
             when (stato) {
                 0 -> btnPresente.setBackgroundResource(R.drawable.background_circle_confirm)
                 1 -> btnAssente.setBackgroundResource(R.drawable.background_circle_delete)

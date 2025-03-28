@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -25,6 +26,7 @@ class FormazioneActivity : BaseActivity() {
     private lateinit var recyclerViewPosizioni: RecyclerView
     private val db = DatabaseManager()
     private lateinit var buttonConferma: Button
+    private lateinit var backButton: ImageButton
 
     private var selezioneGiocatoreAdapter: SelezioneGiocatoreAdapter? = null
 
@@ -121,6 +123,7 @@ class FormazioneActivity : BaseActivity() {
         recyclerViewPosizioni = findViewById(R.id.recyclerPosizioni)
         recyclerViewPosizioni.layoutManager = LinearLayoutManager(this)
         buttonConferma = findViewById(R.id.buttonConferma)
+        backButton = findViewById(R.id.back_button)
 
         val moduliList = moduli.keys.toList()
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, moduliList)
@@ -147,6 +150,10 @@ class FormazioneActivity : BaseActivity() {
                 Log.e("FormazioneActivity", "Impossibile salvare la formazione: dati mancanti")
             }
         }
+
+        backButton.setOnClickListener {
+            finish()
+        }
     }
 
     private fun caricaGiocatori(partitaId: String, dataPartita: String, onComplete: () -> Unit) {
@@ -162,12 +169,14 @@ class FormazioneActivity : BaseActivity() {
     private fun caricaDatiPartita(formattedDate: String) {
         db.getPartita(formattedDate) { _, avversario, _, _, _, casa, _, _ ->
             if (avversario != null && casa != null) {
-                val titoloPartita = if (casa) {
-                    "BedizzoleU16 - $avversario"
-                } else {
-                    "$avversario - BedizzoleU16"
+                db.getSquadraPrincipale { nome, _ ->
+                    val titoloPartita = if (casa) {
+                        "$nome - $avversario"
+                    } else {
+                        "$avversario - $nome"
+                    }
+                    findViewById<TextView>(R.id.testo_partita).text = titoloPartita
                 }
-                findViewById<TextView>(R.id.testo_partita).text = titoloPartita
             }
         }
     }

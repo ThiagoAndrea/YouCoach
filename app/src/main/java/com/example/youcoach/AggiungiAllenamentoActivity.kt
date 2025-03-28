@@ -1,5 +1,6 @@
 package com.example.youcoach
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
@@ -19,6 +20,7 @@ class AggiungiAllenamentoActivity : BaseActivity() {
     private lateinit var editTextOrarioFine: EditText
     private lateinit var buttonAggiungi: Button
     private lateinit var buttonAggiungiObiettivo: ImageButton
+    private lateinit var buttonEliminaObiettivo: ImageButton
     private lateinit var recyclerViewObiettivi: RecyclerView
 
     // Adapter and Data
@@ -45,6 +47,8 @@ class AggiungiAllenamentoActivity : BaseActivity() {
         editTextOrarioFine = findViewById(R.id.editTextOrarioFine)
         buttonAggiungi = findViewById(R.id.btnAggiungiAllenamento)
         buttonAggiungiObiettivo = findViewById(R.id.aggiungiObiettivo_button)
+        buttonEliminaObiettivo = findViewById(R.id.eliminaObiettivo_button)
+
         val buttonBack = findViewById<ImageButton>(R.id.back_button)
 
         recyclerViewObiettivi = findViewById(R.id.recyclerViewObiettivi)
@@ -63,17 +67,17 @@ class AggiungiAllenamentoActivity : BaseActivity() {
         if (allenamentoId != null) {
             val orarioInizio = intent.getStringExtra("ORARIO_INIZIO") ?: ""
             val orarioFine = intent.getStringExtra("ORARIO_FINE") ?: ""
-            val obiettivi = intent.getStringArrayListExtra("OBIETTIVI") ?: arrayListOf()
+
             editTextOrarioInizio.setText(orarioInizio)
             editTextOrarioFine.setText(orarioFine)
             editTextData.setText(selectedDate.replace("-", "/"))
 
-            obiettivi.forEach { obiettiviMappa[it] = true }
 
             buttonAggiungi.text = "Modifica Allenamento"
 
             aggiornaRecyclerView()
         }
+
     }
 
     private fun setupButtonListeners() {
@@ -95,7 +99,6 @@ class AggiungiAllenamentoActivity : BaseActivity() {
                 Toast.makeText(this, "Compila tutti i campi", Toast.LENGTH_SHORT).show()
             } else {
                 val obiettiviSelezionati = obiettiviMappa.filter { it.value }.keys.toList()
-
                 if (allenamentoId != null) {
                     db.modificaAllenamento(selectedDate, allenamentoId!!, orarioInizio, orarioFine, obiettiviSelezionati) { success, message ->
                         if (success) {
@@ -116,6 +119,10 @@ class AggiungiAllenamentoActivity : BaseActivity() {
                     }
                 }
             }
+        }
+
+        buttonEliminaObiettivo.setOnClickListener {
+            obiettiviAdapter.toggleDeleteMode()
         }
     }
 
@@ -154,18 +161,56 @@ class AggiungiAllenamentoActivity : BaseActivity() {
             obiettiviList.addAll(obiettivi)
             obiettiviMappa.clear()
             obiettiviMappa.putAll(mappa)
+
+            if (allenamentoId != null) {
+                val obiettiviSelezionati = intent.getStringArrayListExtra("OBIETTIVI") ?: arrayListOf()
+                obiettiviSelezionati.forEach { obiettivo ->
+                    obiettiviMappa[obiettivo] = true
+                }
+            }
+
             aggiornaRecyclerView()
         }
     }
 
     private fun aggiornaRecyclerView() {
         obiettiviAdapter = ObiettiviAdapter(
-            obiettiviList,
-            true,
-            obiettiviMappa
-        ) { obiettivo, isChecked ->
-            obiettiviMappa[obiettivo] = isChecked
-        }
+            obiettivi = obiettiviList,
+            isEditMode = true,
+            obiettiviSelezionati = obiettiviMappa,
+            onObiettivoChecked = { obiettivo, isChecked ->
+                obiettiviMappa[obiettivo] = isChecked
+            },
+            onObiettivoEliminato = { obiettivo ->
+                // Mostra un dialog di conferma prima di eliminare
+                AlertDialog.Builder(this)
+                    .setTitle("Conferma eliminazione")
+                    .setMessage("Sei sicuro di voler eliminare l'obiettivo \"$obiettivo\"?")
+                    .setPositiveButton("Elimina") { _, _ ->
+                        eliminaObiettivo(obiettivo)
+                    }
+                    .setNegativeButton("Annulla", null)
+                    .show()
+            }
+        )
+
         recyclerViewObiettivi.adapter = obiettiviAdapter
     }
+
+    private fun eliminaObiettivo(obiettivo: String) {
+        val db = DatabaseManager()
+        db.eliminaObiettivo(obiettivo) { success, message ->
+            if (success) {
+                obiettiviList.remove(obiettivo)
+                obiettiviMappa.remove(obiettivo)
+
+                obiettiviAdapter.updateObiettivi(obiettiviList)
+
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 }

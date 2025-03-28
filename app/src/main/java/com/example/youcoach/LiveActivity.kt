@@ -84,6 +84,7 @@ class LiveActivity : BaseActivity() {
         setupRecyclerViews()
         setUpIconeSuperiori()
         setUpListeners()
+        setupEventiListener()
         db.getPartita(dataPartita) { _, avversario, _, _, _, _, _, _ ->
             if (avversario == null) {
                 Toast.makeText(this, "Dati della partita non trovati per ID: $partitaId", Toast.LENGTH_LONG).show()
@@ -139,7 +140,7 @@ class LiveActivity : BaseActivity() {
 
         db.getFormazioneMap(partitaId, dataPartita) { titolari, panchina ->
             if (titolari.isNotEmpty()) {
-                recyclerFormazione.adapter = FormazioneAdapter(titolari, dataPartita, partitaId)
+                recyclerFormazione.adapter = FormazioneAdapter(titolari, dataPartita, partitaId, this)
             } else {
                 Toast.makeText(this, "Nessun dato per 'titolari'", Toast.LENGTH_SHORT).show()
             }
@@ -296,38 +297,41 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun setUpListeners() {
-        val resources = buttonEventiCasa.resources
-        val cornerDrawable = ResourcesCompat.getDrawable(resources, R.drawable.corner, null)
-        val puntoEsclamativoDrawable = ResourcesCompat.getDrawable(resources, R.drawable.punto_esclamativo, null)
-
+        setupButtonTags()
         buttonEventiCasa.setOnClickListener {
-            val casaDrawableState = buttonEventiCasa.drawable?.constantState
-            Log.d("setUpListeners", "Button Eventi Casa clicked. Drawable state: $casaDrawableState")
-
-            when (casaDrawableState) {
-                cornerDrawable?.constantState -> {
+            Log.d("setUpListeners", "Button Eventi Casa clicked. Tag: ${it.tag}")
+            when (it.tag) {
+                "corner" -> {
                     Log.d("setUpListeners", "Casa: Angolo rilevato")
                     aggiungiAngolo()
                 }
-                puntoEsclamativoDrawable?.constantState -> {
+                "exclamation" -> {
                     Log.d("setUpListeners", "Casa: Mostra dialog avversari")
                     mostraDialogAvversari()
                 }
             }
         }
-
         buttonEventiOspite.setOnClickListener {
-            val ospiteDrawableState = buttonEventiOspite.drawable?.constantState
-            Log.d("setUpListeners", "Button Eventi Ospite clicked. Drawable state: $ospiteDrawableState")
+            when (it.tag) {
+                "corner" -> aggiungiAngolo()
+                "exclamation" -> mostraDialogAvversari()
+            }
+        }
+    }
 
-            when (ospiteDrawableState) {
-                cornerDrawable?.constantState -> {
-                    Log.d("setUpListeners", "Ospite: Angolo rilevato")
-                    aggiungiAngolo()
-                }
-                puntoEsclamativoDrawable?.constantState -> {
-                    Log.d("setUpListeners", "Ospite: Mostra dialog avversari")
-                    mostraDialogAvversari()
+    private fun setupButtonTags() {
+        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _ ->
+            runOnUiThread {
+                if (casa == true) {
+                    buttonEventiCasa.tag = "corner"
+                    buttonEventiOspite.tag = "exclamation"
+                    buttonEventiCasa.setImageResource(R.drawable.corner)
+                    buttonEventiOspite.setImageResource(R.drawable.punto_esclamativo)
+                } else {
+                    buttonEventiCasa.tag = "exclamation"
+                    buttonEventiOspite.tag = "corner"
+                    buttonEventiCasa.setImageResource(R.drawable.punto_esclamativo)
+                    buttonEventiOspite.setImageResource(R.drawable.corner)
                 }
             }
         }
@@ -335,9 +339,41 @@ class LiveActivity : BaseActivity() {
 
     private fun aggiungiAngolo() {
         getCurrentMinutaggio()?.let { minutaggio ->
-            Log.d("aggiungiAngolo", "Aggiunto evento angolo: minutaggio = $minutaggio")
             db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "Angolo", true)
-        } ?: Log.e("aggiungiAngolo", "Minutaggio nullo, impossibile aggiungere evento")
+        }
+        animaIconaEvento(500f, 500f, R.drawable.corner)
+    }
+
+
+    private fun setupEventiListener() {
+        db.setupEventiListener(dataPartita, partitaId) { eventi ->
+            eventoAdapter.updateEventi(eventi)
+
+            eventi.lastOrNull()?.let { ultimoEvento ->
+                if (ultimoEvento.nomeEvento == "Gol") {
+                    aggiornaGol(ultimoEvento)
+                }
+            }
+        }
+    }
+
+    private fun aggiornaGol(evento: Evento) {
+        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _ ->
+                when {
+                    evento.squadra == true && casa == true -> {
+                        punteggioCasa.text = (punteggioCasa.text.toString().toInt() + 1).toString()
+                    }
+                    evento.squadra == false && casa == false -> {
+                        punteggioCasa.text = (punteggioCasa.text.toString().toInt() + 1).toString()
+                    }
+                    evento.squadra == true && casa == false -> {
+                        punteggioOspite.text = (punteggioOspite.text.toString().toInt() + 1).toString()
+                    }
+                    evento.squadra == false && casa == true -> {
+                        punteggioOspite.text = (punteggioOspite.text.toString().toInt() + 1).toString()
+                    }
+            }
+        }
     }
 
     private fun mostraDialogAvversari() {
@@ -355,36 +391,45 @@ class LiveActivity : BaseActivity() {
             Log.d("mostraDialogAvversari", "Minutaggio attuale: $minutaggio")
 
             btnGolAvversari.setOnClickListener {
-                Log.d("mostraDialogAvversari", "Evento: Gol Avversario")
-                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "gol", false)
+                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "Gol", false)
                 animaIconaEvento(500f, 500f, R.drawable.gol)
                 dialog.dismiss()
             }
 
             btnTiroAvversari.setOnClickListener {
-                Log.d("mostraDialogAvversari", "Evento: Tiro Avversario")
-                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "tiro", false)
-                animaIconaEvento(500f, 500f, R.drawable.tiro)
+                val options = arrayOf("In porta", "Fuori porta")
+                val builder = AlertDialog.Builder(it.context)
+
+                builder.setTitle("Seleziona se il tiro è in porta o fuori porta")
+                    .setItems(options) { dialog, which ->
+                        val tipoTiro = options[which]
+                        val dettagliTiro = mapOf("tipoTiro" to tipoTiro)
+                        db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "Tiro", false, dettagliTiro)
+                        animaIconaEvento(500f, 500f, R.drawable.tiro)
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("Annulla") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .create()
+                    .show()
                 dialog.dismiss()
             }
 
             btnFuorigiocoAvversari.setOnClickListener {
-                Log.d("mostraDialogAvversari", "Evento: Fuorigioco Avversario")
-                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "fuorigioco", false)
+                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "Fuorigioco", false)
                 animaIconaEvento(500f, 500f, R.drawable.fuorigioco)
                 dialog.dismiss()
             }
 
             btnAngoliAvversari.setOnClickListener {
-                Log.d("mostraDialogAvversari", "Evento: Angolo Avversario")
-                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "angolo", false)
+                db.aggiungiEvento(partitaId, dataPartita, minutaggio, "N/A", "Angolo", false)
                 animaIconaEvento(500f, 500f, R.drawable.corner)
                 dialog.dismiss()
             }
-        } ?: Log.e("mostraDialogAvversari", "Minutaggio nullo, impossibile registrare evento")
+        }
 
         btnChiudiAvversari.setOnClickListener {
-            Log.d("mostraDialogAvversari", "Chiusura finestra eventi avversari")
             dialog.dismiss()
         }
 
@@ -447,8 +492,26 @@ class LiveActivity : BaseActivity() {
 
 
     fun getCurrentMinutaggio(): String {
-        return minutaggio.text.toString()
+
+        val minutaggioConTempo = minutaggio.text
+        val minuti = minutaggioConTempo.substring(0, 2).toInt()
+        val secondi = minutaggioConTempo.substring(3).toInt()
+        val minutiTotali = minuti + (minutiPerTempo * (tempoCorrente - 1))
+
+        return String.format("%02d:%02d", minutiTotali, secondi)
     }
+
+
+
+    fun aggiornaUIAfterSostituzione() {
+        db.getFormazioneMap(partitaId, dataPartita) { titolari, panchina ->
+            (recyclerFormazione.adapter as? FormazioneAdapter)?.updateFormazione(titolari)
+            (recyclerPanchina.adapter as? PanchinaAdapter)?.updatePanchina(panchina)
+
+            Toast.makeText(this, "Formazione aggiornata", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
 }
 

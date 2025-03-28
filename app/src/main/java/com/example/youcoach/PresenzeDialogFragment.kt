@@ -22,7 +22,14 @@ class PresenzeDialogFragment(
     private val onConfermaClick: (Map<String, Int>) -> Unit
 ) : DialogFragment() {
 
-    private val presenzeMap = presenzeIniziali.toMutableMap()
+    private val presenzeMap: MutableMap<String, Int> by lazy {
+        if (presenzeIniziali.isEmpty()) {
+            giocatori.associate { it.id to 1 }.toMutableMap()
+        } else {
+            giocatori.associate { it.id to (presenzeIniziali[it.id] ?: 1) }.toMutableMap()
+        }
+    }
+
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.finestra_presenze, null)

@@ -3,7 +3,7 @@ package com.example.youcoach
 import java.io.Serializable
 
 data class Evento(
-    val idEvento: String? = null,
+    var idEvento: String="",
     val minutaggio: String ="",
     val nomeEvento: String = "",
     val nomeGiocatore: String = "",

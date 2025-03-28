@@ -15,9 +15,10 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 
 class FormazioneAdapter(
-    private val formazione: Map<String, String>,
+    private var formazione: Map<String, String>,
     private val data: String,
     private val idPartita: String,
+    private val activity: LiveActivity,
     private val ruoliOrdine: List<String> = listOf("Portiere", "Difensore", "Centrocampista", "Trequartista", "Attaccante")
 
 
@@ -35,14 +36,13 @@ class FormazioneAdapter(
     }
 
 
-    private val formazioneRaggruppata: List<List<String>> = ruoliOrdine.map { ruolo ->
+    private var formazioneRaggruppata: List<List<String>> = ruoliOrdine.map { ruolo ->
         val giocatoriInRuolo = formazione
             .filter { normalizzaRuolo(it.value) == ruolo }
             .toList()
             .sortedBy { estraiNumeroRuolo(it.second) }
             .map { it.first }
 
-        Log.d("FormazioneAdapter", "Ruolo: $ruolo → Giocatori: $giocatoriInRuolo")
         giocatoriInRuolo
     }.filter { it.isNotEmpty() }
 
@@ -75,15 +75,24 @@ class FormazioneAdapter(
 
                 val cognomeGiocatore: TextView = giocatoreView.findViewById(R.id.cognome_giocatore)
                 val cerchioGiocatore: TextView = giocatoreView.findViewById(R.id.cerchio_giocatore)
-
+                val maxLunghezza = 10
                 db.getNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
                     if (cognome != null) {
-                        cognomeGiocatore.text = cognome
+                        val testoModificato = if (cognome.length > maxLunghezza) {
+                            cognome.substring(0, maxLunghezza - 1) + "..."
+                        } else {
+                            cognome
+                        }
+                        cognomeGiocatore.text = testoModificato
                     } else {
-                        Log.e("FormazioneAdapter", "Cognome non trovato per il giocatore con id: $idGiocatore")
+                        Log.e(
+                            "FormazioneAdapter",
+                            "Cognome non trovato per il giocatore con id: $idGiocatore"
+                        )
                     }
 
-                    val iniziali = "${nome?.firstOrNull() ?: ""}${cognome?.firstOrNull() ?: ""}".uppercase()
+                    val iniziali =
+                        "${nome?.firstOrNull() ?: ""}${cognome?.firstOrNull() ?: ""}".uppercase()
                     cerchioGiocatore.text = if (iniziali.isNotBlank()) iniziali else "?"
                 }
 
@@ -105,28 +114,32 @@ class FormazioneAdapter(
 
                 cerchioGiocatore.setOnClickListener {
                     if (buttonsEnabled) {
-                        (itemView.context as? LiveActivity)?.getCurrentMinutaggio()?.let { minutaggio ->
-                            mostraDialogEventoGiocatore(itemView, idGiocatore, minutaggio)
-                        }
+                        (itemView.context as? LiveActivity)?.getCurrentMinutaggio()
+                            ?.let { minutaggio ->
+                                mostraDialogEventoGiocatore(itemView, idGiocatore, minutaggio)
+                            }
                     }
                 }
             }
         }
 
 
-
-
-        private fun mostraDialogEventoGiocatore(view: View, idGiocatore: String, minutaggio: String) {
+        private fun mostraDialogEventoGiocatore(
+            view: View,
+            idGiocatore: String,
+            minutaggio: String
+        ) {
             val context = view.context
-            val dialogView = LayoutInflater.from(context).inflate(R.layout.finestra_eventi_giocatore, null)
+            val dialogView =
+                LayoutInflater.from(context).inflate(R.layout.finestra_eventi_giocatore, null)
             val dialog = AlertDialog.Builder(context).setView(dialogView).create()
 
             val textEvento: TextView = dialogView.findViewById(R.id.textEvento)
-            db.getNomeCognomeGiocatore(idGiocatore){nome, cognome ->
-                if(nome!=null && cognome!=null ){
-                    textEvento.text="$nome $cognome"
+            db.getNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
+                if (nome != null && cognome != null) {
+                    textEvento.text = "$nome $cognome"
                 } else {
-                    textEvento.text="Dettaglio giocatore"
+                    textEvento.text = "Dettaglio giocatore"
                 }
             }
 
@@ -150,7 +163,15 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val tipoTiro = options[which]
                         val dettagliTiro = mapOf("tipoTiro" to tipoTiro)
-                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Tiro", true, dettagliTiro)
+                        db.aggiungiEvento(
+                            idPartita,
+                            data,
+                            minutaggio,
+                            idGiocatore,
+                            "Tiro",
+                            true,
+                            dettagliTiro
+                        )
                         avviaAnimazione(view, R.drawable.tiro)
                         dialog.dismiss()
                     }
@@ -167,14 +188,13 @@ class FormazioneAdapter(
             }
 
             btnFuorigioco.setOnClickListener {
-                db.aggiungiEvento(idPartita, data, minutaggio,idGiocatore, "Fuorigioco", true)
+                db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Fuorigioco", true)
                 avviaAnimazione(view, R.drawable.fuorigioco)
                 dialog.dismiss()
             }
 
             btnCambio.setOnClickListener {
-                db.aggiungiEvento(idPartita, data,minutaggio, idGiocatore, "Cambio", true)
-                avviaAnimazione(view, R.drawable.round_arrows)
+                mostraDialogSostituzione(view, idGiocatore, minutaggio)
                 dialog.dismiss()
             }
 
@@ -185,7 +205,15 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val tipoInfortunio = options[which]
                         val dettagliInfortunio = mapOf("tipoInfortunio" to tipoInfortunio)
-                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Infortunio", true, dettagliInfortunio)
+                        db.aggiungiEvento(
+                            idPartita,
+                            data,
+                            minutaggio,
+                            idGiocatore,
+                            "Infortunio",
+                            true,
+                            dettagliInfortunio
+                        )
                         avviaAnimazione(view, R.drawable.infortunio_live)
                         dialog.dismiss()
                     }
@@ -205,7 +233,15 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val tipoFallo = options[which]
                         val dettagliFallo = mapOf("tipoFallo" to tipoFallo)
-                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Fallo", true, dettagliFallo)
+                        db.aggiungiEvento(
+                            idPartita,
+                            data,
+                            minutaggio,
+                            idGiocatore,
+                            "Fallo",
+                            true,
+                            dettagliFallo
+                        )
                         avviaAnimazione(view, R.drawable.fallo)
                         dialog.dismiss()
                     }
@@ -225,7 +261,15 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val motivoCartellinoGiallo = options[which]
                         val dettagliCartellinoGiallo = mapOf("motivo" to motivoCartellinoGiallo)
-                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Giallo", true, dettagliCartellinoGiallo)
+                        db.aggiungiEvento(
+                            idPartita,
+                            data,
+                            minutaggio,
+                            idGiocatore,
+                            "Giallo",
+                            true,
+                            dettagliCartellinoGiallo
+                        )
                         avviaAnimazione(view, R.drawable.yellow_card)
                         dialog.dismiss()
                     }
@@ -236,7 +280,6 @@ class FormazioneAdapter(
                 dialog.dismiss()
             }
 
-
             btnRosso.setOnClickListener {
                 val options = arrayOf("Doppia Ammonizione", "Rosso Diretto")
                 val builder = AlertDialog.Builder(view.context)
@@ -245,7 +288,15 @@ class FormazioneAdapter(
                     .setItems(options) { dialog, which ->
                         val motivoCartellinoRosso = options[which]
                         val dettagliCartellinoRosso = mapOf("motivo" to motivoCartellinoRosso)
-                        db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Rosso", true, dettagliCartellinoRosso)
+                        db.aggiungiEvento(
+                            idPartita,
+                            data,
+                            minutaggio,
+                            idGiocatore,
+                            "Rosso",
+                            true,
+                            dettagliCartellinoRosso
+                        )
                         avviaAnimazione(view, R.drawable.red_card)
                         dialog.dismiss()
                     }
@@ -256,13 +307,11 @@ class FormazioneAdapter(
                 dialog.dismiss()
             }
 
-
             btnParata.setOnClickListener {
-                db.aggiungiEvento(idPartita, data,minutaggio, idGiocatore, "Parata", true)
+                db.aggiungiEvento(idPartita, data, minutaggio, idGiocatore, "Parata", true)
                 avviaAnimazione(view, R.drawable.parata)
                 dialog.dismiss()
             }
-
             btnChiudi.setOnClickListener {
                 dialog.dismiss()
             }
@@ -303,7 +352,11 @@ class FormazioneAdapter(
                         giocatoriIdMap[nomeCompleto] = idGiocatore
 
                         if (giocatoriNomi.size == giocatoriTitolari.size + 1) {
-                            val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, giocatoriNomi)
+                            val adapter = ArrayAdapter(
+                                context,
+                                android.R.layout.simple_spinner_dropdown_item,
+                                giocatoriNomi
+                            )
                             spinnerAssist.adapter = adapter
                         }
                     }
@@ -314,12 +367,18 @@ class FormazioneAdapter(
                 val assistSelezionato = spinnerAssist.selectedItem.toString()
                 val idAssistMan = giocatoriIdMap[assistSelezionato]
                 val dettagliGol = mapOf("idAssist" to idAssistMan)
-                db.aggiungiEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true, dettagliGol)
+                db.aggiungiEvento(
+                    idPartita,
+                    data,
+                    minutaggio,
+                    idMarcatore,
+                    "Gol",
+                    true,
+                    dettagliGol
+                )
                 avviaAnimazione(view, R.drawable.gol)
                 dialog.dismiss()
             }
-
-
             btnNessunAssist.setOnClickListener {
                 db.aggiungiEvento(idPartita, data, minutaggio, idMarcatore, "Gol", true)
                 avviaAnimazione(view, R.drawable.gol)
@@ -333,6 +392,105 @@ class FormazioneAdapter(
             dialog.show()
         }
 
+        private fun mostraDialogSostituzione(
+            view: View,
+            idGiocatoreUscente: String,
+            minutaggio: String
+        ) {
+            val context = view.context
+            val dialogView =
+                LayoutInflater.from(context).inflate(R.layout.finestra_sostituzione, null)
+            val dialog = AlertDialog.Builder(context).setView(dialogView).create()
+
+            val textUscente: TextView = dialogView.findViewById(R.id.textGiocatoreUscente)
+            val spinnerEntrante: Spinner = dialogView.findViewById(R.id.spinnerEntrante)
+            val btnConferma: Button = dialogView.findViewById(R.id.btnConfermaSostituzione)
+            val btnChiudi: ImageButton = dialogView.findViewById(R.id.btnChiudiSostituzione)
+
+            db.getNomeCognomeGiocatore(idGiocatoreUscente) { nome, cognome ->
+                textUscente.text = "$nome $cognome"
+            }
+
+            val panchinaNomi = mutableListOf<String>()
+            val panchinaIdMap = mutableMapOf<String, String>()
+
+            db.getPanchina(idPartita, data) { panchinari ->
+                if (panchinari.isEmpty()) {
+                    spinnerEntrante.isEnabled = false
+                    btnConferma.isEnabled = false
+                    return@getPanchina
+                }
+
+                fun processGiocatore(index: Int) {
+                    if (index >= panchinari.size) {
+                        val adapter = ArrayAdapter(
+                            context,
+                            android.R.layout.simple_spinner_dropdown_item,
+                            panchinaNomi
+                        )
+                        spinnerEntrante.adapter = adapter
+                        return
+                    }
+                    val idGiocatore = panchinari[index]
+                    db.getNomeCognomeGiocatore(idGiocatore) { nome, cognome ->
+                        if (nome != null && cognome != null) {
+                            val nomeCompleto = "$nome $cognome"
+                            panchinaNomi.add(nomeCompleto)
+                            panchinaIdMap[nomeCompleto] = idGiocatore
+                        }
+                        processGiocatore(index + 1)
+                    }
+                }
+                processGiocatore(0)
+            }
+
+            btnConferma.setOnClickListener {
+                val entranteSelezionato = spinnerEntrante.selectedItem?.toString()
+                if (entranteSelezionato != null && panchinaIdMap.containsKey(entranteSelezionato)) {
+                    val idEntrante = panchinaIdMap[entranteSelezionato]!!
+                    eseguiSostituzioneNelDatabase(idGiocatoreUscente, idEntrante, minutaggio)
+                    avviaAnimazione(view, R.drawable.round_arrows)
+                }
+                dialog.dismiss()
+            }
+
+            btnChiudi.setOnClickListener {
+                dialog.dismiss()
+            }
+
+            dialog.show()
+        }
+
+        private fun eseguiSostituzioneNelDatabase(
+            idUscente: String,
+            idEntrante: String,
+            minutaggio: String
+        ) {
+            db.modificaFormazione(idPartita, data, idUscente, idEntrante) { success, message ->
+                if (success) {
+                    db.aggiungiEvento(idPartita, data, minutaggio, idUscente, "Cambio", true, mapOf("Entra: " to idEntrante))
+                    activity.aggiornaUIAfterSostituzione()
+                }
+            }
+        }
+
+    }
+
+    fun getFormazione(): Map<String, String> {
+        return formazione
+    }
+
+    fun updateFormazione(nuovaFormazione: Map<String, String>) {
+        this.formazione = nuovaFormazione
+        this.formazioneRaggruppata = ruoliOrdine.map { ruolo ->
+            nuovaFormazione
+                .filter { normalizzaRuolo(it.value) == ruolo }
+                .toList()
+                .sortedBy { estraiNumeroRuolo(it.second) }
+                .map { it.first }
+        }.filter { it.isNotEmpty() }
+
+        notifyDataSetChanged()
     }
 
     fun setButtonsEnabled(enabled: Boolean) {

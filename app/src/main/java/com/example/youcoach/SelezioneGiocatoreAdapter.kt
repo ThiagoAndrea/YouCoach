@@ -17,7 +17,6 @@ class SelezioneGiocatoreAdapter(
     private val giocatori: List<Giocatore>
 ) : RecyclerView.Adapter<SelezioneGiocatoreAdapter.PosizioneViewHolder>() {
 
-    // Mappa globale delle selezioni: chiave: Posizione, valore: ID del giocatore selezionato
     val selezioni = mutableMapOf<Posizione, String>()
 
     inner class PosizioneViewHolder(view: View) : RecyclerView.ViewHolder(view) {

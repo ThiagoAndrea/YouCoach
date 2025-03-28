@@ -99,6 +99,10 @@ class DettaglioAllenamentoActivity : BaseActivity() {
                     obiettiviList.addAll(obiettivi)
                 }
                 obiettiviAdapter.notifyDataSetChanged()
+
+                db.getPresenzePerAllenamento(formattedDate, allenamentoId ?: "") { presenze ->
+                    aggiornaNumeriGiocatori(presenze)
+                }
             } else {
                 cardTraining.visibility = View.GONE
                 recyclerViewObiettivi.visibility = View.GONE
@@ -110,7 +114,6 @@ class DettaglioAllenamentoActivity : BaseActivity() {
     private fun caricaGiocatoriEApriDialog() {
         db.getGiocatori { giocatori ->
             db.getPresenzePerAllenamento(formattedDate, allenamentoId ?: "") { presenzeIniziali ->
-                aggiornaNumeriGiocatori(presenzeIniziali)
                 apriDialogPresenze(giocatori, presenzeIniziali)
             }
         }
@@ -127,6 +130,7 @@ class DettaglioAllenamentoActivity : BaseActivity() {
         if(allenamentoId != null) {
             db.aggiungiPresenzeAllenamento(formattedDate, allenamentoId!!, presenzeConfermate) { success, message ->
                 if (success) {
+                    aggiornaNumeriGiocatori(presenzeConfermate)
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -180,10 +184,10 @@ class DettaglioAllenamentoActivity : BaseActivity() {
 
         presenze.values.forEach { stato ->
             when (stato) {
-                1 -> presenti++
+                0 -> presenti++
+                1 -> assenti++
                 2 -> ritardi++
-                3 -> assenti++
-                4 -> infortunati++
+                3 -> infortunati++
             }
         }
         numPresenze.text = presenti.toString()

@@ -14,7 +14,6 @@ class DettaglioGiocatoreActivity : BaseActivity() {
 
     private lateinit var giocatore: Giocatore
     private lateinit var giocatoreId: String
-
     private val db = DatabaseManager()
     private lateinit var modificaGiocatoreLauncher: ActivityResultLauncher<Intent>
 
@@ -23,12 +22,10 @@ class DettaglioGiocatoreActivity : BaseActivity() {
         setContentView(R.layout.activity_layout_dettaglio_giocatore)
         setupBottomNavigation(R.id.nav_rosa)
 
-        // Inizializza l'ActivityResultLauncher
         modificaGiocatoreLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == RESULT_OK) {
-                // Ricarica i dettagli del giocatore
                 caricaDettagliGiocatore()
             }
         }
