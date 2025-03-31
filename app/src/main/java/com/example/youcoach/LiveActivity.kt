@@ -85,7 +85,7 @@ class LiveActivity : BaseActivity() {
         setUpIconeSuperiori()
         setUpListeners()
         setupEventiListener()
-        db.getPartita(dataPartita) { _, avversario, _, _, _, _, _, _ ->
+        db.getPartita(dataPartita) { _, avversario, _, _, _, _, _, _, _ ->
             if (avversario == null) {
                 Toast.makeText(this, "Dati della partita non trovati per ID: $partitaId", Toast.LENGTH_LONG).show()
             }
@@ -267,14 +267,20 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun setUpNomi(){
-        db.getPartita(dataPartita) { idPartita, avversario, _, _, _, casa, _, _ ->
-            if (idPartita != null) {
+        db.getPartita(dataPartita) { idPartita, avversario, _, _, _, casa,_, _, _ ->
+            if (idPartita != null && avversario != null) {
+                val maxLunghezza = 12
+                val testoModificato = if (avversario.length > maxLunghezza) {
+                    avversario.substring(0, maxLunghezza - 2) + "..."
+                } else {
+                    avversario
+                }
                 db.getSquadraPrincipale { nome, _ ->
                     if (casa == true) {
                         squadraCasa.text = nome ?: "N/A"
-                        squadraOspite.text = avversario
+                        squadraOspite.text = testoModificato
                     } else {
-                        squadraCasa.text = avversario
+                        squadraCasa.text = testoModificato
                         squadraOspite.text = nome ?: "N/A"
                     }
                 }
@@ -283,7 +289,7 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun setUpIconeSuperiori(){
-        db.getPartita(dataPartita){ idPartita, _, _, _, _, casa, _, _ ->
+        db.getPartita(dataPartita){ idPartita, _, _, _, _, casa, _, _, _ ->
             if(idPartita != null){
                 if(casa == true){
                     buttonEventiCasa.setImageResource(R.drawable.corner)
@@ -320,7 +326,7 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun setupButtonTags() {
-        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _ ->
+        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->
             runOnUiThread {
                 if (casa == true) {
                     buttonEventiCasa.tag = "corner"
@@ -358,7 +364,7 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun aggiornaGol(evento: Evento) {
-        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _ ->
+        db.getPartita(dataPartita) { _, _, _, _, _, casa, _ , _, _ ->
                 when {
                     evento.squadra == true && casa == true -> {
                         punteggioCasa.text = (punteggioCasa.text.toString().toInt() + 1).toString()
@@ -504,7 +510,9 @@ class LiveActivity : BaseActivity() {
 
 
     fun aggiornaUIAfterSostituzione() {
+        Log.d("LiveActivity", "aggiornaUIAfterSostituzione chiamato") // Aggiunto log
         db.getFormazioneMap(partitaId, dataPartita) { titolari, panchina ->
+            Log.d("LiveActivity", "Dati formazione ricevuti: titolari=$titolari, panchina=$panchina") // Aggiunto log
             (recyclerFormazione.adapter as? FormazioneAdapter)?.updateFormazione(titolari)
             (recyclerPanchina.adapter as? PanchinaAdapter)?.updatePanchina(panchina)
 

@@ -13,12 +13,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 
 class FormazioneActivity : BaseActivity() {
 
@@ -167,7 +161,7 @@ class FormazioneActivity : BaseActivity() {
     }
 
     private fun caricaDatiPartita(formattedDate: String) {
-        db.getPartita(formattedDate) { _, avversario, _, _, _, casa, _, _ ->
+        db.getPartita(formattedDate) { _, avversario, _, _, _, casa, _, _, _ ->
             if (avversario != null && casa != null) {
                 db.getSquadraPrincipale { nome, _ ->
                     val titoloPartita = if (casa) {
@@ -200,7 +194,6 @@ class FormazioneActivity : BaseActivity() {
 
                 selezioneGiocatoreAdapter = SelezioneGiocatoreAdapter(this@FormazioneActivity, posizioni, rosaConvocati)
                 recyclerViewPosizioni.adapter = selezioneGiocatoreAdapter
-                Log.d("FormazioneActivity", "formationAdapter assegnato con ${posizioni.size} posizioni")
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {

@@ -96,7 +96,7 @@ class DettaglioPartitaActivity : BaseActivity() {
     }
 
     private fun caricaPartita(formattedDate: String) {
-        db.getPartita(formattedDate) { idPartita, avversario, orario, luogo, competizione, casa, minutiPerTempo, numeroCalciatori ->
+        db.getPartita(formattedDate) { idPartita, avversario, orario, luogo, competizione, casa, minutiPerTempo, numeroTempi, numeroCalciatori ->
             this.partitaId = idPartita
             if (avversario != null && orario != null && luogo != null) {
                 if (casa == true) {
@@ -108,9 +108,8 @@ class DettaglioPartitaActivity : BaseActivity() {
                 matchLocation.text = luogo
                 durataTempo.text = "Durata per tempo: $minutiPerTempo"
                 numGiocatori.text = "Giocatori: $numeroCalciatori"
-                if (numeroCalciatori != null) {
-                    numTempi.text = "Tempi: ${numeroCalciatori / 11}"
-                }
+                numTempi.text = "Tempi: $numeroTempi"
+
                 when (competizione) {
                     "Campionato" -> competitionIcon.setImageResource(R.drawable.campionato)
                     "Coppa" -> competitionIcon.setImageResource(R.drawable.coppa)

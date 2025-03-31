@@ -2,6 +2,7 @@ package com.example.youcoach
 
 import android.app.AlertDialog
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -71,12 +72,13 @@ class EventoAdapter(
                 holder.dettagliEvento.visibility = View.VISIBLE
             }
         }
-        if(evento.nomeGiocatore == "N/A")
+        if (evento.nomeGiocatore == "N/A")
             holder.nomeGiocatoreTextView.visibility = View.GONE
 
         holder.modificaButton.setOnClickListener {
 
-            val dialogView = LayoutInflater.from(context).inflate(R.layout.finestra_aggiungi_evento, null)
+            val dialogView =
+                LayoutInflater.from(context).inflate(R.layout.finestra_aggiungi_evento, null)
             val dialog = AlertDialog.Builder(context)
                 .setView(dialogView)
                 .create()
@@ -98,7 +100,11 @@ class EventoAdapter(
                 val idGiocatori = titolari.keys.toList()
 
                 if (idGiocatori.isEmpty()) {
-                    val giocatoreAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, emptyList<String>())
+                    val giocatoreAdapter = ArrayAdapter(
+                        context,
+                        android.R.layout.simple_spinner_item,
+                        emptyList<String>()
+                    )
                     giocatoreAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     spinnerGiocatore.adapter = giocatoreAdapter
                     return@getTitolari
@@ -106,28 +112,46 @@ class EventoAdapter(
 
                 var counter = 0
                 idGiocatori.forEach { idGiocatore ->
-                    val ruolo = titolari[idGiocatore] ?: ""
-
                     db.getNomeCognomeGiocatore(idGiocatore) { _, cognome ->
-                        listaGiocatori.add((ruolo to cognome) as Pair<String, String>)
+                        listaGiocatori.add((idGiocatore to cognome) as Pair<String, String>)
                         counter++
 
                         if (counter == idGiocatori.size) {
-                            val listaOrdinata = listaGiocatori
-                                .sortedWith(compareBy({ it.first }, { it.second }))
-                                .map { it.second }
+                            val listaOrdinata = listaGiocatori.sortedBy { it.second }
 
-                            val giocatoreAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, listaOrdinata)
+                            val cognomi = listaOrdinata.map { it.second }
+
+                            val giocatoreAdapter = ArrayAdapter(
+                                context,
+                                android.R.layout.simple_spinner_item, cognomi
+                            )
                             giocatoreAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                             spinnerGiocatore.adapter = giocatoreAdapter
+                            val posizione =
+                                listaOrdinata.indexOfFirst { it.first == evento.nomeGiocatore }
+                            if (posizione != -1) {
+                                spinnerGiocatore.setSelection(posizione)
+                            }
                         }
                     }
                 }
             }
 
 
-            val tipiEvento = listOf("Gol", "Parata", "Tiro", "Fuorigioco", "Cambio", "Infortunio", "Fallo", "Giallo", "Rosso", "Angolo")
-            val tipoEventoAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, tipiEvento)
+            val tipiEvento = listOf(
+                "Gol",
+                "Parata",
+                "Tiro",
+                "Fuorigioco",
+                "Cambio",
+                "Infortunio",
+                "Fallo",
+                "Giallo",
+                "Rosso",
+                "Angolo"
+            )
+            val tipoEventoAdapter =
+                ArrayAdapter(context, android.R.layout.simple_spinner_item, tipiEvento)
             tipoEventoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinnerTipoEvento.adapter = tipoEventoAdapter
 
@@ -139,148 +163,96 @@ class EventoAdapter(
             editTextMinutaggio.setText(evento.minutaggio)
 
             spinnerTipoEvento.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
                     val tipoEventoSelezionato = tipiEvento[position]
+
+                    fun setupSpinner(options: List<String>, selectedValue: String?, label: String) {
+                        val adapter =
+                            ArrayAdapter(context, android.R.layout.simple_spinner_item, options)
+                        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                        spinnerDettagli.adapter = adapter
+                        textDettagli.text = label
+                        spinnerDettagli.visibility = View.VISIBLE
+                        textDettagli.visibility = View.VISIBLE
+                        selectedValue?.let {
+                            spinnerDettagli.setSelection(
+                                options.indexOf(it).takeIf { it != -1 } ?: 0)
+                        }
+                    }
+
                     when (tipoEventoSelezionato) {
                         "Gol" -> {
-                            popolaSpinnerGiocatori(spinnerDettagli, evento.nomeGiocatore, idPartita, dataPartita)
+                            popolaSpinnerGiocatori(
+                                spinnerDettagli,
+                                evento.nomeGiocatore,
+                                idPartita,
+                                dataPartita
+                            )
                             textDettagli.text = "Assist:"
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
                             spinnerDettagli.visibility = View.VISIBLE
                         }
-                        "Parata" -> {
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
-                            spinnerDettagli.visibility = View.GONE
-                            textDettagli.visibility = View.GONE
-                        }
-                        "Tiro" -> {
-                            val inPortaTiro = listOf("In porta", "Fuori porta")
-                            val motivoAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, inPortaTiro)
-                            motivoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                            spinnerDettagli.adapter = motivoAdapter
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
-                            textDettagli.visibility = View.VISIBLE
-                            textDettagli.text = "Dettagli:"
-                            spinnerDettagli.visibility = View.VISIBLE
 
-                            evento.dettagli["motivo"]?.let {
-                                val pos = inPortaTiro.indexOf(it)
-                                if (pos != -1) spinnerDettagli.setSelection(pos)
-                            }
-                        }
-                        "Fuorigioco" -> {
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
+                        "Tiro" -> setupSpinner(
+                            listOf("In porta", "Fuori porta"),
+                            evento.dettagli["motivo"].toString(), "Dettagli:"
+                        )
+
+                        "Infortunio" -> setupSpinner(
+                            listOf("Muscolare", "Traumatico"),
+                            evento.dettagli["tipoInfortunio"].toString(), "Dettagli:"
+                        )
+
+                        "Fallo" -> setupSpinner(
+                            listOf("Fatto", "Subito"),
+                            evento.dettagli["tipoFallo"].toString(), "Dettagli:"
+                        )
+
+                        "Giallo" -> setupSpinner(
+                            listOf("Proteste", "Fallo"),
+                            evento.dettagli["motivo"].toString(), "Dettagli:"
+                        )
+
+                        "Rosso" -> setupSpinner(
+                            listOf("Doppia Ammonizione", "Rosso Diretto"),
+                            evento.dettagli["motivo"].toString(), "Dettagli:"
+                        )
+
+                        "Parata", "Fuorigioco" -> {
                             spinnerDettagli.visibility = View.GONE
                             textDettagli.visibility = View.GONE
                         }
 
                         "Cambio" -> {
-                            spinnerDettagli.visibility = View.GONE
-                            textDettagli.visibility = View.GONE
-                        }
-
-                        "Infortunio" -> {
-                            val tipiInfortunio = listOf("Muscolare", "Traumatico")
-                            val infortunioAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, tipiInfortunio)
-                            infortunioAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                            spinnerDettagli.adapter = infortunioAdapter
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
-                            textDettagli.visibility = View.VISIBLE
+                            popolaSpinnerPanchinari(spinnerDettagli, idPartita, dataPartita)
+                            textDettagli.text = "Entra:"
                             spinnerDettagli.visibility = View.VISIBLE
-                            textDettagli.text = "Dettagli:"
-
-                            evento.dettagli["tipoInfortunio"]?.let {
-                                val pos = tipiInfortunio.indexOf(it)
-                                if (pos != -1) spinnerDettagli.setSelection(pos)
-                            }
-                        }
-
-                        "Fallo" -> {
-                            val tipoFallo = listOf("Fatto", "Subito")
-                            val infortunioAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, tipoFallo)
-                            infortunioAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                            spinnerDettagli.adapter = infortunioAdapter
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
-                            textDettagli.visibility = View.VISIBLE
-                            spinnerDettagli.visibility = View.VISIBLE
-                            textDettagli.text = "Dettagli:"
-                            evento.dettagli["tipoInfortunio"]?.let {
-                                val pos = tipoFallo.indexOf(it)
-                                if (pos != -1) spinnerDettagli.setSelection(pos)
-                            }
-                        }
-
-                        "Giallo" -> {
-                            val motiviGiallo = listOf("Proteste", "Fallo")
-                            val motivoAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, motiviGiallo)
-                            motivoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                            spinnerDettagli.adapter = motivoAdapter
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
-                            textDettagli.visibility = View.VISIBLE
-                            spinnerDettagli.visibility = View.VISIBLE
-                            textDettagli.text = "Dettagli:"
-
-                            evento.dettagli["motivo"]?.let {
-                                val pos = motiviGiallo.indexOf(it)
-                                if (pos != -1) spinnerDettagli.setSelection(pos)
-                            }
-                        }
-                        "Rosso" -> {
-                            val motiviRosso = listOf("Doppia Ammonizione", "Rosso Diretto")
-                            val motivoAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, motiviRosso)
-                            motivoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                            spinnerDettagli.adapter = motivoAdapter
-                            spinnerGiocatore.visibility = View.VISIBLE
-                            textGiocatore.visibility = View.VISIBLE
-                            textDettagli.visibility = View.VISIBLE
-                            spinnerDettagli.visibility = View.VISIBLE
-                            textDettagli.text = "Dettagli:"
-
-                            evento.dettagli["motivo"]?.let {
-                                val pos = motiviRosso.indexOf(it)
-                                if (pos != -1) spinnerDettagli.setSelection(pos)
-                            }
-                        }
-
-                        else -> {
-                            spinnerDettagli.visibility = View.GONE
-                            spinnerGiocatore.visibility = View.GONE
-                            textGiocatore.visibility = View.GONE
-                            textDettagli.visibility = View.GONE
                         }
                     }
+
+                    val showGiocatore = tipoEventoSelezionato !in listOf("Angolo")
+                    spinnerGiocatore.visibility = if (showGiocatore) View.VISIBLE else View.GONE
+                    textGiocatore.visibility = if (showGiocatore) View.VISIBLE else View.GONE
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>?) {}
             }
 
             buttonConferma.setOnClickListener {
-
                 val nuovoGiocatoreCognome = spinnerGiocatore.selectedItem as String
-                db.getGiocatoreIdPerCognome(nuovoGiocatoreCognome) { idGiocatore ->
-                    if (idGiocatore != null) {
+                val nuovoTipoEvento = spinnerTipoEvento.selectedItem as String
+                val nuovoMinutaggio = editTextMinutaggio.text.toString()
 
-                        val nuovoTipoEvento = spinnerTipoEvento.selectedItem as String
-                        val nuovoMinutaggio = editTextMinutaggio.text.toString()
-
-                        val dettagliSpecifici = when (nuovoTipoEvento) {
-                            "Gol" -> mapOf("idAssist" to (spinnerDettagli.selectedItem as String))
-                            "Giallo" -> mapOf("motivo" to (spinnerDettagli.selectedItem as String))
-                            "Rosso" -> mapOf("motivo" to (spinnerDettagli.selectedItem as String))
-                            "Infortunio" -> mapOf("tipoInfortunio" to (spinnerDettagli.selectedItem as String))
-                            "Tiro" -> mapOf("motivo" to (spinnerDettagli.selectedItem as String))
-                            "Fallo" -> mapOf("tipoInfortunio" to (spinnerDettagli.selectedItem as String))
-                            else -> emptyMap()
-                        }
-
-                        if (evento.idEvento != null) {
+                fun modificaConDettagli(
+                    dettagli: Map<String, String>,
+                    onComplete: () -> Unit = {}
+                ) {
+                    db.getGiocatoreIdPerCognome(nuovoGiocatoreCognome) { idGiocatore ->
+                        if (idGiocatore != null) {
                             db.modificaEvento(
                                 evento.idEvento,
                                 idPartita,
@@ -288,17 +260,77 @@ class EventoAdapter(
                                 nuovoMinutaggio,
                                 idGiocatore,
                                 nuovoTipoEvento,
-                                dettagliSpecifici
+                                dettagli
                             ) { success, message ->
                                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                if (success) onComplete()
+                                dialog.dismiss()
                             }
+                        } else {
+                            Toast.makeText(context, "Giocatore non trovato", Toast.LENGTH_SHORT)
+                                .show()
                         }
-                    } else {
-                        Toast.makeText(context, "Giocatore non trovato", Toast.LENGTH_SHORT).show()
                     }
                 }
+                when (nuovoTipoEvento) {
+                    "Gol" -> {
+                        val assistCognome = spinnerDettagli.selectedItem as String
+                        if (assistCognome != "Giocatore") {
+                            db.getGiocatoreIdPerCognome(assistCognome) { idAssist ->
+                                if (idAssist != null) {
+                                    modificaConDettagli(mapOf("idAssist" to idAssist))
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Assistente non trovato",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        } else {
+                            modificaConDettagli(emptyMap())
+                        }
+                    }
 
-                dialog.dismiss()
+                    "Cambio" -> {
+                        val entranteCognome = spinnerDettagli.selectedItem as String
+                        db.getGiocatoreIdPerCognome(entranteCognome) { idEntrante ->
+                            if (idEntrante != null) {
+                                modificaConDettagli(mapOf("Entra: " to idEntrante)) {
+                                    db.getGiocatoreIdPerCognome(nuovoGiocatoreCognome) { idUscente ->
+                                        if (idUscente != null) {
+                                            db.modificaFormazione(
+                                                idPartita,
+                                                dataPartita,
+                                                idUscente,
+                                                idEntrante
+                                            ) { success, _ ->
+                                                if (success)
+                                                    (context as? LiveActivity)?.aggiornaUIAfterSostituzione()
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Giocatore entrante non trovato",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+
+                    "Giallo" -> modificaConDettagli(mapOf("motivo" to (spinnerDettagli.selectedItem as String)))
+                    "Rosso" -> modificaConDettagli(mapOf("motivo" to (spinnerDettagli.selectedItem as String)))
+                    "Infortunio" -> modificaConDettagli(mapOf("tipoInfortunio" to (spinnerDettagli.selectedItem as String)))
+                    "Tiro" -> modificaConDettagli(mapOf("motivo" to (spinnerDettagli.selectedItem as String)))
+                    "Fallo" -> modificaConDettagli(mapOf("tipoFallo" to (spinnerDettagli.selectedItem as String)))
+
+                    else -> {
+                        modificaConDettagli(emptyMap())
+                    }
+                }
             }
 
             buttonAnnulla.setOnClickListener {
@@ -307,17 +339,47 @@ class EventoAdapter(
 
             dialog.show()
         }
+
         holder.eliminaButton.setOnClickListener {
             if (evento.idEvento != null) {
                 val alertDialog = AlertDialog.Builder(context).apply {
                     setTitle("Conferma eliminazione")
                     setMessage("Sei sicuro di voler eliminare questo evento?")
                     setPositiveButton("Elimina") { dialog, which ->
-                        db.eliminaEvento(evento.idEvento, idPartita, dataPartita) { success, message ->
-                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        when (evento.nomeEvento) {
+                            "Cambio" -> {
+                                val uscente = evento.nomeGiocatore
+                                val entrante = evento.dettagli["Entra: "]?.toString() ?: ""
+                                if (uscente != null && entrante.isNotEmpty()) {
+                                    db.modificaFormazione(idPartita, dataPartita,entrante,uscente) { success, message ->
+                                        if (success) {
+                                            (context as? LiveActivity)?.aggiornaUIAfterSostituzione()
+                                        }
+                                        db.eliminaEvento(
+                                            evento.idEvento,
+                                            idPartita,
+                                            dataPartita
+                                        ) { success, message ->
+                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                        }
+                                        eventi.removeAt(position)
+                                        notifyItemRemoved(position)
+                                    }
+                                  }
+                                }
+                            else -> {
+                                db.eliminaEvento(
+                                    evento.idEvento,
+                                    idPartita,
+                                    dataPartita
+                                ) { success, message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
+                                eventi.removeAt(position)
+                                notifyItemRemoved(position)
+                            }
                         }
-                        eventi.removeAt(position)
-                        notifyItemRemoved(position)
+
                     }
                     setNegativeButton("Annulla") { dialog, which ->
                         dialog.dismiss()
@@ -328,6 +390,7 @@ class EventoAdapter(
             }
         }
     }
+
 
     override fun getItemCount(): Int = eventi.size
 
@@ -386,19 +449,42 @@ class EventoAdapter(
 
     private fun popolaSpinnerGiocatori(spinner: Spinner, idGiocatoreCorrente: String, idPartita: String, dataPartita: String) {
         db.getTitolari(idPartita, dataPartita) { titolari ->
-            val giocatoriNomi = mutableListOf("Seleziona giocatore")
+            val giocatoriNomi = mutableListOf("Giocatore")
             val giocatoriIdMap = mutableMapOf<String, String>()
 
-            titolari.forEach { (idGiocatore, nomeGiocatore) ->
-                if (idGiocatore != idGiocatoreCorrente) {
-                    val nomeCompleto = "$nomeGiocatore"
-                    giocatoriNomi.add(nomeCompleto)
-                    giocatoriIdMap[nomeCompleto] = idGiocatore
+            titolari.forEach { (idGiocatore, _) ->
+                db.getNomeCognomeGiocatore(idGiocatore) { _, nomeGiocatore ->
+                    if (idGiocatore != idGiocatoreCorrente) {
+                        val nomeCompleto = "$nomeGiocatore"
+                        giocatoriNomi.add(nomeCompleto)
+                        giocatoriIdMap[nomeCompleto] = idGiocatore
+                    }
                 }
             }
             val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, giocatoriNomi)
             spinner.adapter = adapter
         }
     }
+
+    private fun popolaSpinnerPanchinari(spinnerDettagli: Spinner, idPartita: String, dataPartita: String) {
+        db.getPanchina(idPartita, dataPartita){ panchinari ->
+            val giocatoriNomi = mutableListOf("Giocatore")
+            val giocatoriIdMap = mutableMapOf<String, String>()
+
+            panchinari.forEach{ idGiocatore ->
+                db.getNomeCognomeGiocatore(idGiocatore) { _, cognomeGiocatore ->
+                    if (idGiocatore != cognomeGiocatore) {
+                        val cognome = "$cognomeGiocatore"
+                        giocatoriNomi.add(cognome)
+                        giocatoriIdMap[cognome] = idGiocatore
+                    }
+                }
+            }
+            val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, giocatoriNomi)
+            spinnerDettagli.adapter = adapter
+
+        }
+    }
+
 
 }

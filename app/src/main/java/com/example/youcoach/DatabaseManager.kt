@@ -245,7 +245,7 @@ class DatabaseManager {
         })
     }
 
-    fun getPartita(formattedDate: String, callback: (String?, String?, String?, String?, String?, Boolean?, Int?, Int?) -> Unit) {
+    fun getPartita(formattedDate: String, callback: (String?, String?, String?, String?, String?, Boolean?, Int?, Int?, Int?) -> Unit) {
         val partitaRef = database.child("Partite").child(formattedDate)
         partitaRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -259,18 +259,19 @@ class DatabaseManager {
                         val competizione = firstPartita.child("competizione").value as? String ?: "N/A"
                         val casa = firstPartita.child("casa").value as? Boolean ?: false
                         val minutiPerTempo = (firstPartita.child("minuti_per_tempo").value as? Number)?.toInt() ?: 0
+                        val numeroTempi = (firstPartita.child("numero_tempi").value as? Number)?.toInt() ?: 0
                         val numeroCalciatori = (firstPartita.child("numero_calciatori").value as? Number)?.toInt() ?: 0
-                        callback(idPartita, avversario, orario, luogo, competizione, casa, minutiPerTempo, numeroCalciatori)
+                        callback(idPartita, avversario, orario, luogo, competizione, casa, minutiPerTempo, numeroTempi, numeroCalciatori)
                     } else {
-                        callback(null, null, null, null, null, null, null, null)
+                        callback(null, null, null, null, null, null, null, null, null)
                     }
                 } else {
-                    callback(null, null, null, null, null, null, null, null)
+                    callback(null, null, null, null, null, null, null, null, null)
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                callback(null, null, null, null, null, null, null, null)
+                callback(null, null, null, null, null, null, null, null, null)
             }
         })
     }
@@ -675,7 +676,6 @@ class DatabaseManager {
             }
         })
     }
-
 
     /**
      * Funzioni di eliminazione dal database

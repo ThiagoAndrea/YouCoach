@@ -15,28 +15,34 @@ class ConvocazioniAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_convocazione, parent, false)
-        return ViewHolder(view, onConvocazioneUpdated)
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val giocatore = giocatori[position]
-        holder.bind(giocatore, convocazioni[giocatore.id] ?: true)
+        holder.bind(giocatore, convocazioni[giocatore.id] ?: false, onConvocazioneUpdated)
     }
 
     override fun getItemCount() = giocatori.size
 
-    class ViewHolder(itemView: View, private val onConvocazioneUpdated: (String, Boolean) -> Unit) :
-        RecyclerView.ViewHolder(itemView) {
-
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val nomeGiocatore: TextView = itemView.findViewById(R.id.txt_giocatore)
         private val switcher: SwitchCompat = itemView.findViewById(R.id.switchConvocazione)
 
-        fun bind(giocatore: Giocatore, stato: Boolean) {
+        private var currentId: String? = null
+
+        fun bind(giocatore: Giocatore, stato: Boolean, onConvocazioneUpdated: (String, Boolean) -> Unit) {
+            switcher.setOnCheckedChangeListener(null)
+
             nomeGiocatore.text = "${giocatore.nome} ${giocatore.cognome}"
             switcher.isChecked = stato
 
+            currentId = giocatore.id
+
             switcher.setOnCheckedChangeListener { _, isChecked ->
-                onConvocazioneUpdated(giocatore.id, isChecked)
+                currentId?.let { id ->
+                    onConvocazioneUpdated(id, isChecked)
+                }
             }
         }
     }

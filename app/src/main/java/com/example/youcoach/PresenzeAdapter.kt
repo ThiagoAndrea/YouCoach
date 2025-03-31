@@ -9,15 +9,14 @@ import com.example.youcoach.R
 
 class PresenzeAdapter(
     private val giocatori: List<Giocatore>,
-    private val presenze: MutableMap<String, Int>, // Mappa delle presenze
-    private val onPresenzaUpdated: (String, Int) -> Unit // Callback per aggiornare la presenza
+    private val presenze: MutableMap<String, Int>,
+    private val onPresenzaUpdated: (String, Int) -> Unit
 ) : RecyclerView.Adapter<PresenzeAdapter.ViewHolder>() {
 
-    // Inizializza la mappa delle presenze con stato 0 per tutti i giocatori
     init {
         for (giocatore in giocatori) {
             if (!presenze.containsKey(giocatore.id)) {
-                presenze[giocatore.id] = 0 // Imposta lo stato iniziale a 0 (presente)
+                presenze[giocatore.id] = 0
             }
         }
     }
@@ -29,7 +28,6 @@ class PresenzeAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val giocatore = giocatori[position]
-        // Usa lo stato dalla mappa, con default 0 se non presente
         holder.bind(giocatore, presenze[giocatore.id] ?: 0)
     }
 

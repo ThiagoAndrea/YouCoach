@@ -476,10 +476,6 @@ class FormazioneAdapter(
 
     }
 
-    fun getFormazione(): Map<String, String> {
-        return formazione
-    }
-
     fun updateFormazione(nuovaFormazione: Map<String, String>) {
         this.formazione = nuovaFormazione
         this.formazioneRaggruppata = ruoliOrdine.map { ruolo ->
