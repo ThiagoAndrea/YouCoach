@@ -32,6 +32,7 @@
         <activity android:name=".DettaglioPartitaActivity"/>
         <activity android:name=".FormazioneActivity"/>
         <activity android:name=".LiveActivity"/>
+        <activity android:name=".FinePartitaActivity"/>
     </application>
 
 </manifest>

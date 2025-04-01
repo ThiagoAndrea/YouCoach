@@ -10,21 +10,27 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomeActivity : BaseActivity() {
 
     private val db = DatabaseManager()
+    private lateinit var risultatoUltimaPartita: TextView
+    private lateinit var esitoUltimaPartita: TextView
+    private lateinit var nomeSquadra: TextView
+    private lateinit var avversarioUltimaPartita: TextView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         setupBottomNavigation(R.id.nav_home)
+        val buttonDetails = findViewById<Button>(R.id.btn_vai_a_partita)
 
         val modificaImpostazioniSquadra = findViewById<ImageButton>(R.id.modifica_impostazioni)
         val nomeSquadra = findViewById<TextView>(R.id.nome_squadra)
 
+
+        setUI()
         modificaImpostazioniSquadra.setOnClickListener {
             val dialogView = LayoutInflater.from(this).inflate(R.layout.finestra_modifica_squadra, null)
             val dialog = AlertDialog.Builder(this)
@@ -61,5 +67,39 @@ class HomeActivity : BaseActivity() {
             dialog.show()
         }
 
+        buttonDetails.setOnClickListener {
+            db.getUltimaPartita() { data, partitaId ->
+                val intent = Intent(this, FinePartitaActivity::class.java).apply {
+                    putExtra("dataPartita", data)
+                    putExtra("partitaId", partitaId)
+                }
+                startActivity(intent)
+            }
+        }
+
+
+
     }
+
+    private fun setUI(){
+        risultatoUltimaPartita = findViewById(R.id.risultato_ultima_partita)
+        esitoUltimaPartita = findViewById(R.id.esito_ultima_partita)
+        avversarioUltimaPartita = findViewById(R.id.avversario_ultima_partita)
+
+        db.getSquadraPrincipale(){nomeSquadra, _ ->
+            db.getUltimaPartita(){data, partitaId ->
+                if(partitaId != null && data != null){
+                    db.getPartita(data){_, avversario, _, _, _, casa, _, _, _ ->
+                        avversarioUltimaPartita.text = avversario
+                        db.getRisultatoPartita(partitaId, data) { esito, golCasa, golOspite ->
+                            esitoUltimaPartita.text = esito
+                                risultatoUltimaPartita.text = "$golCasa - $golOspite"
+                        }
+                    }
+
+                        }
+                    }
+        }
+    }
+
 }

@@ -4,6 +4,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DatabaseManager {
     private val database = FirebaseDatabase.getInstance().reference
@@ -346,6 +349,47 @@ class DatabaseManager {
         })
     }
 
+    fun getUltimaPartita(callback: (data: String?, partitaId: String?) -> Unit) {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val dbRef = FirebaseDatabase.getInstance().getReference("Partite")
+
+        dbRef.orderByKey().endAt(today).limitToLast(1)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    val ultimaData = snapshot.children.last().key!!
+                    val partitaNode = snapshot.children.last().children.first()
+                    val partitaId = partitaNode.key!!
+                    callback(ultimaData, partitaId)
+                } else {
+                    callback(null, null)
+                }
+            }
+            .addOnFailureListener {
+                callback(null, null)
+            }
+    }
+
+    fun getRisultatoPartita(partitaId: String, dataPartita: String, callback: (String?, Int, Int) -> Unit) {
+        val risultatoRef = database.child("Partite").child(dataPartita).child(partitaId).child("risultato")
+        risultatoRef.get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    val esito = snapshot.child("esito").getValue(String::class.java)
+                    val golCasa = snapshot.child("golCasa").getValue(Int::class.java) ?: 0
+                    val golOspite = snapshot.child("golOspite").getValue(Int::class.java) ?: 0
+
+                    callback(esito, golCasa, golOspite)
+                } else {
+                    callback(null, 0, 0)
+                }
+            }
+            .addOnFailureListener {
+                callback(null, 0, 0)
+            }
+
+    }
+
 
 
 
@@ -528,6 +572,25 @@ class DatabaseManager {
         )
 
         eventiRef.child(eventoId).setValue(eventoMap)
+    }
+
+
+    fun aggiungiStats(partitaId: String, dataPartita: String, statsMap: Map<String, Pair<Int, Int>>) {
+        val statsRef = database.child("Partite").child(dataPartita).child(partitaId).child("stats")
+        val stat = statsMap.mapValues { (_, value) ->
+            mapOf("casa" to value.first, "ospite" to value.second)
+        }
+        statsRef.setValue(stat)
+    }
+
+    fun aggiungiRisultato(partitaId: String, dataPartita: String, esito: String, golCasa: Int, golOspite: Int) {
+        val risultatoRef = database.child("Partite").child(dataPartita).child(partitaId).child("risultato")
+        val risultatoMap = mapOf(
+            "esito" to esito,
+            "golCasa" to golCasa,
+            "golOspite" to golOspite
+        )
+        risultatoRef.setValue(risultatoMap)
     }
 
     /**
@@ -736,6 +799,8 @@ class DatabaseManager {
             })
     }
 
+
+
     /**
      * Listeners
      */
@@ -766,6 +831,7 @@ class DatabaseManager {
 
         return eventListener
     }
+
 
 }
 

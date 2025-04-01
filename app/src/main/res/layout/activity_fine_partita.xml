@@ -77,7 +77,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- TextView per Dettagli (visibile di default) -->
         <TextView
             android:id="@+id/text_dettagli"
             android:layout_width="match_parent"
@@ -88,16 +87,15 @@
             android:layout_gravity="center"
             android:visibility="visible" />
 
-        <!-- TextView per Statistiche -->
-        <TextView
-            android:id="@+id/text_statistiche"
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_statistiche"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Statistiche"
-            android:textAlignment="center"
-            android:textSize="24sp"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:visibility="gone"
+            tools:listitem="@layout/item_statistica"/>
+
     </FrameLayout>
 
 

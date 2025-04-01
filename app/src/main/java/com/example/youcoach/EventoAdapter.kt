@@ -306,7 +306,7 @@ class EventoAdapter(
                                                 idEntrante
                                             ) { success, _ ->
                                                 if (success)
-                                                    (context as? LiveActivity)?.aggiornaUIAfterSostituzione()
+                                                    (context as? LiveActivity)?.aggiornaUIAfterSostituzione(idPartita, dataPartita)
                                             }
                                         }
                                     }
@@ -353,7 +353,7 @@ class EventoAdapter(
                                 if (uscente != null && entrante.isNotEmpty()) {
                                     db.modificaFormazione(idPartita, dataPartita,entrante,uscente) { success, message ->
                                         if (success) {
-                                            (context as? LiveActivity)?.aggiornaUIAfterSostituzione()
+                                            (context as? LiveActivity)?.aggiornaUIAfterSostituzione(idPartita, dataPartita)
                                         }
                                         db.eliminaEvento(
                                             evento.idEvento,

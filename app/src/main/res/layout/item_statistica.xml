@@ -1,0 +1,70 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/text_value_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="59%"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Nome statistica -->
+    <TextView
+        android:id="@+id/text_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Possesso Palla"
+        android:textSize="14sp"
+        android:gravity="center"
+        app:layout_constraintStart_toEndOf="@id/text_value_left"
+        app:layout_constraintEnd_toStartOf="@id/text_value_right"
+        app:layout_constraintTop_toTopOf="@id/text_value_left"
+        app:layout_constraintBottom_toBottomOf="@id/text_value_left" />
+
+    <!-- Valore destro -->
+    <TextView
+        android:id="@+id/text_value_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="41%"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="@id/text_value_left"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Progress bar doppia -->
+    <LinearLayout
+        android:id="@+id/progress_container"
+        android:layout_width="0dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/text_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Barra squadra sinistra -->
+        <View
+            android:id="@+id/bar_left"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@color/delete"
+            android:layout_weight="59" />
+
+        <!-- Barra squadra destra -->
+        <View
+            android:id="@+id/bar_right"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@color/black"
+            android:layout_weight="41" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

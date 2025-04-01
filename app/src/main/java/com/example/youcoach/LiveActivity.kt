@@ -1,6 +1,7 @@
 package com.example.youcoach
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -8,8 +9,6 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation
-import android.view.animation.AnimationSet
-import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 import android.widget.Button
 import android.widget.ImageButton
@@ -17,19 +16,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.tasks.Tasks
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
 import androidx.core.view.doOnPreDraw
-import org.w3c.dom.Text
 
 
 class LiveActivity : BaseActivity() {
@@ -245,6 +238,10 @@ class LiveActivity : BaseActivity() {
         fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
         fabStartMatch.setImageResource(R.drawable.fischietto)
         (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(false)
+        salvaStatisticheSquadra()
+        salvaRisultatoPartita(punteggioCasa.text.toString().toInt(), punteggioOspite.text.toString().toInt())
+        val intent = Intent(this, FinePartitaActivity::class.java)
+        startActivity(intent)
     }
 
     private fun resetTimer() {
@@ -350,7 +347,6 @@ class LiveActivity : BaseActivity() {
         animaIconaEvento(500f, 500f, R.drawable.corner)
     }
 
-
     private fun setupEventiListener() {
         db.setupEventiListener(dataPartita, partitaId) { eventi ->
             eventoAdapter.updateEventi(eventi)
@@ -442,8 +438,6 @@ class LiveActivity : BaseActivity() {
         dialog.show()
     }
 
-
-
     fun animaIconaEvento(startX: Float, startY: Float, iconaResId: Int) {
         val iconaAnimata = findViewById<ImageView>(R.id.iconaAnimata)
         iconaAnimata.setImageResource(iconaResId)
@@ -496,7 +490,6 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-
     fun getCurrentMinutaggio(): String {
 
         val minutaggioConTempo = minutaggio.text
@@ -507,18 +500,118 @@ class LiveActivity : BaseActivity() {
         return String.format("%02d:%02d", minutiTotali, secondi)
     }
 
-
-
-    fun aggiornaUIAfterSostituzione() {
-        Log.d("LiveActivity", "aggiornaUIAfterSostituzione chiamato") // Aggiunto log
+    fun aggiornaUIAfterSostituzione(partitaId: String, dataPartita: String) {
         db.getFormazioneMap(partitaId, dataPartita) { titolari, panchina ->
-            Log.d("LiveActivity", "Dati formazione ricevuti: titolari=$titolari, panchina=$panchina") // Aggiunto log
             (recyclerFormazione.adapter as? FormazioneAdapter)?.updateFormazione(titolari)
             (recyclerPanchina.adapter as? PanchinaAdapter)?.updatePanchina(panchina)
 
             Toast.makeText(this, "Formazione aggiornata", Toast.LENGTH_SHORT).show()
         }
     }
+
+    fun salvaStatisticheSquadra() {
+        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->
+            val squadraInCasa = casa
+            db.getEventi(partitaId, dataPartita) { eventi ->
+
+                val eventiValidi = setOf("Tiro", "Fallo", "Angolo", "Giallo", "Rosso", "Fuorigioco")
+                val statsMap = eventiValidi.associateWith { Pair(0, 0) }.toMutableMap()
+
+                eventi.forEach { evento ->
+                    val nomeEvento = evento.nomeEvento
+                    val squadra = evento.squadra
+                    val dettagli = evento.dettagli
+
+                    when (nomeEvento) {
+
+                        "Tiro" -> {
+                            val attuale = statsMap["Tiro"] ?: Pair(0, 0)
+                            val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
+                            statsMap["Tiro"] = nuovoValore
+
+                            val esito = (dettagli["tipoTiro"] as? String)?.lowercase()
+                            if (esito == "in porta") {
+                                val attualeTP = statsMap["Tiro in porta"] ?: Pair(0, 0)
+                                val nuovoTP = calcolaValoreAggiornato(squadraInCasa, squadra, attualeTP)
+                                statsMap["Tiro in porta"] = nuovoTP
+                            }
+                        }
+
+                        "Fallo" -> {
+                            val tipoFallo = (dettagli["tipoFallo"] as? String)?.lowercase()
+                            val attuale = statsMap["Fallo"] ?: Pair(0, 0)
+
+                            val assegnaACasa = if (tipoFallo == "subito") {
+                                if (squadraInCasa == true) !squadra else squadra
+                            } else {
+                                if (squadraInCasa == true) squadra else !squadra
+                            }
+
+                            val nuovoValore = if (assegnaACasa) {
+                                Pair(attuale.first + 1, attuale.second)
+                            } else {
+                                Pair(attuale.first, attuale.second + 1)
+                            }
+
+                            statsMap["Fallo"] = nuovoValore
+                        }
+                        "Gol" -> {
+                            val attuale = statsMap["Tiro"] ?: Pair(0, 0)
+                            val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
+                            statsMap["Tiro"] = nuovoValore
+
+                            val attualeGol = statsMap["Tiro in porta"] ?: Pair(0, 0)
+                            val nuovoGol = calcolaValoreAggiornato(squadraInCasa, squadra, attualeGol)
+                            statsMap["Tiro in porta"] = nuovoGol
+                        }
+
+                        "Giallo", "Rosso", "Fuorigioco", "Angolo" -> {
+                            val attuale = statsMap[nomeEvento] ?: Pair(0, 0)
+                            val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
+                            statsMap[nomeEvento] = nuovoValore
+                        }
+
+                        else -> {
+                        }
+                    }
+                }
+
+
+                db.aggiungiStats(partitaId, dataPartita, statsMap)
+            }
+        }
+    }
+
+    private fun salvaRisultatoPartita(golCasa: Int, golOspite: Int) {
+        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->
+            var esito = ""
+            if (golCasa > golOspite) {
+                if (casa == true)
+                    esito = "Vittoria"
+                else esito = "Sconfitta"
+            } else if (golCasa < golOspite) {
+                if (casa == true)
+                    esito = "Sconfitta"
+                else esito = "Vittoria"
+            } else esito = "Pareggio"
+            db.aggiungiRisultato(partitaId, dataPartita, esito, golCasa, golOspite)
+        }
+    }
+
+    private fun calcolaValoreAggiornato(
+        squadraInCasa: Boolean?,
+        squadraEvento: Boolean,
+        attuale: Pair<Int, Int>
+    ): Pair<Int, Int> {
+        return if (squadraInCasa == true) {
+            if (squadraEvento) Pair(attuale.first + 1, attuale.second)
+            else Pair(attuale.first, attuale.second + 1)
+        } else {
+            if (!squadraEvento) Pair(attuale.first + 1, attuale.second)
+            else Pair(attuale.first, attuale.second + 1)
+        }
+    }
+
 
 
 }

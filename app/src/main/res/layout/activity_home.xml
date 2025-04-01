@@ -60,7 +60,7 @@
 
         android:id="@+id/card_ultima_partita"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="230dp"
         app:layout_constraintTop_toBottomOf="@+id/ultima_partita_text"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginEnd="16dp"
@@ -75,17 +75,43 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/esito_ultima_partita"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="esito"
+                android:textAllCaps="true"
+                android:textSize="16dp"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+
+            <TextView
                     android:id="@+id/risultato_ultima_partita"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Bedizzole 3 - 2 Roncadelle"
-                    android:textSize="24dp"
+                    android:text="0-0"
+                    android:textSize="32dp"
                     android:textStyle="bold"
+                    android:layout_marginTop="8dp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/esito_ultima_partita"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     />
+
+            <TextView
+                android:id="@+id/avversario_ultima_partita"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Avversario"
+                android:textSize="24dp"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp"
+                app:layout_constraintStart_toStartOf="@+id/risultato_ultima_partita"
+                app:layout_constraintEnd_toEndOf="@+id/risultato_ultima_partita"
+                app:layout_constraintTop_toBottomOf="@+id/risultato_ultima_partita"
+                />
 
             <Button
                 android:id="@+id/btn_vai_a_partita"
@@ -97,7 +123,7 @@
                 android:textSize="16dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/risultato_ultima_partita"
+                app:layout_constraintTop_toBottomOf="@+id/avversario_ultima_partita"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
             <ImageView

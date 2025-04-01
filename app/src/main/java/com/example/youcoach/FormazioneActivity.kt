@@ -197,7 +197,6 @@ class FormazioneActivity : BaseActivity() {
             }
 
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
-                // Nessuna azione necessaria
             }
         })
     }

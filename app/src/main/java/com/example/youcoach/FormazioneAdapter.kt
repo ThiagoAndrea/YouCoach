@@ -469,7 +469,7 @@ class FormazioneAdapter(
             db.modificaFormazione(idPartita, data, idUscente, idEntrante) { success, message ->
                 if (success) {
                     db.aggiungiEvento(idPartita, data, minutaggio, idUscente, "Cambio", true, mapOf("Entra: " to idEntrante))
-                    activity.aggiornaUIAfterSostituzione()
+                    activity.aggiornaUIAfterSostituzione(idPartita, data)
                 }
             }
         }
