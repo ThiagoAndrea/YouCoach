@@ -390,6 +390,45 @@ class DatabaseManager {
 
     }
 
+    fun getStatsPartita(partitaId: String, dataPartita: String, callback: (List<Statistica>) -> Unit) {
+        val statisticheRef = database.child("Partite").child(dataPartita).child(partitaId).child("stats")
+
+        // Ordine desiderato
+        val ordineStat = listOf(
+            "Tiri",
+            "Tiri in porta",
+            "Angoli",
+            "Falli fatti",
+            "Fuorigiochi",
+            "Cartellini gialli",
+            "Cartellini rossi"
+        )
+
+        statisticheRef.get().addOnSuccessListener { snapshot ->
+            val listStats = mutableListOf<Statistica>()
+            snapshot.children.forEach { stat ->
+                val nome = stat.key ?: return@forEach
+                val casaValue = stat.child("casa").getValue(Int::class.java) ?: 0
+                val ospiteValue = stat.child("ospite").getValue(Int::class.java) ?: 0
+                val tot = casaValue + ospiteValue
+                val perCasa = if (tot == 0) 50f else (casaValue.toFloat() / tot) * 100
+                val perOspite = 100f - perCasa
+
+                listStats.add(Statistica(nome, casaValue.toString(), ospiteValue.toString(), perCasa, perOspite))
+            }
+            val ordinata = listStats.sortedWith(
+                compareBy { stat ->
+                    ordineStat.indexOfFirst { it.equals(stat.nome, ignoreCase = true) }.takeIf { it >= 0 } ?: Int.MAX_VALUE
+                }
+            )
+
+            callback(ordinata)
+        }.addOnFailureListener {
+            callback(emptyList())
+        }
+    }
+
+
 
 
 

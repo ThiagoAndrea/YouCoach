@@ -241,6 +241,8 @@ class LiveActivity : BaseActivity() {
         salvaStatisticheSquadra()
         salvaRisultatoPartita(punteggioCasa.text.toString().toInt(), punteggioOspite.text.toString().toInt())
         val intent = Intent(this, FinePartitaActivity::class.java)
+        intent.putExtra("PARTITA_ID", partitaId)
+        intent.putExtra("DATA", dataPartita)
         startActivity(intent)
     }
 
@@ -512,63 +514,73 @@ class LiveActivity : BaseActivity() {
     fun salvaStatisticheSquadra() {
         db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->
             val squadraInCasa = casa
+
             db.getEventi(partitaId, dataPartita) { eventi ->
-
-                val eventiValidi = setOf("Tiro", "Fallo", "Angolo", "Giallo", "Rosso", "Fuorigioco")
+                val nomeStatistica = mapOf(
+                    "Tiro" to "Tiri",
+                    "Fallo" to "Falli fatti",
+                    "Gol" to "Tiri in porta",
+                    "Angolo" to "Angoli",
+                    "Giallo" to "Cartellini gialli",
+                    "Rosso" to "Cartellini rossi",
+                    "Fuorigioco" to "Fuorigiochi"
+                )
+                val eventiValidi = listOf(
+                    "Tiri", "Tiri in porta", "Falli fatti", "Angoli", "Fuorigiochi",
+                    "Cartellini gialli", "Cartellini rossi"
+                )
                 val statsMap = eventiValidi.associateWith { Pair(0, 0) }.toMutableMap()
-
                 eventi.forEach { evento ->
                     val nomeEvento = evento.nomeEvento
                     val squadra = evento.squadra
                     val dettagli = evento.dettagli
 
                     when (nomeEvento) {
-
                         "Tiro" -> {
-                            val attuale = statsMap["Tiro"] ?: Pair(0, 0)
+                            val labelTiri = nomeStatistica["Tiro"] ?: return@forEach
+                            val attuale = statsMap[labelTiri] ?: Pair(0, 0)
                             val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
-                            statsMap["Tiro"] = nuovoValore
-
+                            statsMap[labelTiri] = nuovoValore
                             val esito = (dettagli["tipoTiro"] as? String)?.lowercase()
                             if (esito == "in porta") {
-                                val attualeTP = statsMap["Tiro in porta"] ?: Pair(0, 0)
+                                val labelTP = "Tiri in porta"
+                                val attualeTP = statsMap[labelTP] ?: Pair(0, 0)
                                 val nuovoTP = calcolaValoreAggiornato(squadraInCasa, squadra, attualeTP)
-                                statsMap["Tiro in porta"] = nuovoTP
+                                statsMap[labelTP] = nuovoTP
                             }
+                        }
+
+                        "Gol" -> {
+                            val labelTiri = nomeStatistica["Tiro"] ?: return@forEach
+                            val labelTP = nomeStatistica["Gol"] ?: return@forEach
+                            val attTiro = statsMap[labelTiri] ?: Pair(0, 0)
+                            val attTP = statsMap[labelTP] ?: Pair(0, 0)
+                            statsMap[labelTiri] = calcolaValoreAggiornato(squadraInCasa, squadra, attTiro)
+                            statsMap[labelTP] = calcolaValoreAggiornato(squadraInCasa, squadra, attTP)
                         }
 
                         "Fallo" -> {
                             val tipoFallo = (dettagli["tipoFallo"] as? String)?.lowercase()
-                            val attuale = statsMap["Fallo"] ?: Pair(0, 0)
-
+                            val label = nomeStatistica["Fallo"] ?: return@forEach
+                            val attuale = statsMap[label] ?: Pair(0, 0)
                             val assegnaACasa = if (tipoFallo == "subito") {
                                 if (squadraInCasa == true) !squadra else squadra
                             } else {
                                 if (squadraInCasa == true) squadra else !squadra
                             }
-
                             val nuovoValore = if (assegnaACasa) {
                                 Pair(attuale.first + 1, attuale.second)
                             } else {
                                 Pair(attuale.first, attuale.second + 1)
                             }
-
-                            statsMap["Fallo"] = nuovoValore
-                        }
-                        "Gol" -> {
-                            val attuale = statsMap["Tiro"] ?: Pair(0, 0)
-                            val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
-                            statsMap["Tiro"] = nuovoValore
-
-                            val attualeGol = statsMap["Tiro in porta"] ?: Pair(0, 0)
-                            val nuovoGol = calcolaValoreAggiornato(squadraInCasa, squadra, attualeGol)
-                            statsMap["Tiro in porta"] = nuovoGol
+                            statsMap[label] = nuovoValore
                         }
 
-                        "Giallo", "Rosso", "Fuorigioco", "Angolo" -> {
-                            val attuale = statsMap[nomeEvento] ?: Pair(0, 0)
+                        "Angolo", "Giallo", "Rosso", "Fuorigioco" -> {
+                            val label = nomeStatistica[nomeEvento] ?: return@forEach
+                            val attuale = statsMap[label] ?: Pair(0, 0)
                             val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
-                            statsMap[nomeEvento] = nuovoValore
+                            statsMap[label] = nuovoValore
                         }
 
                         else -> {
@@ -576,11 +588,11 @@ class LiveActivity : BaseActivity() {
                     }
                 }
 
-
                 db.aggiungiStats(partitaId, dataPartita, statsMap)
             }
         }
     }
+
 
     private fun salvaRisultatoPartita(golCasa: Int, golOspite: Int) {
         db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->

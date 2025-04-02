@@ -70,8 +70,8 @@ class HomeActivity : BaseActivity() {
         buttonDetails.setOnClickListener {
             db.getUltimaPartita() { data, partitaId ->
                 val intent = Intent(this, FinePartitaActivity::class.java).apply {
-                    putExtra("dataPartita", data)
-                    putExtra("partitaId", partitaId)
+                    putExtra("DATA", data)
+                    putExtra("PARTITA_ID", partitaId)
                 }
                 startActivity(intent)
             }

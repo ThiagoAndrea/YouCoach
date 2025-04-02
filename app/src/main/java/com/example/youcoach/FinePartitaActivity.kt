@@ -8,36 +8,30 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.tabs.TabLayout
 
 
+
 class FinePartitaActivity : BaseActivity() {
 
 
     private lateinit var partitaId: String
     private lateinit var dataPartita: String
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var textDettagli: TextView
+    private lateinit var tabLayout: TabLayout
+    private lateinit var db: DatabaseManager
+    private lateinit var squadraCasa: TextView
+    private lateinit var squadraOspite: TextView
+    private lateinit var risultato: TextView
+    private lateinit var esito: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fine_partita)
+        setupBottomNavigation(R.id.nav_stats)
 
         partitaId = intent.getStringExtra("PARTITA_ID") ?: ""
         dataPartita = intent.getStringExtra("DATA") ?: ""
 
-        val tabLayout = findViewById<TabLayout>(R.id.tab_layout)
-        val textDettagli = findViewById<TextView>(R.id.text_dettagli)
-        val recyclerView = findViewById<RecyclerView>(R.id.recycler_statistiche)
-
-        val listaStatistiche = listOf(
-            Statistica("Goal previsti (xG)", "1.10", "0.39", 74f, 26f),
-            Statistica("Possesso Palla", "59%", "41%", 59f, 41f),
-            Statistica("Tiri totali", "16", "7", 69f, 31f),
-            Statistica("Tiri in Porta", "6", "2", 75f, 25f),
-            Statistica("Grandi occasioni", "3", "1", 75f, 25f),
-            Statistica("Calci d’angolo", "5", "3", 63f, 37f),
-            Statistica("Cartellini Gialli", "2", "4", 33f, 67f)
-        )
-
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = StatisticaAdapter(listaStatistiche)
-        recyclerView.visibility = View.GONE
+        setUi()
 
         tabLayout.addTab(tabLayout.newTab().setText("Dettagli"))
         tabLayout.addTab(tabLayout.newTab().setText("Statistiche"))
@@ -49,6 +43,7 @@ class FinePartitaActivity : BaseActivity() {
                         textDettagli.visibility = View.VISIBLE
                         recyclerView.visibility = View.GONE
                     }
+
                     1 -> {
                         textDettagli.visibility = View.GONE
                         recyclerView.visibility = View.VISIBLE
@@ -59,5 +54,40 @@ class FinePartitaActivity : BaseActivity() {
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
+
+        db.getStatsPartita(partitaId, dataPartita) { statistiche ->
+            recyclerView.adapter = StatisticaAdapter(statistiche)
+        }
+    }
+
+    private fun setUi(){
+        tabLayout = findViewById(R.id.tab_layout)
+        textDettagli = findViewById(R.id.text_dettagli)
+        recyclerView = findViewById(R.id.recycler_statistiche)
+        squadraCasa = findViewById(R.id.text_squadra_casa)
+        squadraOspite = findViewById(R.id.text_squadra_ospite)
+        risultato = findViewById(R.id.text_score)
+        esito = findViewById(R.id.text_esito)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.visibility = View.GONE
+        db = DatabaseManager()
+
+        db.getSquadraPrincipale{squadra, _ ->
+            db.getPartita(dataPartita){_, avversario, _, _, _, casa, _, _, _ ->
+                if(casa==true) {
+                    squadraCasa.text = Utils.troncaTesto(squadra, 13)
+                    squadraOspite.text = Utils.troncaTesto(avversario, 13)
+                }
+                else {
+                    squadraCasa.text = Utils.troncaTesto(avversario, 13)
+                    squadraOspite.text = Utils.troncaTesto(squadra, 13)
+                }
+                db.getRisultatoPartita(partitaId, dataPartita){esitoPartita, golCasa, golOspite ->
+                    risultato.text = "$golCasa - $golOspite"
+                    esito.text = esitoPartita
+                }
+
+            }
+        }
     }
 }

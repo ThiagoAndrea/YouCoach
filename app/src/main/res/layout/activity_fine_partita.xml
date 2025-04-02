@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/text_vittoria"
+        android:id="@+id/text_esito"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Vittoria"
@@ -26,7 +26,7 @@
         android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/text_score"
-        app:layout_constraintTop_toBottomOf="@id/text_vittoria"
+        app:layout_constraintTop_toBottomOf="@id/text_esito"
         />
 
     <TextView
@@ -49,7 +49,7 @@
         android:layout_marginTop="16dp"
         app:layout_constraintStart_toEndOf="@+id/text_score"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_vittoria"
+        app:layout_constraintTop_toBottomOf="@id/text_esito"
         />
 
 
