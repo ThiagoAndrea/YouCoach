@@ -12,4 +12,12 @@ object Utils {
             testo
         }
     }
+
+    fun parseMinuto(minutaggio: String?): Int {
+        if (minutaggio.isNullOrBlank()) return 0
+        val parts = minutaggio.split(":")
+        val minuti = parts.getOrNull(0)?.toIntOrNull() ?: 0
+        return  minuti + 1
+    }
+
 }

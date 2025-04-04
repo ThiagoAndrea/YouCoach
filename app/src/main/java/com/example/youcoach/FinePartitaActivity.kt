@@ -1,6 +1,7 @@
 package com.example.youcoach
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -56,6 +57,7 @@ class FinePartitaActivity : BaseActivity() {
         })
 
         db.getStatsPartita(partitaId, dataPartita) { statistiche ->
+            Log.d("DEBUG", "Statistiche trovate: ${statistiche.size}")
             recyclerView.adapter = StatisticaAdapter(statistiche)
         }
     }

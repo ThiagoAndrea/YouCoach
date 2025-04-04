@@ -238,7 +238,7 @@ class LiveActivity : BaseActivity() {
         fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
         fabStartMatch.setImageResource(R.drawable.fischietto)
         (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(false)
-        salvaStatisticheSquadra()
+        salvaStats()
         salvaRisultatoPartita(punteggioCasa.text.toString().toInt(), punteggioOspite.text.toString().toInt())
         val intent = Intent(this, FinePartitaActivity::class.java)
         intent.putExtra("PARTITA_ID", partitaId)
@@ -288,15 +288,13 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun setUpIconeSuperiori(){
-        db.getPartita(dataPartita){ idPartita, _, _, _, _, casa, _, _, _ ->
-            if(idPartita != null){
-                if(casa == true){
-                    buttonEventiCasa.setImageResource(R.drawable.corner)
-                    buttonEventiOspite.setImageResource(R.drawable.punto_esclamativo)
-                }else{
-                    buttonEventiCasa.setImageResource(R.drawable.punto_esclamativo)
-                    buttonEventiOspite.setImageResource(R.drawable.corner)
-                }
+        db.getCasa(partitaId, dataPartita){ casa ->
+            if(casa == true){
+                buttonEventiCasa.setImageResource(R.drawable.corner)
+                buttonEventiOspite.setImageResource(R.drawable.punto_esclamativo)
+            }else{
+                buttonEventiCasa.setImageResource(R.drawable.punto_esclamativo)
+                buttonEventiOspite.setImageResource(R.drawable.corner)
             }
         }
     }
@@ -325,19 +323,17 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun setupButtonTags() {
-        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->
-            runOnUiThread {
-                if (casa == true) {
-                    buttonEventiCasa.tag = "corner"
-                    buttonEventiOspite.tag = "exclamation"
-                    buttonEventiCasa.setImageResource(R.drawable.corner)
-                    buttonEventiOspite.setImageResource(R.drawable.punto_esclamativo)
-                } else {
-                    buttonEventiCasa.tag = "exclamation"
-                    buttonEventiOspite.tag = "corner"
-                    buttonEventiCasa.setImageResource(R.drawable.punto_esclamativo)
-                    buttonEventiOspite.setImageResource(R.drawable.corner)
-                }
+        db.getCasa(partitaId, dataPartita){ casa ->
+            if (casa == true) {
+                buttonEventiCasa.tag = "corner"
+                buttonEventiOspite.tag = "exclamation"
+                buttonEventiCasa.setImageResource(R.drawable.corner)
+                buttonEventiOspite.setImageResource(R.drawable.punto_esclamativo)
+            } else {
+                buttonEventiCasa.tag = "exclamation"
+                buttonEventiOspite.tag = "corner"
+                buttonEventiCasa.setImageResource(R.drawable.punto_esclamativo)
+                buttonEventiOspite.setImageResource(R.drawable.corner)
             }
         }
     }
@@ -362,20 +358,20 @@ class LiveActivity : BaseActivity() {
     }
 
     private fun aggiornaGol(evento: Evento) {
-        db.getPartita(dataPartita) { _, _, _, _, _, casa, _ , _, _ ->
-                when {
-                    evento.squadra == true && casa == true -> {
-                        punteggioCasa.text = (punteggioCasa.text.toString().toInt() + 1).toString()
-                    }
-                    evento.squadra == false && casa == false -> {
-                        punteggioCasa.text = (punteggioCasa.text.toString().toInt() + 1).toString()
-                    }
-                    evento.squadra == true && casa == false -> {
-                        punteggioOspite.text = (punteggioOspite.text.toString().toInt() + 1).toString()
-                    }
-                    evento.squadra == false && casa == true -> {
-                        punteggioOspite.text = (punteggioOspite.text.toString().toInt() + 1).toString()
-                    }
+        db.getCasa(partitaId, dataPartita){ casa ->
+            when {
+                evento.squadra == true && casa == true -> {
+                    punteggioCasa.text = (punteggioCasa.text.toString().toInt() + 1).toString()
+                }
+                evento.squadra == false && casa == false -> {
+                    punteggioCasa.text = (punteggioCasa.text.toString().toInt() + 1).toString()
+                }
+                evento.squadra == true && casa == false -> {
+                    punteggioOspite.text = (punteggioOspite.text.toString().toInt() + 1).toString()
+                }
+                evento.squadra == false && casa == true -> {
+                    punteggioOspite.text = (punteggioOspite.text.toString().toInt() + 1).toString()
+                }
             }
         }
     }
@@ -511,8 +507,15 @@ class LiveActivity : BaseActivity() {
         }
     }
 
-    fun salvaStatisticheSquadra() {
-        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->
+    fun salvaStats(){
+        salvaStatisticheSquadra()
+        salvaStatisticheGiocatore()
+        salvaConvocazioniEMinuti()
+        completaStatsRosa()
+    }
+
+    private fun salvaStatisticheSquadra() {
+        db.getCasa(partitaId, dataPartita){ casa ->
             val squadraInCasa = casa
 
             db.getEventi(partitaId, dataPartita) { eventi ->
@@ -588,14 +591,177 @@ class LiveActivity : BaseActivity() {
                     }
                 }
 
-                db.aggiungiStats(partitaId, dataPartita, statsMap)
+                db.aggiungiStatsPartita(partitaId, dataPartita, statsMap)
+            }
+        }
+    }
+
+    private fun salvaStatisticheGiocatore(){
+        db.getEventi(partitaId, dataPartita) { eventi ->
+
+            val statsGiocatori = mutableMapOf<String, MutableMap<String, Any>>()
+
+            fun incrementaStat(giocatore: String, chiave: String) {
+                val stats = statsGiocatori.getOrPut(giocatore) { mutableMapOf() }
+                val attuale = (stats[chiave] as? Int) ?: 0
+                stats[chiave] = attuale + 1
+            }
+
+            eventi.forEach { evento ->
+                if (!evento.squadra) return@forEach
+                val nomeEvento = evento.nomeEvento
+                val giocatoreId = evento.nomeGiocatore
+                val dettagli = evento.dettagli
+
+                when (nomeEvento) {
+                    "Tiro" -> {
+                        incrementaStat(giocatoreId, "Tiri")
+                        val esito = (dettagli["tipoTiro"] as? String)?.lowercase()
+                        if (esito == "in porta") {
+                            incrementaStat(giocatoreId, "Tiri in porta")
+                        }
+                    }
+
+                    "Gol" -> {
+                        val assistId = (dettagli["assist"] as? String)
+                        if (assistId != null) {
+                            incrementaStat(assistId, "Assist")
+                        }
+                        incrementaStat(giocatoreId, "Gol")
+                        incrementaStat(giocatoreId, "Tiri")
+                        incrementaStat(giocatoreId, "Tiri in porta")
+                    }
+
+                    "Fallo" -> {
+                        val tipoFallo = (dettagli["tipoFallo"] as? String)?.lowercase()
+                        if (tipoFallo == "subito") {
+                            incrementaStat(giocatoreId, "Falli subiti")
+                        } else {
+                            incrementaStat(giocatoreId, "Falli fatti")
+                        }
+                    }
+
+                    "Giallo" -> incrementaStat(giocatoreId, "Cartellini gialli")
+                    "Rosso" -> incrementaStat(giocatoreId, "Cartellini rossi")
+                    "Fuorigioco" -> incrementaStat(giocatoreId, "Fuorigiochi")
+                    "Parata" -> incrementaStat(giocatoreId, "Parate")
+
+                    else -> {
+                    }
+                }
+            }
+
+            statsGiocatori.forEach { (giocatoreId, statsMap) ->
+                db.aggiungiStatsGiocatore(partitaId, dataPartita, giocatoreId, statsMap)
+            }
+        }
+    }
+
+    private fun salvaConvocazioniEMinuti() {
+        db.getConvocati(partitaId, dataPartita) { convocati ->
+            db.getTitolari(partitaId, dataPartita) { titolari ->
+                db.getEventi(partitaId, dataPartita) { eventi ->
+                    val statsGiocatori = mutableMapOf<String, MutableMap<String, Any>>()
+                    convocati.forEach { giocatoreId ->
+                        statsGiocatori[giocatoreId] = mutableMapOf(
+                            "convocato" to true,
+                            "titolare" to (giocatoreId in titolari.keys),
+                            "minutoInizio" to if (giocatoreId in titolari.keys) 0 else -1,
+                            "minutiGiocati" to 0
+                        )
+                    }
+                    eventi.filter { it.nomeEvento == "Cambio" }
+                        .forEach { evento ->
+                            val dettagli = evento.dettagli
+                            val uscente = evento.nomeGiocatore
+                            val entrante = dettagli["Entra: "] as? String ?: return@forEach
+                            val minutaggio = evento.minutaggio
+                            val minutoCambio = Utils.parseMinuto(minutaggio)
+
+                            statsGiocatori[uscente]?.let { statUscente ->
+                                val inizio = (statUscente["minutoInizio"] as? Int) ?: 0
+                                val giocati = minutoCambio - inizio
+                                statUscente["minutiGiocati"] = giocati
+                            }
+
+                            val statEntrante = statsGiocatori.getOrPut(entrante) {
+                                mutableMapOf("convocato" to true, "titolare" to false, "minutiGiocati" to 0)
+                            }
+                            statEntrante["minutoInizio"] = minutoCambio
+                        }
+
+                    db.getPartita(dataPartita) { _, _, _, _, _, _, minutiPerTempo, numeroTempi, _ ->
+                        if (minutiPerTempo != null && numeroTempi != null) {
+                            val durataPartita = minutiPerTempo * numeroTempi
+
+                            statsGiocatori.forEach { (_, stat) ->
+                                val inizio = (stat["minutoInizio"] as? Int)
+                                if (inizio != null && inizio >= 0) {
+                                    val giocati = durataPartita - inizio
+                                    val giaCalcolati = (stat["minutiGiocati"] as? Int) ?: 0
+                                    stat["minutiGiocati"] = giaCalcolati + giocati
+                                }
+                                stat.remove("minutoInizio")
+                            }
+
+                            statsGiocatori.forEach { (giocatoreId, statMap) ->
+                                db.aggiungiStatsGiocatore(partitaId, dataPartita, giocatoreId, statMap)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun completaStatsRosa() {
+        db.getGiocatori { giocatori ->
+            db.getConvocati(partitaId, dataPartita) { convocati ->
+                val idConvocati = convocati.toSet()
+
+                val statsBase = mapOf(
+                    "convocato" to false,
+                    "titolare" to false,
+                    "gol" to 0,
+                    "minutiGiocati" to 0,
+                    "falliFatti" to 0,
+                    "falliSubiti" to 0,
+                    "cartelliniGialli" to 0,
+                    "cartelliniRossi" to 0,
+                    "fuorigiochi" to 0,
+                    "tiri" to 0,
+                    "tiriInPorta" to 0,
+                    "parate" to 0
+                )
+
+                giocatori.forEach { giocatore ->
+                    val giocatoreId = giocatore.id
+                    db.getStatsGiocatorePartita(giocatoreId, partitaId) { statsEsistenti ->
+                        val statMap = mutableMapOf<String, Any>()
+                        if (giocatoreId in idConvocati) {
+                            statsBase.forEach { (chiave, valoreBase) ->
+                                if (!statsEsistenti.containsKey(chiave)) {
+                                    statMap[chiave] = valoreBase
+                                }
+                            }
+                        } else {
+                            statMap.putAll(statsBase)
+                        }
+                        if (statMap.isNotEmpty()) {
+                            db.aggiungiStatsGiocatore(partitaId, dataPartita, giocatoreId, statMap)
+                        }
+                    }
+                }
             }
         }
     }
 
 
+
+
+
     private fun salvaRisultatoPartita(golCasa: Int, golOspite: Int) {
-        db.getPartita(dataPartita) { _, _, _, _, _, casa, _, _, _ ->
+        db.getCasa(partitaId, dataPartita){ casa ->
             var esito = ""
             if (golCasa > golOspite) {
                 if (casa == true)

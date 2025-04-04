@@ -7,7 +7,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class StatisticaAdapter(private val statistiche: List<Statistica>) :
+class StatisticaAdapter(private val statistiche: List<StatisticaPartita>) :
     RecyclerView.Adapter<StatisticaAdapter.StatViewHolder>() {
 
     inner class StatViewHolder(view: View) : RecyclerView.ViewHolder(view) {

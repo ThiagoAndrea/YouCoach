@@ -279,6 +279,20 @@ class DatabaseManager {
         })
     }
 
+    fun getCasa(partitaId: String, dataPartita: String, callback: (Boolean) -> Unit){
+        database.child("Partite").child(dataPartita).child(partitaId).child("casa").get()
+            .addOnSuccessListener { snapshot ->
+                if(snapshot.exists()) {
+                    val casa = snapshot.getValue(Boolean::class.java) ?: false
+                    callback(casa)
+                }
+                else {
+                    callback(false)
+                }
+            }
+
+    }
+
     fun getMinutiPerTempo(partitaId: String, dataPartita: String, callback: (Int) -> Unit) {
         database.child("Partite").child(dataPartita).child(partitaId).child("minuti_per_tempo")
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -302,7 +316,7 @@ class DatabaseManager {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    callback(2) // Valore predefinito in caso di errore
+                    callback(2)
                 }
             })
     }
@@ -390,10 +404,9 @@ class DatabaseManager {
 
     }
 
-    fun getStatsPartita(partitaId: String, dataPartita: String, callback: (List<Statistica>) -> Unit) {
-        val statisticheRef = database.child("Partite").child(dataPartita).child(partitaId).child("stats")
+    fun getStatsPartita(partitaId: String, dataPartita: String, callback: (List<StatisticaPartita>) -> Unit) {
+        val statisticheRef = database.child("Partite").child(dataPartita).child(partitaId).child("stats").child("partita")
 
-        // Ordine desiderato
         val ordineStat = listOf(
             "Tiri",
             "Tiri in porta",
@@ -405,7 +418,7 @@ class DatabaseManager {
         )
 
         statisticheRef.get().addOnSuccessListener { snapshot ->
-            val listStats = mutableListOf<Statistica>()
+            val listStats = mutableListOf<StatisticaPartita>()
             snapshot.children.forEach { stat ->
                 val nome = stat.key ?: return@forEach
                 val casaValue = stat.child("casa").getValue(Int::class.java) ?: 0
@@ -414,7 +427,7 @@ class DatabaseManager {
                 val perCasa = if (tot == 0) 50f else (casaValue.toFloat() / tot) * 100
                 val perOspite = 100f - perCasa
 
-                listStats.add(Statistica(nome, casaValue.toString(), ospiteValue.toString(), perCasa, perOspite))
+                listStats.add(StatisticaPartita(nome, casaValue.toString(), ospiteValue.toString(), perCasa, perOspite))
             }
             val ordinata = listStats.sortedWith(
                 compareBy { stat ->
@@ -428,10 +441,21 @@ class DatabaseManager {
         }
     }
 
+    fun getStatsGiocatorePartita(giocatoreId: String, partitaId: String, callback: (Map<String, Any>) -> Unit) {
+        val ref = database
+            .child("Giocatori")
+            .child(giocatoreId)
+            .child("stats")
+            .child("partite")
+            .child(partitaId)
 
-
-
-
+        ref.get().addOnSuccessListener { snapshot ->
+            val map = snapshot.value as? Map<String, Any> ?: emptyMap()
+            callback(map)
+        }.addOnFailureListener {
+            callback(emptyMap())
+        }
+    }
 
     /**
      * Funzioni di aggiunta al database
@@ -547,11 +571,24 @@ class DatabaseManager {
         val presenzeRef = database.child("Allenamenti").child(data).child(allenamentoId).child("presenze")
         presenzeRef.setValue(presenze)
             .addOnSuccessListener {
-                callback(true, "Presenze salvate con successo")
-            } .addOnFailureListener {
-                callback(false, "Errore durante il salvataggio: ${it.message}")
+                val updates = mutableMapOf<String, Any>()
+                presenze.forEach { (giocatoreId, presenzaValore) ->
+                    val path = "/Giocatori/$giocatoreId/stats/allenamenti/$allenamentoId"
+                    updates[path] = presenzaValore
+                }
+                database.updateChildren(updates)
+                    .addOnSuccessListener {
+                        callback(true, "Presenze salvate correttamente in entrambi i nodi")
+                    }
+                    .addOnFailureListener {
+                        callback(false, "Errore nel salvataggio nel nodo Giocatori: ${it.message}")
+                    }
+            }
+            .addOnFailureListener {
+                callback(false, "Errore nel salvataggio del nodo Allenamenti: ${it.message}")
             }
     }
+
 
     fun aggiungiConvocatiPartita(
         partitaId: String,
@@ -614,13 +651,36 @@ class DatabaseManager {
     }
 
 
-    fun aggiungiStats(partitaId: String, dataPartita: String, statsMap: Map<String, Pair<Int, Int>>) {
-        val statsRef = database.child("Partite").child(dataPartita).child(partitaId).child("stats")
+    fun aggiungiStatsPartita(partitaId: String, dataPartita: String, statsMap: Map<String, Pair<Int, Int>>) {
+        val statsRef = database.child("Partite").child(dataPartita).child(partitaId).child("stats").child("partita")
         val stat = statsMap.mapValues { (_, value) ->
             mapOf("casa" to value.first, "ospite" to value.second)
         }
         statsRef.setValue(stat)
     }
+
+    fun aggiungiStatsGiocatore(partitaId: String, dataPartita: String, giocatoreId: String, statsGiocatoreMap: Map<String, Any>) {
+        val database = FirebaseDatabase.getInstance().reference
+        database
+            .child("Partite")
+            .child(dataPartita)
+            .child(partitaId)
+            .child("stats")
+            .child("giocatori")
+            .child(giocatoreId)
+            .updateChildren(statsGiocatoreMap)
+
+        database
+            .child("Giocatori")
+            .child(giocatoreId)
+            .child("stats")
+            .child("partite")
+            .child(partitaId)
+            .updateChildren(statsGiocatoreMap)
+    }
+
+
+
 
     fun aggiungiRisultato(partitaId: String, dataPartita: String, esito: String, golCasa: Int, golOspite: Int) {
         val risultatoRef = database.child("Partite").child(dataPartita).child(partitaId).child("risultato")

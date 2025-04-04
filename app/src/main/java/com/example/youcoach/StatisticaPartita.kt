@@ -1,6 +1,6 @@
 package com.example.youcoach
 
-data class Statistica(
+data class StatisticaPartita(
     val nome: String,
     val casaValue: String,
     val ospiteValue: String,
