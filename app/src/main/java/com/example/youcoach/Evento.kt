@@ -7,6 +7,7 @@ data class Evento(
     val minutaggio: String ="",
     val nomeEvento: String = "",
     val nomeGiocatore: String = "",
+    var nomeCompletoGiocatore: String = "",
     val squadra: Boolean = true,
     val dettagli: Map<String, Any?> = emptyMap()
 ): Serializable

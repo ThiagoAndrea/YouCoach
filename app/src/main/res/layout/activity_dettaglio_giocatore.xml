@@ -109,6 +109,104 @@
 
 
     <TextView
+        android:id="@+id/textStatsPartite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Partite"
+        app:layout_constraintTop_toBottomOf="@+id/icona_presenze"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="24dp"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/icona_convocazioni"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="@+id/textStatsPartite"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsPartite"
+        android:src="@drawable/rosa" />
+
+    <TextView
+        android:id="@+id/num_convocazioni"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="24"
+        android:textSize="24dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_convocazioni"
+        app:layout_constraintTop_toTopOf="@+id/icona_convocazioni"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_convocazioni"/>
+
+    <ImageView
+        android:id="@+id/icona_titolari"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/num_convocazioni"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsPartite"
+        android:src="@drawable/titolare" />
+
+    <TextView
+        android:id="@+id/num_titolari"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="3"
+        android:textSize="24dp"
+        android:layout_marginStart="4dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_titolari"
+        app:layout_constraintTop_toTopOf="@+id/icona_titolari"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_titolari"/>
+
+    <ImageView
+        android:id="@+id/icona_minuti_giocati"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/num_titolari"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsPartite"
+        android:src="@drawable/minuti_giocati" />
+
+    <TextView
+        android:id="@+id/num_minuti_giocati"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="4"
+        android:textSize="24dp"
+        android:layout_margin="4dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_minuti_giocati"
+        app:layout_constraintTop_toTopOf="@+id/icona_minuti_giocati"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_minuti_giocati"/>
+
+
+
+    <ImageView
+        android:id="@+id/icona_gol"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/num_minuti_giocati"
+        app:layout_constraintTop_toBottomOf="@+id/textStatsPartite"
+        android:src="@drawable/gol" />
+
+    <TextView
+        android:id="@+id/num_gol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:textSize="24dp"
+        android:layout_marginStart="4dp"
+        app:layout_constraintStart_toEndOf="@+id/icona_gol"
+        app:layout_constraintTop_toTopOf="@+id/icona_gol"
+        app:layout_constraintBottom_toBottomOf="@+id/icona_gol"/>
+
+
+    <TextView
         android:id="@+id/textStatsAllenamenti"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -122,8 +220,8 @@
 
     <ImageView
         android:id="@+id/icona_presenze"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginTop="8dp"
         app:layout_constraintStart_toStartOf="@+id/textStatsAllenamenti"
         app:layout_constraintTop_toBottomOf="@+id/textStatsAllenamenti"
@@ -142,8 +240,8 @@
 
     <ImageView
         android:id="@+id/icona_ritardo"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toEndOf="@+id/num_presenze"
@@ -163,8 +261,8 @@
 
     <ImageView
         android:id="@+id/icona_assenze"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toEndOf="@+id/num_ritardi"
@@ -186,8 +284,8 @@
 
     <ImageView
         android:id="@+id/icona_infortunio"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toEndOf="@+id/num_assenze"

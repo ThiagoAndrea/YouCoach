@@ -101,6 +101,48 @@
         app:layout_constraintStart_toStartOf="@id/angoli_avversari"
         app:layout_constraintEnd_toEndOf="@+id/angoli_avversari"/>
 
+    <ImageButton
+        android:id="@+id/giallo_avversari"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/yellow_card"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/fuorigioco_avversari"
+        app:layout_constraintStart_toStartOf="@+id/textEventoAvversari"
+        app:layout_constraintEnd_toStartOf="@+id/rosso_avversari"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Giallo"
+        app:layout_constraintTop_toBottomOf="@+id/giallo_avversari"
+        app:layout_constraintStart_toStartOf="@id/giallo_avversari"
+        app:layout_constraintEnd_toEndOf="@+id/giallo_avversari"/>
+
+
+
+    <ImageButton
+        android:id="@+id/rosso_avversari"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/red_card"
+        android:background="@color/transparent"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="32dp"
+        app:layout_constraintTop_toBottomOf="@+id/fuorigioco_avversari"
+        app:layout_constraintStart_toEndOf="@+id/giallo_avversari"
+        app:layout_constraintEnd_toEndOf="@+id/textEventoAvversari"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rosso"
+        app:layout_constraintTop_toBottomOf="@+id/rosso_avversari"
+        app:layout_constraintStart_toStartOf="@id/rosso_avversari"
+        app:layout_constraintEnd_toEndOf="@+id/rosso_avversari"/>
+
 
 
 
@@ -111,7 +153,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="36dp"
         android:text="Chiudi"
-        app:layout_constraintTop_toBottomOf="@+id/fuorigioco_avversari"
+        app:layout_constraintTop_toBottomOf="@+id/giallo_avversari"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

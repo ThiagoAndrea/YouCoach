@@ -2,7 +2,6 @@ package com.example.youcoach
 
 import android.app.AlertDialog
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,10 +22,12 @@ class EventoAdapter(
     private var eventi: MutableList<Evento>,
     private val dataPartita: String,
     private val idPartita: String,
-    private val context: Context
+    private val context: Context,
+    private val onFormazioneAggiornata: () -> Unit
 ) : RecyclerView.Adapter<EventoAdapter.EventoViewHolder>() {
 
     private val db = DatabaseManager()
+
 
     inner class EventoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val minutaggioTextView: TextView = itemView.findViewById(R.id.minutaggio)
@@ -49,18 +50,6 @@ class EventoAdapter(
         val minuto = minutoString + 1
         holder.minutaggioTextView.text = "${minuto}'"
 
-        db.getNomeCognomeGiocatore(evento.nomeGiocatore) { nomeGiocatore, cognomeGiocatore ->
-            if (nomeGiocatore != null && cognomeGiocatore != null) {
-                val maxLunghezza = 10
-                val testoModificato = if (cognomeGiocatore.length > maxLunghezza) {
-                    cognomeGiocatore.substring(0, maxLunghezza - 2) + "..."
-                } else {
-                    cognomeGiocatore
-                }
-                holder.nomeGiocatoreTextView.text = testoModificato
-            }
-        }
-
         setEventoIcona(evento.nomeEvento, holder.immagineEvento)
         setBackground(evento.squadra, holder.cardEvento)
         if (evento.dettagli.isEmpty()) {
@@ -72,8 +61,11 @@ class EventoAdapter(
                 holder.dettagliEvento.visibility = View.VISIBLE
             }
         }
-        if (evento.nomeGiocatore == "N/A")
-            holder.nomeGiocatoreTextView.visibility = View.GONE
+
+        holder.nomeGiocatoreTextView.text = evento.nomeCompletoGiocatore
+        holder.nomeGiocatoreTextView.visibility =
+            if (evento.nomeCompletoGiocatore == "N/A") View.GONE else View.VISIBLE
+
 
         holder.modificaButton.setOnClickListener {
 
@@ -305,8 +297,7 @@ class EventoAdapter(
                                                 idUscente,
                                                 idEntrante
                                             ) { success, _ ->
-                                                if (success)
-                                                    (context as? LiveActivity)?.aggiornaUIAfterSostituzione(idPartita, dataPartita)
+                                                if (success) onFormazioneAggiornata()
                                             }
                                         }
                                     }
@@ -353,7 +344,7 @@ class EventoAdapter(
                                 if (uscente != null && entrante.isNotEmpty()) {
                                     db.modificaFormazione(idPartita, dataPartita,entrante,uscente) { success, message ->
                                         if (success) {
-                                            (context as? LiveActivity)?.aggiornaUIAfterSostituzione(idPartita, dataPartita)
+                                            onFormazioneAggiornata()
                                         }
                                         db.eliminaEvento(
                                             evento.idEvento,

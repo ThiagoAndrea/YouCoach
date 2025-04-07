@@ -40,7 +40,7 @@ class GiocatoreAdapter(private val giocatoreList: List<Giocatore>): RecyclerView
             "difensore" -> R.drawable.circle_background_difensore
             "centrocampista" -> R.drawable.circle_backkground_centrocampista
             "attaccante" -> R.drawable.circle_background_attaccante
-            else -> R.drawable.circle_background_green// Colore di default
+            else -> R.drawable.circle_background_green
         }
 
         holder.sfondoGiocatore.setBackgroundResource(backgroundColor)

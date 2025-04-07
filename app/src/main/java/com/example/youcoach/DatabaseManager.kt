@@ -634,7 +634,7 @@ class DatabaseManager {
         }
     }
 
-    fun aggiungiEvento (idPartita: String, data: String, minutaggio: String,idGiocatore: String, nomeEvento: String, squadra: Boolean, dettagliEvento: Map<String, Any?> = emptyMap()) {
+    fun aggiungiEvento (idPartita: String, data: String, minutaggio: String,nomeGiocatore: String, nomeEvento: String, squadra: Boolean, dettagliEvento: Map<String, Any?> = emptyMap()) {
         val eventiRef = database.child("Partite").child(data).child(idPartita).child("eventi")
         val eventoId = eventiRef.push().key ?: return
 
@@ -642,7 +642,7 @@ class DatabaseManager {
             "idEvento" to eventoId,
             "minutaggio" to minutaggio,
             "nomeEvento" to nomeEvento,
-            "nomeGiocatore" to idGiocatore,
+            "nomeGiocatore" to nomeGiocatore,
             "squadra" to squadra,
             "dettagli" to dettagliEvento
         )
@@ -682,15 +682,31 @@ class DatabaseManager {
 
 
 
-    fun aggiungiRisultato(partitaId: String, dataPartita: String, esito: String, golCasa: Int, golOspite: Int) {
-        val risultatoRef = database.child("Partite").child(dataPartita).child(partitaId).child("risultato")
+    fun aggiungiRisultato(
+        partitaId: String,
+        dataPartita: String,
+        esito: String,
+        golCasa: Int,
+        golOspite: Int,
+        callback: (Boolean) -> Unit
+    ) {
+        val risultatoRef = database
+            .child("Partite")
+            .child(dataPartita)
+            .child(partitaId)
+            .child("risultato")
+
         val risultatoMap = mapOf(
             "esito" to esito,
             "golCasa" to golCasa,
             "golOspite" to golOspite
         )
+
         risultatoRef.setValue(risultatoMap)
+            .addOnSuccessListener { callback(true) }
+            .addOnFailureListener { callback(false) }
     }
+
 
     /**
      *  Funzioni di modifica del database
@@ -931,6 +947,70 @@ class DatabaseManager {
         return eventListener
     }
 
+    /**
+     * Statistiche
+     */
+
+    fun calcolaStatsAllenamenti(giocatoreId: String, callback: (presenze: Int, assenze: Int, ritardi: Int, infortuni: Int) -> Unit) {
+
+        val giocatoreRef =
+            database.child("Giocatori").child(giocatoreId).child("stats").child("allenamenti")
+        giocatoreRef.get().addOnSuccessListener { snapshot ->
+            var presenze = 0
+            var assenze = 0
+            var ritardi = 0
+            var infortuni = 0
+            snapshot.children.forEach { allenamento ->
+                val stato = allenamento.getValue(Int::class.java) ?: -1
+
+                when (stato) {
+                    0 -> presenze++
+                    1 -> assenze++
+                    2 -> ritardi++
+                    3 -> infortuni++
+                }
+            }
+
+            callback(presenze, assenze, ritardi, infortuni)
+        }.addOnFailureListener {
+            callback(0, 0, 0, 0)
+
+        }
+    }
+
+    fun calcolaStatsPartitaGiocatore(giocatoreId: String, callback: (convocazioni: Int, titolari: Int, minuti: Int, gol: Int) -> Unit){
+            val ref = FirebaseDatabase.getInstance().reference
+                .child("Giocatori")
+                .child(giocatoreId)
+                .child("stats")
+                .child("partite")
+
+            ref.get().addOnSuccessListener { snapshot ->
+                var convocazioni = 0
+                var titolari = 0
+                var minuti = 0
+                var gol = 0
+
+                snapshot.children.forEach { partita ->
+                    val convocato = partita.child("convocato").getValue(Boolean::class.java) == true
+                    val titolareVal = partita.child("titolare").getValue(Boolean::class.java) == true
+                    val minutiGiocati = partita.child("minutiGiocati").getValue(Int::class.java) ?: 0
+                    val golSegnati = partita.child("Gol").getValue(Int::class.java) ?: 0
+
+                    if (convocato) convocazioni++
+                    if (titolareVal) titolari++
+                    minuti += minutiGiocati
+                    gol += golSegnati
+                }
+
+                callback(convocazioni, titolari, minuti, gol)
+            }.addOnFailureListener {
+                callback(0, 0, 0, 0)
+            }
+        }
 
 }
+
+
+
 

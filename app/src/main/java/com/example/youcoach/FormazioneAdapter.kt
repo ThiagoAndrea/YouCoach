@@ -18,9 +18,8 @@ class FormazioneAdapter(
     private var formazione: Map<String, String>,
     private val data: String,
     private val idPartita: String,
-    private val activity: LiveActivity,
+    private val onFormazioneAggiornata: () -> Unit,
     private val ruoliOrdine: List<String> = listOf("Portiere", "Difensore", "Centrocampista", "Trequartista", "Attaccante")
-
 
 ) : RecyclerView.Adapter<FormazioneAdapter.RigaViewHolder>() {
 
@@ -469,7 +468,7 @@ class FormazioneAdapter(
             db.modificaFormazione(idPartita, data, idUscente, idEntrante) { success, message ->
                 if (success) {
                     db.aggiungiEvento(idPartita, data, minutaggio, idUscente, "Cambio", true, mapOf("Entra: " to idEntrante))
-                    activity.aggiornaUIAfterSostituzione(idPartita, data)
+                    onFormazioneAggiornata()
                 }
             }
         }
