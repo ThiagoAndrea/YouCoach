@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">YouCoach</string>
+    <string name="app_name">LiveCoaching</string>
     <string name="textview">TextView</string>
     <string name="calendar">Calendar</string>
     <string name="home_screen">Home Screen</string>

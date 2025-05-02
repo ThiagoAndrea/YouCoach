@@ -27,7 +27,7 @@ class RosaActivity : BaseActivity() {
         recyclerView = findViewById(R.id.recyclerGiocatore)
         nomeSquadra = findViewById(R.id.nome_squadra)
         db.getSquadraPrincipale{nome, _ ->
-            nomeSquadra.text = Utils.troncaTesto(nome, 14)
+            nomeSquadra.text = Utils.troncaTesto(nome, 11)
         }
         recyclerView.layoutManager = LinearLayoutManager(this)
 

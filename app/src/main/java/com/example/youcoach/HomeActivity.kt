@@ -159,7 +159,7 @@ class HomeActivity : BaseActivity() {
                     card2.visibility = View.VISIBLE
                     avversario2TextView.text = seconda["avversario"].toString()
                     logo2.setImageResource(if (seconda["casa"] as Boolean) R.drawable.home else R.drawable.aereo)
-                    setupCardClick(card2, prima["data"].toString())
+                    setupCardClick(card2, seconda["data"].toString())
                 } else {
                     card2.visibility = View.GONE
                 }
