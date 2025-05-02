@@ -2,8 +2,8 @@ package com.example.youcoach
 
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.SyncResult
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
@@ -12,13 +12,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.card.MaterialCardView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
 
 class DettaglioPartitaActivity : BaseActivity() {
-    private var partitaId: String? = null
-    private lateinit var formattedDate: String
+    private var idPartita: String? = null
+    private lateinit var data_partita: String
 
     // UI Components
     private lateinit var cardMatch: MaterialCardView
@@ -35,6 +32,7 @@ class DettaglioPartitaActivity : BaseActivity() {
     private lateinit var editButton: ImageButton
     private lateinit var convocatiButton: Button
     private lateinit var goLiveButton: Button
+    private lateinit var offlineButton: Button
     private lateinit var numConvocati: TextView
 
     private val db = DatabaseManager()
@@ -46,8 +44,7 @@ class DettaglioPartitaActivity : BaseActivity() {
 
         initUI()
         loadSelectedDate()
-        caricaPartita(formattedDate)
-        setupButtonListeners()
+        caricaPartita(data_partita)
     }
 
     private fun initUI() {
@@ -63,6 +60,7 @@ class DettaglioPartitaActivity : BaseActivity() {
         competitionIcon = findViewById(R.id.competition_icon)
         convocatiButton = findViewById(R.id.convocati_button)
         goLiveButton = findViewById(R.id.go_live_button)
+        offlineButton = findViewById(R.id.btn_offline)
         editButton = findViewById(R.id.modificaPartita_button)
         deleteButton = findViewById(R.id.eliminaPartita_button)
         numConvocati = findViewById(R.id.num_convocati)
@@ -72,8 +70,7 @@ class DettaglioPartitaActivity : BaseActivity() {
         val selectedDay = intent.getStringExtra("selectedDay")
         val selectedMonth = intent.getIntExtra("selectedMonth", -1)
         val selectedYear = intent.getIntExtra("selectedYear", -1)
-
-        formattedDate = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay?.toIntOrNull() ?: 0)
+        data_partita = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay?.toIntOrNull() ?: 0)
         val date = "$selectedDay/${selectedMonth + 1}/$selectedYear"
         cardDate.text = date
     }
@@ -84,20 +81,54 @@ class DettaglioPartitaActivity : BaseActivity() {
         editButton.setOnClickListener{modificaPartita()}
         deleteButton.setOnClickListener{confermaEliminazione()}
         convocatiButton.setOnClickListener{caricaGiocatoriEApriDialog()}
-        goLiveButton.setOnClickListener{goLive()}
+        idPartita?.let {
+            db.getGiocata(it, data_partita){ giocata ->
+                if(!giocata) {
+                    goLiveButton.text = "VAI AL LIVE"
+                    goLiveButton.setOnClickListener { goLive() }
+                    offlineButton.visibility = View.VISIBLE
+                    offlineButton.setOnClickListener { offlineMode() }
+                }
+                else{
+                    goLiveButton.text="Dettaglio"
+                    goLiveButton.setOnClickListener{vaiAlDettaglio()}
+                    offlineButton.visibility = View.GONE
+
+                }
+            }
+        }
+
 
     }
 
     private fun goLive() {
         val intent = Intent(this, FormazioneActivity::class.java)
-        intent.putExtra("PARTITA_ID", partitaId)
-        intent.putExtra("DATA", formattedDate)
+        intent.putExtra("PARTITA_ID", idPartita)
+        intent.putExtra("DATA", data_partita)
+        intent.putExtra("LIVE", true)
         startActivity(intent)
+    }
+
+    private fun vaiAlDettaglio(){
+        val intent = Intent(this, FinePartitaActivity::class.java)
+        intent.putExtra("PARTITA_ID", idPartita)
+        intent.putExtra("DATA", data_partita)
+        startActivity(intent)
+    }
+
+    private fun offlineMode() {
+        val intent = Intent(this, FormazioneActivity::class.java)
+        intent.putExtra("PARTITA_ID", idPartita)
+        intent.putExtra("DATA", data_partita)
+        intent.putExtra("LIVE", false)
+        startActivity(intent)
+
     }
 
     private fun caricaPartita(formattedDate: String) {
         db.getPartita(formattedDate) { idPartita, avversario, orario, luogo, competizione, casa, minutiPerTempo, numeroTempi, numeroCalciatori ->
-            this.partitaId = idPartita
+            this.idPartita = idPartita
+            setupButtonListeners()
             if (avversario != null && orario != null && luogo != null) {
                 if (casa == true) {
                     cardTitle.text = "Bedizzole U16 - $avversario"
@@ -116,7 +147,8 @@ class DettaglioPartitaActivity : BaseActivity() {
                     else -> competitionIcon.setImageResource(R.drawable.fair_play)
                 }
 
-                db.getConvocatiMap(formattedDate, partitaId ?: "") { convocati ->
+                db.getConvocatiMap(formattedDate, this.idPartita
+                    ?: "") { convocati ->
                     aggiornaNumeriConvocati(convocati)
                 }
             } else {
@@ -126,9 +158,9 @@ class DettaglioPartitaActivity : BaseActivity() {
     }
 
     private fun caricaGiocatoriEApriDialog() {
-        if (partitaId != null) {
+        if (idPartita != null) {
             db.getGiocatori { giocatori ->
-                db.getConvocatiMap(formattedDate, partitaId!!) { convocati ->
+                db.getConvocatiMap(data_partita, idPartita!!) { convocati ->
                     apriDialogConvocati(giocatori, convocati)
                 }
             }
@@ -145,8 +177,8 @@ class DettaglioPartitaActivity : BaseActivity() {
     }
 
     private fun salvaConvocati(convocazioniConfermate: Map<String, Boolean>) {
-        if (partitaId != null) {
-            db.aggiungiConvocatiPartita(partitaId!!, formattedDate, convocazioniConfermate) { success, message ->
+        if (idPartita != null) {
+            db.aggiungiConvocatiPartita(idPartita!!, data_partita, convocazioniConfermate) { success, message ->
                 if (success) {
                     aggiornaNumeriConvocati(convocazioniConfermate)
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
@@ -160,10 +192,10 @@ class DettaglioPartitaActivity : BaseActivity() {
     }
 
     private fun modificaPartita() {
-        if (partitaId != null) {
+        if (idPartita != null) {
             val intent = Intent(this, AggiungiPartitaActivity::class.java)
-            intent.putExtra("PARTITA_ID", partitaId)
-            intent.putExtra("DATA", formattedDate)
+            intent.putExtra("PARTITA_ID", idPartita)
+            intent.putExtra("DATA", data_partita)
             intent.putExtra("ORARIO", cardTime.text.toString())
             intent.putExtra("LUOGO", matchLocation.text.toString())
             intent.putExtra("AVVERSARIO", cardTitle.text.toString().split(" - ").last()) // Estrai avversario dal titolo
@@ -195,8 +227,8 @@ class DettaglioPartitaActivity : BaseActivity() {
     }
 
     private fun eliminaPartita() {
-        if (partitaId != null) {
-            db.eliminaPartita(formattedDate ?: "", partitaId!!) { success, message ->
+        if (idPartita != null) {
+            db.eliminaPartita(data_partita ?: "", idPartita!!) { success, message ->
                 if (success) {
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                     finish()

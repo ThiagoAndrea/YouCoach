@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageButton
+        android:id="@+id/back_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/transparent"
+        android:src="@drawable/arrow_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/titleStatsGiocatori"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Statistiche giocatori"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/text_giocatore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Giocatore"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/titleStatsGiocatori"
+        app:layout_constraintEnd_toStartOf="@+id/spinnerGiocatore"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp" />
+
+
+    <Spinner
+        android:id="@+id/spinnerGiocatore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@+id/text_giocatore"
+        app:layout_constraintTop_toTopOf="@+id/text_giocatore"
+        app:layout_constraintBottom_toBottomOf="@+id/text_giocatore"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:tabIndicatorFullWidth="false"
+        android:layout_marginTop="16dp"
+        app:tabMode="fixed"
+        app:tabTextColor="@android:color/white"
+        app:tabGravity="fill"
+        android:background="@color/youcoach_secondary_container"
+        app:tabSelectedTextColor="@android:color/black"
+        app:layout_constraintTop_toBottomOf="@id/text_giocatore"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/tab_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/tab_layout"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:padding="8dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutAllenamenti"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvPresenze"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Presenze"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tvMese"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mese"
+                android:textSize="16sp"
+                app:layout_constraintTop_toBottomOf="@id/tvPresenze"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="8dp" />
+
+            <Spinner
+                android:id="@+id/spinnerMese"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvMese"
+                app:layout_constraintStart_toEndOf="@id/tvMese"
+                android:layout_marginStart="16dp" />
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/barChartPresenze"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                app:layout_constraintTop_toBottomOf="@id/tvMese"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutPartite"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            >
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:singleSelection="false"
+                app:selectionRequired="false">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip1"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Campionato"
+                    android:checkable="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip2"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Coppa"
+                    android:checkable="true" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip3"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Torneo"
+                    android:checkable="true" />
+
+                <!-- Add more chips as needed -->
+
+            </com.google.android.material.chip.ChipGroup>
+
+            <TextView
+                android:id="@+id/textMese"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mese"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/chipGroup"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <Spinner
+                android:id="@+id/spinnerMesePartita"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@+id/textMese"
+                app:layout_constraintTop_toTopOf="@+id/textMese"
+                app:layout_constraintBottom_toBottomOf="@+id/textMese"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <TextView
+                android:id="@+id/textPartita"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Partita"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textMese"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <Spinner
+                android:id="@+id/spinnerPartita"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@+id/textPartita"
+                app:layout_constraintTop_toTopOf="@+id/textPartita"
+                app:layout_constraintBottom_toBottomOf="@+id/textPartita"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+            <ImageView
+                android:id="@+id/icon_convocazioni"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/rosa"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textPartita"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/numConvocazioniTot"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/icon_convocazioni"
+                app:layout_constraintTop_toTopOf="@+id/icon_convocazioni"
+                app:layout_constraintBottom_toBottomOf="@+id/icon_convocazioni"/>
+
+            <ImageView
+                android:id="@+id/icon_titolare"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/titolare"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/icon_convocazioni"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/textTitolare"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/icon_titolare"
+                app:layout_constraintTop_toTopOf="@+id/icon_titolare"
+                app:layout_constraintBottom_toBottomOf="@+id/icon_titolare"/>
+
+            <ImageView
+                android:id="@+id/iconMinuti"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/minuti_giocati"
+                app:layout_constraintStart_toEndOf="@+id/numConvocazioniTot"
+                app:layout_constraintTop_toBottomOf="@+id/textPartita"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/numMinuti"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconMinuti"
+                app:layout_constraintTop_toTopOf="@+id/iconMinuti"
+                app:layout_constraintBottom_toBottomOf="@+id/iconMinuti"/>
+
+            <ImageView
+                android:id="@+id/iconEntrante"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/cambio_entrante"
+                app:layout_constraintStart_toEndOf="@+id/textTitolare"
+                app:layout_constraintTop_toBottomOf="@+id/icon_convocazioni"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numEntrante"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconEntrante"
+                app:layout_constraintTop_toTopOf="@+id/iconEntrante"
+                app:layout_constraintBottom_toBottomOf="@+id/iconEntrante"/>
+
+            <ImageView
+                android:id="@+id/iconUscente"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/cambio_uscente"
+                app:layout_constraintStart_toEndOf="@+id/numEntrante"
+                app:layout_constraintTop_toBottomOf="@+id/icon_convocazioni"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numUscente"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconUscente"
+                app:layout_constraintTop_toTopOf="@+id/iconUscente"
+                app:layout_constraintBottom_toBottomOf="@+id/iconUscente"/>
+
+
+            <ImageView
+                android:id="@+id/iconGol"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/pallone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/icon_titolare"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numGol"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconGol"
+                app:layout_constraintTop_toTopOf="@+id/iconGol"
+                app:layout_constraintBottom_toBottomOf="@+id/iconGol"/>
+
+            <ImageView
+                android:id="@+id/iconAssist"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/assist"
+                app:layout_constraintStart_toEndOf="@+id/numGol"
+                app:layout_constraintTop_toBottomOf="@+id/icon_titolare"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numAssist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconAssist"
+                app:layout_constraintTop_toTopOf="@+id/iconAssist"
+                app:layout_constraintBottom_toBottomOf="@+id/iconAssist"/>
+
+            <ImageView
+                android:id="@+id/iconTiri"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/tiro"
+                app:layout_constraintStart_toEndOf="@+id/numAssist"
+                app:layout_constraintTop_toBottomOf="@+id/icon_titolare"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numTiri"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconTiri"
+                app:layout_constraintTop_toTopOf="@+id/iconTiri"
+                app:layout_constraintBottom_toBottomOf="@+id/iconTiri"/>
+
+            <ImageView
+                android:id="@+id/iconFalliFatti"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/fallo_fatto"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/iconGol"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numFalliFatti"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconFalliFatti"
+                app:layout_constraintTop_toTopOf="@+id/iconFalliFatti"
+                app:layout_constraintBottom_toBottomOf="@+id/iconFalliFatti"/>
+
+            <ImageView
+                android:id="@+id/iconFalliSubiti"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/fallo_subito"
+                app:layout_constraintStart_toEndOf="@+id/numFalliFatti"
+                app:layout_constraintTop_toBottomOf="@+id/iconGol"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numFalliSubiti"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconFalliSubiti"
+                app:layout_constraintTop_toTopOf="@+id/iconFalliSubiti"
+                app:layout_constraintBottom_toBottomOf="@+id/iconFalliSubiti"/>
+
+            <ImageView
+                android:id="@+id/iconFuorigioco"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/fuorigioco"
+                app:layout_constraintStart_toEndOf="@+id/numFalliSubiti"
+                app:layout_constraintTop_toBottomOf="@+id/iconGol"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numFuorigioco"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconFuorigioco"
+                app:layout_constraintTop_toTopOf="@+id/iconFuorigioco"
+                app:layout_constraintBottom_toBottomOf="@+id/iconFuorigioco"/>
+
+            <ImageView
+                android:id="@+id/iconGialli"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:src="@drawable/yellow_card"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/iconFalliFatti"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numGialli"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconGialli"
+                app:layout_constraintTop_toTopOf="@+id/iconGialli"
+                app:layout_constraintBottom_toBottomOf="@+id/iconGialli"/>
+
+            <ImageView
+                android:id="@+id/iconRossi"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/red_card"
+                app:layout_constraintStart_toEndOf="@+id/numGialli"
+                app:layout_constraintTop_toBottomOf="@+id/iconFalliFatti"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numRossi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconRossi"
+                app:layout_constraintTop_toTopOf="@+id/iconRossi"
+                app:layout_constraintBottom_toBottomOf="@+id/iconRossi"/>
+
+            <ImageView
+                android:id="@+id/iconInfortuni"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="48dp"
+                android:src="@drawable/infortunio"
+                app:layout_constraintStart_toEndOf="@+id/numRossi"
+                app:layout_constraintTop_toBottomOf="@+id/iconFalliFatti"
+                android:layout_marginTop="32dp" />
+
+            <TextView
+                android:id="@+id/numInfortuni"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="36sp"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                app:layout_constraintStart_toEndOf="@+id/iconInfortuni"
+                app:layout_constraintTop_toTopOf="@+id/iconInfortuni"
+                app:layout_constraintBottom_toBottomOf="@+id/iconInfortuni"/>
+
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
+
+
+
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="0dp"
+        android:layout_height="72dp"
+        android:background="?android:attr/windowBackground"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu"
+        style="@style/BottomNavigationViewStyle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -11,7 +11,7 @@ import com.google.firebase.ktx.Firebase
 class AggiungiGiocatoreActivity : BaseActivity() {
 
     private val db = DatabaseManager()
-    private var giocatoreId: String? = null // ID del giocatore (null se stiamo aggiungendo un nuovo giocatore)
+    private var giocatoreId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -3,6 +3,7 @@ package com.example.youcoach
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.*
 import java.util.*
 
@@ -124,6 +125,8 @@ class CalendarActivity : BaseActivity() {
                     intent.putExtra("selectedDay", selectedDay)
                     intent.putExtra("selectedMonth", displayedMonth)
                     intent.putExtra("selectedYear", displayedYear)
+                    Log.d("INTENT_CALENDAR", "Intent da Calendario: selectedDay=$selectedDay, selectedMonth=$displayedMonth, selectedYear=$displayedYear")
+
                     startActivity(intent)
                 }
                 "allenamento" -> {

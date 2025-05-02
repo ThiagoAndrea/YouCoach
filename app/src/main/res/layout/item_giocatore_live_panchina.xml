@@ -9,7 +9,7 @@
         android:id="@+id/cerchio_giocatore"
         android:layout_width="34dp"
         android:layout_height="34dp"
-        android:background="@drawable/circle_background_panchina_live"
+        android:background="@drawable/circle_background_verde_scuro"
         android:gravity="center"
         android:textSize="14sp"
         android:textStyle="bold"

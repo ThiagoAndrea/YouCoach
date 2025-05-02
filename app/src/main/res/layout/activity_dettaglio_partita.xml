@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:background="@color/background_grey"
+        android:background="@color/transparent"
         android:src="@drawable/arrow_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -42,9 +42,9 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_match"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
         app:layout_constraintWidth_percent="0.9"
-        app:layout_constraintHeight_percent="0.55"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
         app:layout_constraintStart_toStartOf="parent"
@@ -195,9 +195,9 @@
                 android:layout_height="wrap_content"
                 android:textSize="24sp"
                 android:text="VAI AL LIVE"
-                android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/ball_icon"
+                app:layout_constraintBottom_toBottomOf="@+id/ball_icon"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/ball_icon"/>
 
@@ -208,14 +208,26 @@
                 android:id="@+id/ball_icon"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:layout_marginTop="16dp"
                 android:src="@drawable/pallone"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@+id/convocati_button"
                 app:layout_constraintEnd_toEndOf="parent" />
+
+            <Button
+                android:id="@+id/btn_offline"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:text="Inserisci eventi a fine gara"
+                android:layout_marginTop="16dp"
+                app:layout_constraintStart_toStartOf="@id/go_live_button"
+                app:layout_constraintTop_toBottomOf="@id/go_live_button"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.google.android.material.card.MaterialCardView>
+
+
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"

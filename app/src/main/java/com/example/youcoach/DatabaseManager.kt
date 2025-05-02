@@ -66,14 +66,9 @@ class DatabaseManager {
     }
 
     fun getGiocatoreIdPerCognome(cognome: String, callback: (String?) -> Unit){
-        getGiocatori{ giocatori ->
+        getGiocatori { giocatori ->
             val giocatore = giocatori.find { it.cognome == cognome }
             callback(giocatore?.id)
-            if (giocatore != null) {
-                callback(giocatore.id)
-            } else {
-                callback(null)
-            }
         }
     }
 
@@ -159,6 +154,19 @@ class DatabaseManager {
             callback(panchina)
         }.addOnFailureListener {
             callback(emptyList())
+        }
+    }
+
+    fun getFormazioneTitolare(idPartita: String, dataPartita: String, callback: (Map<String, String>) -> Unit) {
+        val titolariRef = database.child("Partite").child(dataPartita).child(idPartita).child("formazione").child("formazione_iniziale")
+
+        titolariRef.get().addOnSuccessListener { snapshot ->
+            val titolari = snapshot.children
+                .mapNotNull { it.key?.let { idGiocatore -> it.getValue(String::class.java)?.let { nome -> idGiocatore to nome } } }
+                .toMap()
+            callback(titolari)
+        }.addOnFailureListener {
+            callback(emptyMap())
         }
     }
 
@@ -279,6 +287,45 @@ class DatabaseManager {
         })
     }
 
+    fun getPartite(callback: (List<Partita>) -> Unit) {
+        val partiteRef = database.child("Partite")
+
+        partiteRef.get().addOnSuccessListener { snapshot ->
+            val listaPartite = mutableListOf<Partita>()
+
+            snapshot.children.forEach { dataNode ->
+                val dataPartita = dataNode.key ?: return@forEach
+
+                dataNode.children.forEach { partitaNode ->
+                    val map = partitaNode.value as? Map<String, Any> ?: return@forEach
+
+                    val partita = Partita(
+                        id = partitaNode.key ?: "",
+                        orario = map["orario"] as? String ?: "",
+                        luogo = map["luogo"] as? String ?: "",
+                        avversario = map["avversario"] as? String ?: "",
+                        risultato = map["risultato"] as? String ?: "",
+                        competizione = map["competizione"] as? String ?: "",
+                        numero_tempi = (map["numero_tempi"] as? Long)?.toInt() ?: 0,
+                        minuti_per_tempo = (map["minuti_per_tempo"] as? Long)?.toInt() ?: 0,
+                        numero_calciatori = (map["numero_calciatori"] as? Long)?.toInt() ?: 0,
+                        casa = map["casa"] as? Boolean ?: false,
+                        modulo = map["modulo"] as? String ?: "",
+                        convocati = (map["convocati"] as? Map<String, Boolean>) ?: emptyMap(),
+                        titolari = (map["titolari"] as? Map<String, String>) ?: emptyMap(),
+                        data = dataPartita
+                    )
+
+                    listaPartite.add(partita)
+                }
+            }
+
+            callback(listaPartite)
+        }.addOnFailureListener {
+            callback(emptyList())
+        }
+    }
+
     fun getCasa(partitaId: String, dataPartita: String, callback: (Boolean) -> Unit){
         database.child("Partite").child(dataPartita).child(partitaId).child("casa").get()
             .addOnSuccessListener { snapshot ->
@@ -291,6 +338,23 @@ class DatabaseManager {
                 }
             }
 
+    }
+
+    fun getGiocata(partitaId: String, dataPartita: String, callback: (Boolean) -> Unit) {
+        val giocataRef = database
+            .child("Partite")
+            .child(dataPartita)
+            .child(partitaId)
+            .child("giocata")
+
+        giocataRef.get()
+            .addOnSuccessListener { snapshot ->
+                val giocata = snapshot.getValue(Boolean::class.java) ?: false
+                callback(giocata)
+            }
+            .addOnFailureListener {
+                callback(false) // fallback se c'è un errore
+            }
     }
 
     fun getMinutiPerTempo(partitaId: String, dataPartita: String, callback: (Int) -> Unit) {
@@ -327,19 +391,43 @@ class DatabaseManager {
         eventiRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val eventiList = mutableListOf<Evento>()
+                val eventiRaw = mutableListOf<Evento>()
+
                 for (eventSnapshot in snapshot.children) {
                     try {
                         val evento = eventSnapshot.getValue(Evento::class.java)
                         if (evento != null) {
-                            eventiList.add(evento)
+                            eventiRaw.add(evento)
                         }
                     } catch (e: Exception) {
                         callback(emptyList())
+                        return
                     }
                 }
-                callback(eventiList)
+
+                if (eventiRaw.isEmpty()) {
+                    callback(emptyList())
+                    return
+                }
+
+                var completati = 0
+
+                eventiRaw.forEach { evento ->
+                    getNomeCognomeGiocatore(evento.nomeGiocatore) { _, cognome ->
+                        if (cognome != null) {
+                            evento.nomeCompletoGiocatore = cognome
+                        }
+                        eventiList.add(evento)
+                        completati++
+
+                        if (completati == eventiRaw.size) {
+                            callback(eventiList)
+                        }
+                    }
+                }
             }
-            override fun onCancelled(error: DatabaseError){
+
+            override fun onCancelled(error: DatabaseError) {
                 callback(emptyList())
             }
         })
@@ -383,6 +471,76 @@ class DatabaseManager {
                 callback(null, null)
             }
     }
+
+    fun getProssimePartite(callback: (List<Map<String, Any>>) -> Unit) {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val partiteRef = FirebaseDatabase.getInstance().getReference("Partite")
+
+        partiteRef.orderByKey().startAt(today).get().addOnSuccessListener { snapshot ->
+            val result = mutableListOf<Map<String, Any>>()
+
+            for (dataNode in snapshot.children) {
+                val data = dataNode.key ?: continue
+
+                for (partitaNode in dataNode.children) {
+                    val id = partitaNode.key ?: continue
+                    val map = partitaNode.value as? Map<String, Any> ?: continue
+                    val giocata = map["giocata"] as? Boolean ?: false
+                    if (giocata) continue
+
+                    val avversario = map["avversario"] as? String ?: "Sconosciuto"
+                    val casa = map["casa"] as? Boolean ?: false
+
+                    result.add(
+                        mapOf(
+                            "id" to id,
+                            "data" to data,
+                            "avversario" to avversario,
+                            "casa" to casa
+                        )
+                    )
+                }
+            }
+
+            callback(result)
+        }.addOnFailureListener {
+            callback(emptyList())
+        }
+    }
+
+    fun getNumeroAllenamentiFatti(callback: (Int) -> Unit) {
+        val ref = FirebaseDatabase.getInstance().getReference("Allenamenti")
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        ref.orderByKey().endAt(today).get().addOnSuccessListener { snapshot ->
+            var count = 0
+            snapshot.children.forEach { giornoSnapshot ->
+                count += giornoSnapshot.childrenCount.toInt()
+            }
+            callback(count)
+        }.addOnFailureListener {
+            callback(0)
+        }
+    }
+
+
+
+    fun getNumeroPartiteFatte(callback: (Int) -> Unit) {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val partiteRef = FirebaseDatabase.getInstance().getReference("Partite")
+
+        partiteRef.orderByKey().endAt(today).get()
+            .addOnSuccessListener { snapshot ->
+                var count = 0
+                snapshot.children.forEach { giorno ->
+                    count += giorno.childrenCount.toInt()
+                }
+                callback(count)
+            }.addOnFailureListener {
+                callback(0)
+            }
+    }
+
 
     fun getRisultatoPartita(partitaId: String, dataPartita: String, callback: (String?, Int, Int) -> Unit) {
         val risultatoRef = database.child("Partite").child(dataPartita).child(partitaId).child("risultato")
@@ -549,7 +707,8 @@ class DatabaseManager {
             "numero_tempi" to numTempi,
             "minuti_per_tempo" to minTempi,
             "numero_calciatori" to numGiocatori,
-            "casa" to casa
+            "casa" to casa,
+            "giocata" to false
         )
         val partitaIdFinal = partitaId ?: database.child("Partite").child(selectedDate).push().key!!
         database.child("Partite").child(selectedDate).child(partitaIdFinal)
@@ -619,10 +778,12 @@ class DatabaseManager {
             }
             val titolariIds = titolari.keys.toSet()
             val panchina = convocati.filter { it !in titolariIds }
+            val formazione_iniziale = titolari.toMap()
 
             val formazioneMap = mapOf(
                 "titolari" to titolari,
-                "panchina" to panchina
+                "panchina" to panchina,
+                "formazione_iniziale" to formazione_iniziale
             )
 
             database.child("Partite").child(dataPartita).child(partitaId).child("formazione")
@@ -634,7 +795,7 @@ class DatabaseManager {
         }
     }
 
-    fun aggiungiEvento (idPartita: String, data: String, minutaggio: String,nomeGiocatore: String, nomeEvento: String, squadra: Boolean, dettagliEvento: Map<String, Any?> = emptyMap()) {
+    fun aggiungiEvento (idPartita: String, data: String, minutaggio: String, nomeGiocatore: String, nomeEvento: String, squadra: Boolean, dettagliEvento: Map<String, Any?> = emptyMap()) {
         val eventiRef = database.child("Partite").child(data).child(idPartita).child("eventi")
         val eventoId = eventiRef.push().key ?: return
 
@@ -649,6 +810,7 @@ class DatabaseManager {
 
         eventiRef.child(eventoId).setValue(eventoMap)
     }
+
 
 
     fun aggiungiStatsPartita(partitaId: String, dataPartita: String, statsMap: Map<String, Pair<Int, Int>>) {
@@ -855,6 +1017,28 @@ class DatabaseManager {
         })
     }
 
+    fun modificaPartitaGiocata(
+        partitaId: String,
+        dataPartita: String,
+        giocata: Boolean,
+        callback: (Boolean, String) -> Unit
+    ) {
+        val giocataRef = database
+            .child("Partite")
+            .child(dataPartita)
+            .child(partitaId)
+            .child("giocata")
+
+        giocataRef.setValue(giocata)
+            .addOnSuccessListener {
+                callback(true, "Attributo 'giocata' aggiornato a $giocata")
+            }
+            .addOnFailureListener { e ->
+                callback(false, "Errore durante l'aggiornamento: ${e.message}")
+            }
+    }
+
+
     /**
      * Funzioni di eliminazione dal database
      */
@@ -951,34 +1135,104 @@ class DatabaseManager {
      * Statistiche
      */
 
-    fun calcolaStatsAllenamenti(giocatoreId: String, callback: (presenze: Int, assenze: Int, ritardi: Int, infortuni: Int) -> Unit) {
+    fun getStatsAllenamentiPerMese(
+        giocatoreId: String,
+        meseFiltro: String,
+        callback: (presenze: Int, assenze: Int, ritardi: Int, infortuni: Int) -> Unit
+    ) {
+        val statsRef = database.child("Giocatori").child(giocatoreId).child("stats").child("allenamenti")
+        val allenamentiRef = database.child("Allenamenti")
 
-        val giocatoreRef =
-            database.child("Giocatori").child(giocatoreId).child("stats").child("allenamenti")
-        giocatoreRef.get().addOnSuccessListener { snapshot ->
-            var presenze = 0
-            var assenze = 0
-            var ritardi = 0
-            var infortuni = 0
-            snapshot.children.forEach { allenamento ->
-                val stato = allenamento.getValue(Int::class.java) ?: -1
+        val mesiMap = mapOf(
+            "Gennaio" to "01", "Febbraio" to "02", "Marzo" to "03", "Aprile" to "04",
+            "Maggio" to "05", "Giugno" to "06", "Luglio" to "07", "Agosto" to "08",
+            "Settembre" to "09", "Ottobre" to "10", "Novembre" to "11", "Dicembre" to "12"
+        )
+        val meseNumero = mesiMap[meseFiltro]
 
-                when (stato) {
-                    0 -> presenze++
-                    1 -> assenze++
-                    2 -> ritardi++
-                    3 -> infortuni++
+        statsRef.get().addOnSuccessListener { statsSnapshot ->
+            val allenamentiGiocatore = statsSnapshot.children.associate { it.key!! to it.getValue(Int::class.java)!! }
+
+            allenamentiRef.get().addOnSuccessListener { allenamentiSnapshot ->
+                var presenze = 0
+                var assenze = 0
+                var ritardi = 0
+                var infortuni = 0
+
+                allenamentiSnapshot.children.forEach { giornoSnapshot ->
+                    val dataAllenamento = giornoSnapshot.key ?: return@forEach
+                    val meseAllenamento = dataAllenamento.split("-").getOrNull(1)
+                    if (meseNumero != null && meseAllenamento != meseNumero) return@forEach
+                    giornoSnapshot.children.forEach { allenamentoEntry ->
+                        val idAllenamento = allenamentoEntry.key ?: return@forEach
+
+                        val stato = allenamentiGiocatore[idAllenamento] ?: return@forEach
+
+                        when (stato) {
+                            0 -> assenze++
+                            1 -> infortuni++
+                            2 -> presenze++
+                            3 -> ritardi++
+                        }
+                    }
                 }
-            }
 
-            callback(presenze, assenze, ritardi, infortuni)
+                callback(presenze, assenze, ritardi, infortuni)
+            }
         }.addOnFailureListener {
             callback(0, 0, 0, 0)
-
         }
     }
 
-    fun calcolaStatsPartitaGiocatore(giocatoreId: String, callback: (convocazioni: Int, titolari: Int, minuti: Int, gol: Int) -> Unit){
+
+    fun getPercentualeObiettivoPresenze(
+        giocatoreId: String,
+        obiettivoFiltro: String,
+        callback: (percentuale: Float) -> Unit
+    ) {
+        val statsRef = database.child("Giocatori").child(giocatoreId).child("stats").child("allenamenti")
+        val allenamentiRef = database.child("Allenamenti")
+
+        statsRef.get().addOnSuccessListener { statsSnapshot ->
+            val allenamentiGiocatore = statsSnapshot.children.associate { it.key!! to it.getValue(Int::class.java)!! }
+
+            allenamentiRef.get().addOnSuccessListener { allenamentiSnapshot ->
+                var totAllenamentiConObiettivo = 0
+                var presenzeEffettive = 0
+
+                allenamentiSnapshot.children.forEach { giornoSnapshot ->
+                    giornoSnapshot.children.forEach { allenamentoSnapshot ->
+                        val idAllenamento = allenamentoSnapshot.key ?: return@forEach
+                        val stato = allenamentiGiocatore[idAllenamento] ?: return@forEach
+
+                        val obiettivi = allenamentoSnapshot.child("obiettivi").children.mapNotNull {
+                            it.getValue(String::class.java)
+                        }
+
+                        if (obiettivoFiltro.isBlank() || obiettivi.contains(obiettivoFiltro)) {
+                            totAllenamentiConObiettivo++
+                            if (stato == 2 || stato == 3) {
+                                presenzeEffettive++
+                            }
+                        }
+                    }
+                }
+
+                val percentuale = if (totAllenamentiConObiettivo > 0) {
+                    (presenzeEffettive.toFloat() / totAllenamentiConObiettivo) * 100f
+                } else {
+                    0f
+                }
+
+                callback(percentuale)
+            }
+        }.addOnFailureListener {
+            callback(0f)
+        }
+    }
+
+
+    fun calcolaStatsPartitaGiocatoreBasic(giocatoreId: String, callback: (convocazioni: Int, titolari: Int, minuti: Int, gol: Int) -> Unit){
             val ref = FirebaseDatabase.getInstance().reference
                 .child("Giocatori")
                 .child(giocatoreId)
@@ -1008,6 +1262,267 @@ class DatabaseManager {
                 callback(0, 0, 0, 0)
             }
         }
+
+    fun calcolaStatisticheFiltratePerGiocatore(
+        giocatoreId: String,
+        meseSelezionato: String,
+        competizioniSelezionate: List<String>,
+        avversarioSelezionato: String,
+        listaPartite: List<Partita>,
+        callback: (
+            convocazioni: Int,
+            titolari: Int,
+            subentrati: Int,
+            usciti: Int,
+            infortuni: Int,
+            minuti: Int,
+            gol: Int,
+            assist: Int,
+            tiri: Int,
+            falliFatti: Int,
+            falliSubiti: Int,
+            gialli: Int,
+            rossi: Int,
+            fuorigioco: Int
+        ) -> Unit
+    ) {
+        database.child("Giocatori").child(giocatoreId).child("stats").child("partite").get()
+            .addOnSuccessListener { snapshot ->
+                var convocazioni = 0
+                var titolari = 0
+                var subentrati = 0
+                var usciti = 0
+                var infortuni = 0
+                var minuti = 0
+                var gol = 0
+                var assist = 0
+                var tiri = 0
+                var falliFatti = 0
+                var falliSubiti = 0
+                var gialli = 0
+                var rossi = 0
+                var fuorigioco = 0
+
+                snapshot.children.forEach { partitaSnap ->
+                    val idPartita = partitaSnap.key ?: return@forEach
+                    val stats = partitaSnap.value as? Map<String, Any> ?: return@forEach
+
+                    val partita = listaPartite.find { it.id == idPartita } ?: return@forEach
+
+                    val meseMatch = meseSelezionato == "Tutti" || Utils.estraiMese(partita.data) == meseSelezionato
+                    val competizioneMatch = competizioniSelezionate.isEmpty() || competizioniSelezionate.contains(partita.competizione)
+                    val avversarioMatch = avversarioSelezionato == "Tutte" || partita.avversario == avversarioSelezionato
+
+                    if (meseMatch && competizioneMatch && avversarioMatch) {
+                        if ((stats["convocato"] as? Boolean) == true) convocazioni++
+                        if ((stats["titolare"] as? Boolean) == true) titolari++
+                        if ((stats["subentrato"] as? Boolean) == true) subentrati++
+                        if ((stats["uscito"] as? Boolean) == true) usciti++
+                        if ((stats["infortunato"] as? Boolean) == true) infortuni++
+
+                        minuti += (stats["minutiGiocati"] as? Long)?.toInt() ?: 0
+                        gol += (stats["gol"] as? Long)?.toInt() ?: 0
+                        assist += (stats["assist"] as? Long)?.toInt() ?: 0
+                        tiri += (stats["tiri"] as? Long)?.toInt() ?: 0
+                        falliFatti += (stats["falliFatti"] as? Long)?.toInt() ?: 0
+                        falliSubiti += (stats["falliSubiti"] as? Long)?.toInt() ?: 0
+                        gialli += (stats["cartelliniGialli"] as? Long)?.toInt() ?: 0
+                        rossi += (stats["cartelliniRossi"] as? Long)?.toInt() ?: 0
+                        fuorigioco += (stats["fuorigiochi"] as? Long)?.toInt() ?: 0
+                    }
+                }
+
+                callback(
+                    convocazioni,
+                    titolari,
+                    subentrati,
+                    usciti,
+                    infortuni,
+                    minuti,
+                    gol,
+                    assist,
+                    tiri,
+                    falliFatti,
+                    falliSubiti,
+                    gialli,
+                    rossi,
+                    fuorigioco
+                )
+            }
+            .addOnFailureListener {
+                callback(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            }
+    }
+
+    fun getStatistichePartiteAggregate(
+        mese: String?,
+        competizioni: List<String>,
+        callback: (
+            vittorie: Int,
+            pareggi: Int,
+            sconfitte: Int,
+            golFatti: Int,
+            golSubiti: Int,
+            tiriFatti: Int,
+            tiriSubiti: Int,
+            falliFatti: Int,
+            falliSubiti: Int,
+            angoliFatti: Int,
+            angoliSubiti: Int
+        ) -> Unit
+    ) {
+        getPartite { partite ->
+            val filtrate = partite.filter { partita ->
+                (mese == null || Utils.estraiMese(partita.data) == mese) &&
+                        competizioni.contains(partita.competizione)
+            }
+
+            if (filtrate.isEmpty()) {
+                callback(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                return@getPartite
+            }
+
+            var vittorie = 0
+            var pareggi = 0
+            var sconfitte = 0
+            var golFatti = 0
+            var golSubiti = 0
+            var tiriFatti = 0
+            var tiriSubiti = 0
+            var falliFatti = 0
+            var falliSubiti = 0
+            var angoliFatti = 0
+            var angoliSubiti = 0
+
+            var completate = 0
+            val totale = filtrate.size
+
+            filtrate.forEach { partita ->
+                val casa = partita.casa
+                val partitaRef = FirebaseDatabase.getInstance()
+                    .getReference("Partite")
+                    .child(partita.data)
+                    .child(partita.id)
+                    .child("risultato")
+
+                partitaRef.get().addOnSuccessListener { snapshot ->
+                    val esito = snapshot.child("esito").getValue(String::class.java)?.lowercase() ?: ""
+                    val golCasa = snapshot.child("golCasa").getValue(Int::class.java) ?: 0
+                    val golOspite = snapshot.child("golOspite").getValue(Int::class.java) ?: 0
+
+                    val fatti = if (casa) golCasa else golOspite
+                    val subiti = if (casa) golOspite else golCasa
+
+                    golFatti += fatti
+                    golSubiti += subiti
+
+                    when (esito) {
+                        "vittoria" -> vittorie++
+                        "pareggio" -> pareggi++
+                        "sconfitta" -> sconfitte++
+                    }
+
+                    getStatsPartita(partita.id, partita.data) { statsList ->
+                        statsList.forEach { stat ->
+                            val nome = stat.nome.lowercase()
+                            val casaVal = stat.casaValue.toIntOrNull() ?: 0
+                            val ospiteVal = stat.ospiteValue.toIntOrNull() ?: 0
+
+                            val fattiStat = if (casa) casaVal else ospiteVal
+                            val subitiStat = if (casa) ospiteVal else casaVal
+
+                            when (nome) {
+                                "tiri" -> {
+                                    tiriFatti += fattiStat
+                                    tiriSubiti += subitiStat
+                                }
+                                "falli fatti" -> {
+                                    falliFatti += fattiStat
+                                    falliSubiti += subitiStat
+                                }
+                                "angoli" -> {
+                                    angoliFatti += fattiStat
+                                    angoliSubiti += subitiStat
+                                }
+                            }
+                        }
+
+                        completate++
+                        if (completate == totale) {
+                            callback(
+                                vittorie, pareggi, sconfitte,
+                                golFatti, golSubiti,
+                                tiriFatti, tiriSubiti,
+                                falliFatti, falliSubiti,
+                                angoliFatti, angoliSubiti
+                            )
+                        }
+                    }
+
+                }.addOnFailureListener {
+                    completate++
+                    if (completate == totale) {
+                        callback(
+                            vittorie, pareggi, sconfitte,
+                            golFatti, golSubiti,
+                            tiriFatti, tiriSubiti,
+                            falliFatti, falliSubiti,
+                            angoliFatti, angoliSubiti
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun getStatisticheAllenamentiAggregate(
+        mese: String?,
+        obiettivoFiltro: String?,
+        callback: (presenzeGiocatori: Map<String, Int>, obiettivi: Map<String, Int>) -> Unit
+    ) {
+        val allenamentiRef = FirebaseDatabase.getInstance().getReference("Allenamenti")
+
+        allenamentiRef.get().addOnSuccessListener { snapshot ->
+            val presenzeMap = mutableMapOf<String, Int>()
+            val obiettiviMap = mutableMapOf<String, Int>()
+
+            for (dataSnapshot in snapshot.children) {
+                val dataAllenamento = dataSnapshot.key ?: continue
+                if (mese != null && Utils.estraiMese(dataAllenamento) != mese) continue
+
+                for (allenamentoSnapshot in dataSnapshot.children) {
+                    val obiettivi = allenamentoSnapshot.child("obiettivi").children.mapNotNull {
+                        it.getValue(String::class.java)
+                    }
+
+                    if (obiettivoFiltro != null && obiettivoFiltro !in obiettivi) continue
+                    for (ob in obiettivi) {
+                        obiettiviMap[ob] = obiettiviMap.getOrDefault(ob, 0) + 1
+                    }
+
+                    val presenze = allenamentoSnapshot.child("presenze")
+                    for (giocatoreSnapshot in presenze.children) {
+                        val idGiocatore = giocatoreSnapshot.key ?: continue
+                        val stato = giocatoreSnapshot.getValue(Int::class.java) ?: continue
+
+                        if (stato == 0 || stato == 1) {
+                            presenzeMap[idGiocatore] = presenzeMap.getOrDefault(idGiocatore, 0) + 1
+                        }
+                    }
+                }
+            }
+
+            callback(presenzeMap, obiettiviMap)
+        }.addOnFailureListener {
+            callback(emptyMap(), emptyMap())
+        }
+    }
+
+
+
+
+
+
 
 }
 

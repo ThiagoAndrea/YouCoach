@@ -57,6 +57,7 @@ class LiveActivity : BaseActivity() {
     private lateinit var partitaId: String
     private lateinit var dataPartita: String
 
+
     private val db = DatabaseManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,9 +112,9 @@ class LiveActivity : BaseActivity() {
 
         recyclerViewEvents = sideDrawer.findViewById(R.id.recyclerViewEvents)
         recyclerViewEvents.layoutManager = LinearLayoutManager(this)
-        eventoAdapter = EventoAdapter(mutableListOf(), dataPartita, partitaId, this){
+        eventoAdapter = EventoAdapter(mutableListOf(), dataPartita, partitaId, this,{
             Utils.aggiornaUIDopoSostituzione(partitaId, dataPartita, recyclerFormazione, recyclerPanchina,db)
-        }
+        }, dettagliMode = false)
         recyclerViewEvents.adapter = eventoAdapter
 
         fabStartMatch.setOnClickListener { toggleMenu() }
@@ -242,18 +243,28 @@ class LiveActivity : BaseActivity() {
         fabStartMatch.backgroundTintList = ContextCompat.getColorStateList(this, R.color.confirm)
         fabStartMatch.setImageResource(R.drawable.fischietto)
         (recyclerFormazione.adapter as? FormazioneAdapter)?.setButtonsEnabled(false)
-
-        val golCasa = punteggioCasa.text.toString().toInt()
-        val golOspite = punteggioOspite.text.toString().toInt()
-
-        salvaStats(golCasa, golOspite) { success ->
+        db.modificaPartitaGiocata(partitaId, dataPartita, true) { success, message ->
             if (success) {
-                val intent = Intent(this, FinePartitaActivity::class.java)
-                intent.putExtra("PARTITA_ID", partitaId)
-                intent.putExtra("DATA", dataPartita)
-                startActivity(intent)
+                    val statsManager = StatsManager(partitaId, dataPartita)
+                    db.getCasa(partitaId, dataPartita) { isCasa ->
+                        db.getEventi(partitaId, dataPartita) { eventi ->
+                            val golMiaSquadra = eventi.count { it.nomeEvento == "Gol" && it.squadra }
+                            val golAvversari = eventi.count { it.nomeEvento == "Gol" && !it.squadra }
+                            val golCasa = if (isCasa) golMiaSquadra else golAvversari
+                            val golOspite = if (isCasa) golAvversari else golMiaSquadra
+                            statsManager.salvaStats(golCasa, golOspite) { success ->
+                                if (success) {
+                                    val intent = Intent(this, FinePartitaActivity::class.java)
+                                    intent.putExtra("PARTITA_ID", partitaId)
+                                    intent.putExtra("DATA", dataPartita)
+                                    startActivity(intent)
+                                }
+                            }
+                        }
+                }
+
             } else {
-                Toast.makeText(this, "Errore nel salvataggio delle statistiche", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Errore: $message", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -274,7 +285,6 @@ class LiveActivity : BaseActivity() {
             db.getEventi(partitaId, dataPartita) { eventiList ->
                 db.getGiocatori { giocatoriList ->
                     val mappaGiocatori = giocatoriList.associateBy { it.id }
-
                     val eventiConNomi = eventiList.map { evento ->
                         evento.nomeCompletoGiocatore = mappaGiocatori[evento.nomeGiocatore]?.cognome ?: "N/A"
                         evento
@@ -532,297 +542,7 @@ class LiveActivity : BaseActivity() {
         return String.format("%02d:%02d", minutiTotali, secondi)
     }
 
-    fun salvaStats(golCasa: Int, golOspite: Int, callback: (Boolean) -> Unit) {
-        val totalTasks = 5
-        var completed = 0
-        var allSuccess = true
 
-        fun checkComplete(success: Boolean) {
-            if (!success) allSuccess = false
-            completed++
-            if (completed == totalTasks) {
-                callback(allSuccess)
-            }
-        }
-
-        salvaStatisticheSquadra { checkComplete(it) }
-        salvaStatisticheGiocatore { checkComplete(it) }
-        salvaConvocazioniEMinuti { checkComplete(it) }
-        completaStatsRosa { checkComplete(it) }
-        salvaRisultatoPartita(golCasa, golOspite) { checkComplete(it) }
-    }
-
-    private fun salvaStatisticheSquadra(callback: (Boolean) -> Unit) {
-        db.getCasa(partitaId, dataPartita){ casa ->
-            val squadraInCasa = casa
-
-            db.getEventi(partitaId, dataPartita) { eventi ->
-                val nomeStatistica = mapOf(
-                    "Tiro" to "Tiri",
-                    "Fallo" to "Falli fatti",
-                    "Gol" to "Tiri in porta",
-                    "Angolo" to "Angoli",
-                    "Giallo" to "Cartellini gialli",
-                    "Rosso" to "Cartellini rossi",
-                    "Fuorigioco" to "Fuorigiochi"
-                )
-                val eventiValidi = listOf(
-                    "Tiri", "Tiri in porta", "Falli fatti", "Angoli", "Fuorigiochi",
-                    "Cartellini gialli", "Cartellini rossi"
-                )
-                val statsMap = eventiValidi.associateWith { Pair(0, 0) }.toMutableMap()
-                eventi.forEach { evento ->
-                    val nomeEvento = evento.nomeEvento
-                    val squadra = evento.squadra
-                    val dettagli = evento.dettagli
-
-                    when (nomeEvento) {
-                        "Tiro" -> {
-                            val labelTiri = nomeStatistica["Tiro"] ?: return@forEach
-                            val attuale = statsMap[labelTiri] ?: Pair(0, 0)
-                            val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
-                            statsMap[labelTiri] = nuovoValore
-                            val esito = (dettagli["tipoTiro"] as? String)?.lowercase()
-                            if (esito == "in porta") {
-                                val labelTP = "Tiri in porta"
-                                val attualeTP = statsMap[labelTP] ?: Pair(0, 0)
-                                val nuovoTP = calcolaValoreAggiornato(squadraInCasa, squadra, attualeTP)
-                                statsMap[labelTP] = nuovoTP
-                            }
-                        }
-
-                        "Gol" -> {
-                            val labelTiri = nomeStatistica["Tiro"] ?: return@forEach
-                            val labelTP = nomeStatistica["Gol"] ?: return@forEach
-                            val attTiro = statsMap[labelTiri] ?: Pair(0, 0)
-                            val attTP = statsMap[labelTP] ?: Pair(0, 0)
-                            statsMap[labelTiri] = calcolaValoreAggiornato(squadraInCasa, squadra, attTiro)
-                            statsMap[labelTP] = calcolaValoreAggiornato(squadraInCasa, squadra, attTP)
-                        }
-
-                        "Fallo" -> {
-                            val tipoFallo = (dettagli["tipoFallo"] as? String)?.lowercase()
-                            val label = nomeStatistica["Fallo"] ?: return@forEach
-                            val attuale = statsMap[label] ?: Pair(0, 0)
-                            val assegnaACasa = if (tipoFallo == "subito") {
-                                if (squadraInCasa == true) !squadra else squadra
-                            } else {
-                                if (squadraInCasa == true) squadra else !squadra
-                            }
-                            val nuovoValore = if (assegnaACasa) {
-                                Pair(attuale.first + 1, attuale.second)
-                            } else {
-                                Pair(attuale.first, attuale.second + 1)
-                            }
-                            statsMap[label] = nuovoValore
-                        }
-
-                        "Angolo", "Giallo", "Rosso", "Fuorigioco" -> {
-                            val label = nomeStatistica[nomeEvento] ?: return@forEach
-                            val attuale = statsMap[label] ?: Pair(0, 0)
-                            val nuovoValore = calcolaValoreAggiornato(squadraInCasa, squadra, attuale)
-                            statsMap[label] = nuovoValore
-                        }
-
-                        else -> {
-                        }
-                    }
-                }
-
-                db.aggiungiStatsPartita(partitaId, dataPartita, statsMap)
-                callback(true)
-            }
-        }
-    }
-
-    private fun salvaStatisticheGiocatore(callback: (Boolean) -> Unit) {
-        db.getEventi(partitaId, dataPartita) { eventi ->
-            val statsGiocatori = mutableMapOf<String, MutableMap<String, Any>>()
-
-            fun incrementaStat(giocatore: String, chiave: String) {
-                val stats = statsGiocatori.getOrPut(giocatore) { mutableMapOf() }
-                val attuale = (stats[chiave] as? Int) ?: 0
-                stats[chiave] = attuale + 1
-            }
-
-            eventi.forEach { evento ->
-                if (!evento.squadra) return@forEach
-                val nomeEvento = evento.nomeEvento
-                val giocatoreId = evento.nomeGiocatore
-                val dettagli = evento.dettagli
-
-                when (nomeEvento) {
-                    "Tiro" -> {
-                        incrementaStat(giocatoreId, "Tiri")
-                        val esito = (dettagli["tipoTiro"] as? String)?.lowercase()
-                        if (esito == "in porta") {
-                            incrementaStat(giocatoreId, "Tiri in porta")
-                        }
-                    }
-
-                    "Gol" -> {
-                        val assistId = (dettagli["assist"] as? String)
-                        if (assistId != null) incrementaStat(assistId, "Assist")
-                        incrementaStat(giocatoreId, "Gol")
-                        incrementaStat(giocatoreId, "Tiri")
-                        incrementaStat(giocatoreId, "Tiri in porta")
-                    }
-
-                    "Fallo" -> {
-                        val tipoFallo = (dettagli["tipoFallo"] as? String)?.lowercase()
-                        if (tipoFallo == "subito") {
-                            incrementaStat(giocatoreId, "Falli subiti")
-                        } else {
-                            incrementaStat(giocatoreId, "Falli fatti")
-                        }
-                    }
-
-                    "Giallo" -> incrementaStat(giocatoreId, "Cartellini gialli")
-                    "Rosso" -> incrementaStat(giocatoreId, "Cartellini rossi")
-                    "Fuorigioco" -> incrementaStat(giocatoreId, "Fuorigiochi")
-                    "Parata" -> incrementaStat(giocatoreId, "Parate")
-                    else -> {}
-                }
-            }
-
-            statsGiocatori.forEach { (giocatoreId, statsMap) ->
-                db.aggiungiStatsGiocatore(partitaId, dataPartita, giocatoreId, statsMap)
-            }
-
-            callback(true)
-        }
-    }
-
-    private fun salvaConvocazioniEMinuti(callback: (Boolean) -> Unit) {
-        db.getConvocati(partitaId, dataPartita) { convocati ->
-            db.getTitolari(partitaId, dataPartita) { titolari ->
-                db.getEventi(partitaId, dataPartita) { eventi ->
-                    val statsGiocatori = mutableMapOf<String, MutableMap<String, Any>>()
-                    convocati.forEach { giocatoreId ->
-                        statsGiocatori[giocatoreId] = mutableMapOf(
-                            "convocato" to true,
-                            "titolare" to (giocatoreId in titolari.keys),
-                            "minutoInizio" to if (giocatoreId in titolari.keys) 0 else -1,
-                            "minutiGiocati" to 0
-                        )
-                    }
-
-                    eventi.filter { it.nomeEvento == "Cambio" }
-                        .forEach { evento ->
-                            val dettagli = evento.dettagli
-                            val uscente = evento.nomeGiocatore
-                            val entrante = dettagli["Entra: "] as? String ?: return@forEach
-                            val minutoCambio = Utils.parseMinuto(evento.minutaggio)
-
-                            statsGiocatori[uscente]?.let { statUscente ->
-                                val inizio = (statUscente["minutoInizio"] as? Int) ?: 0
-                                statUscente["minutiGiocati"] = minutoCambio - inizio
-                            }
-
-                            val statEntrante = statsGiocatori.getOrPut(entrante) {
-                                mutableMapOf("convocato" to true, "titolare" to false, "minutiGiocati" to 0)
-                            }
-                            statEntrante["minutoInizio"] = minutoCambio
-                        }
-
-                    db.getPartita(dataPartita) { _, _, _, _, _, _, minutiPerTempo, numeroTempi, _ ->
-                        if (minutiPerTempo != null && numeroTempi != null) {
-                            val durata = minutiPerTempo * numeroTempi
-                            statsGiocatori.forEach { (_, stat) ->
-                                val inizio = (stat["minutoInizio"] as? Int)
-                                if (inizio != null && inizio >= 0) {
-                                    val giocati = durata - inizio
-                                    stat["minutiGiocati"] = (stat["minutiGiocati"] as? Int ?: 0) + giocati
-                                }
-                                stat.remove("minutoInizio")
-                            }
-
-                            statsGiocatori.forEach { (id, statMap) ->
-                                db.aggiungiStatsGiocatore(partitaId, dataPartita, id, statMap)
-                            }
-
-                            callback(true)
-                        } else callback(false)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun completaStatsRosa(callback: (Boolean) -> Unit) {
-        db.getGiocatori { giocatori ->
-            db.getConvocati(partitaId, dataPartita) { convocati ->
-                val idConvocati = convocati.toSet()
-                val statsBase = mapOf(
-                    "convocato" to false,
-                    "titolare" to false,
-                    "gol" to 0,
-                    "minutiGiocati" to 0,
-                    "falliFatti" to 0,
-                    "falliSubiti" to 0,
-                    "cartelliniGialli" to 0,
-                    "cartelliniRossi" to 0,
-                    "fuorigiochi" to 0,
-                    "tiri" to 0,
-                    "tiriInPorta" to 0,
-                    "parate" to 0
-                )
-
-                var completati = 0
-                val tot = giocatori.size
-
-                giocatori.forEach { giocatore ->
-                    val id = giocatore.id
-                    db.getStatsGiocatorePartita(id, partitaId) { esistenti ->
-                        val statMap = mutableMapOf<String, Any>()
-                        if (id in idConvocati) {
-                            statsBase.forEach { (chiave, valoreBase) ->
-                                if (!esistenti.containsKey(chiave)) statMap[chiave] = valoreBase
-                            }
-                        } else {
-                            statMap.putAll(statsBase)
-                        }
-                        if (statMap.isNotEmpty()) {
-                            db.aggiungiStatsGiocatore(partitaId, dataPartita, id, statMap)
-                        }
-                        completati++
-                        if (completati == tot) callback(true)
-                    }
-                }
-
-                if (tot == 0) callback(true)
-            }
-        }
-    }
-
-    private fun salvaRisultatoPartita(golCasa: Int, golOspite: Int, callback: (Boolean) -> Unit) {
-        db.getCasa(partitaId, dataPartita) { casa ->
-            val esito = when {
-                golCasa > golOspite -> if (casa == true) "Vittoria" else "Sconfitta"
-                golCasa < golOspite -> if (casa == true) "Sconfitta" else "Vittoria"
-                else -> "Pareggio"
-            }
-
-            db.aggiungiRisultato(partitaId, dataPartita, esito, golCasa, golOspite) { success ->
-                callback(success)
-            }
-        }
-    }
-
-
-    private fun calcolaValoreAggiornato(
-        squadraInCasa: Boolean?,
-        squadraEvento: Boolean,
-        attuale: Pair<Int, Int>
-    ): Pair<Int, Int> {
-        return if (squadraInCasa == true) {
-            if (squadraEvento) Pair(attuale.first + 1, attuale.second)
-            else Pair(attuale.first, attuale.second + 1)
-        } else {
-            if (!squadraEvento) Pair(attuale.first + 1, attuale.second)
-            else Pair(attuale.first, attuale.second + 1)
-        }
-    }
 
 
 

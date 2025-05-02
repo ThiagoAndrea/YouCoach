@@ -3,15 +3,18 @@ package com.example.youcoach
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.w3c.dom.Text
 
 class RosaActivity : BaseActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var giocatoreAdapter: GiocatoreAdapter
+    private lateinit var nomeSquadra: TextView
     private val playerList = mutableListOf<Giocatore>()
     private val db = DatabaseManager()
     private lateinit var dettaglioGiocatoreLauncher: ActivityResultLauncher<Intent>
@@ -22,6 +25,10 @@ class RosaActivity : BaseActivity() {
         setupBottomNavigation(R.id.nav_rosa)
 
         recyclerView = findViewById(R.id.recyclerGiocatore)
+        nomeSquadra = findViewById(R.id.nome_squadra)
+        db.getSquadraPrincipale{nome, _ ->
+            nomeSquadra.text = Utils.troncaTesto(nome, 14)
+        }
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         giocatoreAdapter = GiocatoreAdapter(playerList)

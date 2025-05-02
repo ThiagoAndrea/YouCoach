@@ -21,13 +21,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-
         <TextView
-            android:id="@+id/name_team"
+            android:id="@+id/nome_squadra"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/nome_squadra"
-            android:textSize="24sp" />
+            android:textStyle="bold"
+            android:textSize="44sp" />
 
         <View
             android:layout_width="0dp"
@@ -39,8 +39,9 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_gravity="end"
-            android:background="@drawable/circle_background_green"
-            android:src="@drawable/add" />
+            android:background="@drawable/circle_background_verde_scuro"
+            android:src="@drawable/add"
+            android:tint="#FFFFFF"/>
 
     </LinearLayout>
 

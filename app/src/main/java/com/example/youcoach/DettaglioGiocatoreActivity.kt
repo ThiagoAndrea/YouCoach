@@ -107,7 +107,7 @@ class DettaglioGiocatoreActivity : BaseActivity() {
     }
 
     private fun caricaStatsAllenamenti() {
-        db.calcolaStatsAllenamenti(giocatoreId) { presenze, assenze, ritardi, infortuni ->
+        db.getStatsAllenamentiPerMese(giocatoreId, "Tutti") { presenze, assenze, ritardi, infortuni ->
             num_presenze.text = presenze.toString()
             num_ritardi.text = ritardi.toString()
             num_assenze.text = assenze.toString()
@@ -116,7 +116,7 @@ class DettaglioGiocatoreActivity : BaseActivity() {
     }
 
     private fun caricaStatsPartite(){
-        db.calcolaStatsPartitaGiocatore(giocatoreId){ convocazioni, titolare, min, gol ->
+        db.calcolaStatsPartitaGiocatoreBasic(giocatoreId){ convocazioni, titolare, min, gol ->
             num_convocazioni.text = convocazioni.toString()
             num_titolari.text = titolare.toString()
             num_minuti_giocati.text = min.toString()

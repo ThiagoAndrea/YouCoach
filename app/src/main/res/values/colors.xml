@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00000000</color>
     <color name="confirm">#00CC33</color>
     <color name="delete">#fb1814</color>
@@ -17,4 +15,24 @@
     <color name="difensore">#90ee90</color>
     <color name="centrocampista">#e3a250</color>
     <color name="attaccante">#f1807e</color>
+
+    <!-- Light Colors -->
+    <color name="youcoach_primary">#267039</color>
+    <color name="youcoach_primary_container">#3DA75A</color>
+
+    <color name="youcoach_secondary">#3F8752</color>
+    <color name="youcoach_secondary_container">#64A77A</color>
+
+    <color name="gray_light">#F5F5F5</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Dark Colors -->
+    <color name="youcoach_primary_dark">#145022</color>
+    <color name="youcoach_primary_container_dark">#1F6B3A</color>
+
+    <color name="youcoach_secondary_dark">#2D5F3E</color>
+    <color name="youcoach_secondary_container_dark">#478D66</color>
+
+    <color name="gray_dark">#1C1C1C</color>
 </resources>

@@ -52,5 +52,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.material.v1110)
     implementation(libs.material.v190)
+    implementation(libs.mpandroidchart)
+
 
 }

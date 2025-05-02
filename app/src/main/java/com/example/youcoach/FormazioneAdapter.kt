@@ -448,7 +448,7 @@ class FormazioneAdapter(
                 if (entranteSelezionato != null && panchinaIdMap.containsKey(entranteSelezionato)) {
                     val idEntrante = panchinaIdMap[entranteSelezionato]!!
                     eseguiSostituzioneNelDatabase(idGiocatoreUscente, idEntrante, minutaggio)
-                    avviaAnimazione(view, R.drawable.round_arrows)
+                    avviaAnimazione(view, R.drawable.cambio)
                 }
                 dialog.dismiss()
             }

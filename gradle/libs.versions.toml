@@ -16,6 +16,7 @@ firebaseDatabaseKtx = "21.0.0"
 leanback = "1.0.0"
 materialCalendarview = "2.0.1"
 materialVersion = "1.11.0"
+mpandroidchart = "v3.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +35,7 @@ androidx-leanback = { group = "androidx.leanback", name = "leanback", version.re
 material-calendarview = { module = "com.github.prolificinteractive:material-calendarview", version = "2.0.1" }
 material-v1110 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 material-v190 = { module = "com.google.android.material:material", version.ref = "googleMaterial" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
 
 
 [plugins]

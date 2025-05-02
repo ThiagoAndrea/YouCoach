@@ -24,6 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/calendar_title"
+            android:textStyle="bold"
             android:layout_marginStart="16dp"
             android:textSize="48sp" />
 
@@ -37,8 +38,9 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_gravity="end"
-            android:background="@drawable/circle_background_green"
-            android:src="@drawable/add" />
+            android:background="@drawable/circle_background_verde_scuro"
+            android:src="@drawable/add"
+            app:tint="#ffffff" />
 
     </LinearLayout>
 

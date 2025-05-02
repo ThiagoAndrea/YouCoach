@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:background="@color/background_grey"
+        android:background="@color/transparent"
         android:src="@drawable/arrow_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -52,10 +52,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:cardCornerRadius="8dp"
-        app:cardBackgroundColor="@color/background_training_card"
-        app:cardElevation="4dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="@color/background_orange">
+       app:cardElevation="4dp"
+        app:strokeWidth="1dp">
 
 
         <androidx.constraintlayout.widget.ConstraintLayout

@@ -126,6 +126,14 @@ class FormazioneActivity : BaseActivity() {
 
         val partitaId = intent.getStringExtra("PARTITA_ID")
         val data = intent.getStringExtra("DATA")
+        val live = intent.getBooleanExtra("LIVE", false)
+
+        if (live) {
+            buttonConferma.text = "Vai al live"
+        } else {
+            buttonConferma.text = "Conferma"
+        }
+
         if (partitaId != null && data != null) {
             caricaDatiPartita(data)
             caricaGiocatori(partitaId, data) {
@@ -138,7 +146,7 @@ class FormazioneActivity : BaseActivity() {
             val currentAdapter = selezioneGiocatoreAdapter
 
             if (partitaId != null && data != null && currentAdapter != null) {
-                salvaFormazione(currentAdapter, partitaId, data)
+                salvaFormazione(currentAdapter, partitaId, data, live)
 
             } else {
                 Log.e("FormazioneActivity", "Impossibile salvare la formazione: dati mancanti")
@@ -201,14 +209,22 @@ class FormazioneActivity : BaseActivity() {
         })
     }
 
-    private fun salvaFormazione(adapter: SelezioneGiocatoreAdapter, partitaId: String, dataPartita: String) {
+    private fun salvaFormazione(adapter: SelezioneGiocatoreAdapter, partitaId: String, dataPartita: String, live: Boolean) {
         db.aggiungiFormazionePartita(adapter, partitaId, dataPartita) { success, message ->
-            if (success) {
+            if (success && live) {
                 val intent = Intent(this, LiveActivity::class.java)
                 intent.putExtra("PARTITA_ID", partitaId)
                 intent.putExtra("DATA", dataPartita)
                 startActivity(intent)
-            } else {
+            }
+            else if (success && !live){
+                val intent = Intent(this, FinePartitaActivity::class.java)
+                intent.putExtra("PARTITA_ID", partitaId)
+                intent.putExtra("DATA", dataPartita)
+                startActivity(intent)
+            }
+
+            else {
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             }
         }

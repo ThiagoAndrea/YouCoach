@@ -33,6 +33,9 @@
         <activity android:name=".FormazioneActivity"/>
         <activity android:name=".LiveActivity"/>
         <activity android:name=".FinePartitaActivity"/>
+        <activity android:name=".StatisticheAllenamentiActivity"/>
+        <activity android:name=".StatisticheGiocatoriActivity"/>
+        <activity android:name=".StatistichePartiteActivity"/>
     </application>
 
 </manifest>
