@@ -11,6 +11,11 @@
         android:fillViewport="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
     <ImageButton
         android:id="@+id/back_button"
         android:layout_width="wrap_content"
@@ -74,8 +79,8 @@
 
     <FrameLayout
         android:id="@+id/tab_container"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/tab_layout"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
         app:layout_constraintStart_toStartOf="parent"
@@ -85,8 +90,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutAllenamenti"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="visible">
+            android:layout_height="wrap_content"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/tvPresenze"
@@ -130,8 +135,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutPartite"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
             >
 
             <com.google.android.material.chip.ChipGroup
@@ -165,7 +170,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Torneo"
+                    android:text="Amichevole"
                     android:checkable="true" />
 
                 <!-- Add more chips as needed -->
@@ -216,9 +221,8 @@
 
             <ImageView
                 android:id="@+id/icon_convocazioni"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="16dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/rosa"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textPartita"
@@ -237,9 +241,8 @@
 
             <ImageView
                 android:id="@+id/icon_titolare"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="16dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/titolare"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/icon_convocazioni"
@@ -258,8 +261,8 @@
 
             <ImageView
                 android:id="@+id/iconMinuti"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/minuti_giocati"
                 app:layout_constraintStart_toEndOf="@+id/numConvocazioniTot"
@@ -279,8 +282,8 @@
 
             <ImageView
                 android:id="@+id/iconEntrante"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/cambio_entrante"
                 app:layout_constraintStart_toEndOf="@+id/textTitolare"
@@ -300,8 +303,8 @@
 
             <ImageView
                 android:id="@+id/iconUscente"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/cambio_uscente"
                 app:layout_constraintStart_toEndOf="@+id/numEntrante"
@@ -322,9 +325,8 @@
 
             <ImageView
                 android:id="@+id/iconGol"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="16dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/pallone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/icon_titolare"
@@ -343,8 +345,8 @@
 
             <ImageView
                 android:id="@+id/iconAssist"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/assist"
                 app:layout_constraintStart_toEndOf="@+id/numGol"
@@ -364,8 +366,8 @@
 
             <ImageView
                 android:id="@+id/iconTiri"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/tiro"
                 app:layout_constraintStart_toEndOf="@+id/numAssist"
@@ -385,9 +387,8 @@
 
             <ImageView
                 android:id="@+id/iconFalliFatti"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="16dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/fallo_fatto"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/iconGol"
@@ -406,8 +407,8 @@
 
             <ImageView
                 android:id="@+id/iconFalliSubiti"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/fallo_subito"
                 app:layout_constraintStart_toEndOf="@+id/numFalliFatti"
@@ -427,8 +428,8 @@
 
             <ImageView
                 android:id="@+id/iconFuorigioco"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/fuorigioco"
                 app:layout_constraintStart_toEndOf="@+id/numFalliSubiti"
@@ -448,9 +449,8 @@
 
             <ImageView
                 android:id="@+id/iconGialli"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="16dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:src="@drawable/yellow_card"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/iconFalliFatti"
@@ -469,8 +469,8 @@
 
             <ImageView
                 android:id="@+id/iconRossi"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/red_card"
                 app:layout_constraintStart_toEndOf="@+id/numGialli"
@@ -490,8 +490,8 @@
 
             <ImageView
                 android:id="@+id/iconInfortuni"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="48dp"
                 android:src="@drawable/infortunio"
                 app:layout_constraintStart_toEndOf="@+id/numRossi"
@@ -516,6 +516,7 @@
     </FrameLayout>
 
 
+        </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView

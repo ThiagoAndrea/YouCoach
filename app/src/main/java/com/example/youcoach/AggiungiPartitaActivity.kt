@@ -14,7 +14,6 @@ class AggiungiPartitaActivity : BaseActivity() {
     private var partitaId: String? = null
     private var selectedDate: String = ""
 
-    // UI Components
     private lateinit var editTextAvversario: EditText
     private lateinit var editTextOrario: EditText
     private lateinit var editTextLuogo: EditText
@@ -35,7 +34,7 @@ class AggiungiPartitaActivity : BaseActivity() {
         setupBottomNavigation(R.id.nav_calendar)
 
         initUI()
-        checkIntentData() // Controlla se ci sono dati da precompilare
+        checkIntentData()
         setupButtonListeners()
     }
 
@@ -93,6 +92,16 @@ class AggiungiPartitaActivity : BaseActivity() {
         editTextData.setOnClickListener { selezionaData() }
         editTextOrario.setOnClickListener { selezionaOrario() }
         buttonAggiungi.setOnClickListener { salvaPartita() }
+        switchCasaTrasferta.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                db.getSquadraPrincipale { _, indirizzo ->
+                    if (!indirizzo.isNullOrEmpty()) {
+                        editTextLuogo.setText(indirizzo)
+                    }
+                }
+            }
+        }
+
 
     }
 
